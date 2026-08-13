@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans Malayalam", "Noto Sans Devanagari", sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background-color: #f3f4f6;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+button,
+a,
+label,
+p,
+h1,
+h2,
+h3,
+span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
