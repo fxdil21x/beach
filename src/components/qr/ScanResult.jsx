@@ -9,7 +9,7 @@ export default function ScanResult({ result, onClose }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center p-6 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-6 py-10 ${
         granted ? 'bg-green-600' : 'bg-red-600'
       } text-white`}
     >
@@ -65,12 +65,12 @@ export default function ScanResult({ result, onClose }) {
                 <dd className="text-right font-semibold">{resident.gender}</dd>
               </div>
             )}
-            {resident.ward && (
+            {/* {resident.ward && (
               <div className="flex justify-between gap-3 border-b border-gray-100 pb-2">
                 <dt className="font-medium text-gray-500">Ward</dt>
                 <dd className="text-right font-semibold">{resident.ward}</dd>
               </div>
-            )}
+            )} */}
             {resident.age != null && (
               <div className="flex justify-between gap-3">
                 <dt className="font-medium text-gray-500">Age</dt>
