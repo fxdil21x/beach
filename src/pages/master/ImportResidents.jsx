@@ -107,14 +107,7 @@ export default function ImportResidents() {
         <p className="mt-2 text-zinc-400">{t('master.importHint')}</p>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-zinc-800 bg-orange-500/10 p-5">
-        <div className="mb-3 flex items-center gap-3">
-          <JsonFileIcon className="h-8 w-8 shrink-0" />
-     
-        </div>
-        <p className="mb-3 text-sm text-zinc-300">{t('master.importFormatDesc')}</p>
-     
-      </div>
+   
 
       {!summary && (
         <div

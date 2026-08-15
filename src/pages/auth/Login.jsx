@@ -34,7 +34,7 @@ export default function Login() {
       <div className="mx-auto w-full max-w-md flex-1">
         <h1 className="text-3xl font-bold text-gray-900">{t('auth.loginTitle')}</h1>
         <p className="mt-2 text-sm text-gray-600">
-          {t('resident.residentLoginHint')}{' '}
+          {t('auth.residentLoginHint')}{' '}
           <Link to="/user/home" className="font-medium text-blue-600">
             {t('nav.home')}
           </Link>
