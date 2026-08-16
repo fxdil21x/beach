@@ -1,0 +1,48 @@
+import { useEffect, useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import { DeviceFrameset } from 'react-device-frameset';
+import 'react-device-frameset/styles/marvel-devices.min.css';
+
+const DESKTOP_QUERY = '(min-width: 1025px)';
+
+function useDesktopFrame() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia(DESKTOP_QUERY);
+    const onChange = () => setIsDesktop(media.matches);
+    onChange();
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+
+  return isDesktop;
+}
+
+export default function DeviceFrameLayout() {
+  const isDesktop = useDesktopFrame();
+
+  useEffect(() => {
+    if (!isDesktop) return undefined;
+    document.documentElement.classList.add('device-frame-active');
+    return () => document.documentElement.classList.remove('device-frame-active');
+  }, [isDesktop]);
+
+  if (!isDesktop) return <Outlet />;
+
+  return (
+    <div className="device-frame-stage">
+      <div className="device-frame-scale">
+        <div className="device-frame-scale-inner">
+          <DeviceFrameset device="iPad Mini" color="black">
+            <div className="device-app-root">
+              <Outlet />
+            </div>
+          </DeviceFrameset>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ProtectedRoute, GuestRoute, RoleRedirect } from './components/layout/ProtectedRoute.jsx';
+import DeviceFrameLayout from './components/layout/DeviceFrameLayout.jsx';
 
 import Login from './pages/auth/Login.jsx';
 import Register from './pages/auth/Register.jsx';
@@ -41,33 +42,35 @@ export default function App() {
         <Routes>
           <Route path="/" element={<RoleRedirect />} />
 
-          <Route element={<GuestRoute />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Route>
+          <Route element={<DeviceFrameLayout />}>
+            <Route element={<GuestRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
 
-          <Route path="/entry" element={<VisitorEntry />} />
-          <Route path="/entry/success" element={<EntrySuccess />} />
-          <Route path="/report" element={<PublicIssueReport />} />
-          <Route path="/user/home" element={<UserDashboard />} />
-          <Route path="/user/search" element={<Navigate to="/user/home" replace />} />
-          <Route path="/user/beach-rules" element={<BeachRules />} />
-          <Route path="/user/report" element={<UserReportIssue />} />
+            <Route path="/entry" element={<VisitorEntry />} />
+            <Route path="/entry/success" element={<EntrySuccess />} />
+            <Route path="/report" element={<PublicIssueReport />} />
+            <Route path="/user/home" element={<UserDashboard />} />
+            <Route path="/user/search" element={<Navigate to="/user/home" replace />} />
+            <Route path="/user/beach-rules" element={<BeachRules />} />
+            <Route path="/user/report" element={<UserReportIssue />} />
 
-          <Route element={<ProtectedRoute roles={['USER']} />}>
-            <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
-            <Route path="/user/my-pass" element={<MyPass />} />
-            <Route path="/user/my-visits" element={<MyVisits />} />
-            <Route path="/user/profile" element={<UserProfile />} />
-          </Route>
+            <Route element={<ProtectedRoute roles={['USER']} />}>
+              <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
+              <Route path="/user/my-pass" element={<MyPass />} />
+              <Route path="/user/my-visits" element={<MyVisits />} />
+              <Route path="/user/profile" element={<UserProfile />} />
+            </Route>
 
-          <Route element={<ProtectedRoute roles={['ADMIN']} />}>
-            <Route path="/admin/scan" element={<Scanner />} />
-            <Route path="/admin/search" element={<AdminResidentSearch />} />
-            <Route path="/admin/recent" element={<RecentEntries />} />
-            <Route path="/admin/reports" element={<AdminReports />} />
-            <Route path="/admin/profile" element={<AdminProfile />} />
-            <Route path="/admin" element={<Navigate to="/admin/recent" replace />} />
+            <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+              <Route path="/admin/scan" element={<Scanner />} />
+              <Route path="/admin/search" element={<AdminResidentSearch />} />
+              <Route path="/admin/recent" element={<RecentEntries />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/profile" element={<AdminProfile />} />
+              <Route path="/admin" element={<Navigate to="/admin/recent" replace />} />
+            </Route>
           </Route>
 
           <Route element={<ProtectedRoute roles={['MASTER_ADMIN']} />}>

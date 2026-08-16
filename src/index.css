@@ -25,3 +25,51 @@ span {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+html.device-frame-active,
+html.device-frame-active body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.device-frame-stage {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  padding: 24px;
+}
+
+.device-frame-scale {
+  --frame-w: 626px;
+  --frame-h: 948px;
+  --scale: min(1, (100vw - 48px) / 626px, (100dvh - 48px) / 948px);
+  width: calc(var(--frame-w) * var(--scale));
+  height: calc(var(--frame-h) * var(--scale));
+  flex-shrink: 0;
+}
+
+.device-frame-scale-inner {
+  display: flex;
+  width: var(--frame-w);
+  height: var(--frame-h);
+  align-items: center;
+  justify-content: center;
+  transform: scale(var(--scale));
+  transform-origin: top left;
+}
+
+.device-app-root {
+  height: 100%;
+  overflow: auto;
+  position: relative;
+  transform: translateZ(0);
+  background: #f3f4f6;
+}
+
+.device-app-root .min-h-screen {
+  min-height: 100%;
+}
