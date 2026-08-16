@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { DeviceFrameset } from 'react-device-frameset';
 import 'react-device-frameset/styles/marvel-devices.min.css';
 
-const DESKTOP_QUERY = '(min-width: 1025px)';
+const DESKTOP_QUERY = '(min-width: 768px)';
 
 function useDesktopFrame() {
   const [isDesktop, setIsDesktop] = useState(() =>
