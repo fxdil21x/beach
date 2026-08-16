@@ -19,7 +19,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(form);
-      navigate('/user/home');
+      navigate('/master/dashboard', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || t('common.error'));
     } finally {

@@ -5,9 +5,7 @@ export const getAnalytics = () => api.get('/master/analytics');
 export const importResidents = (file) => {
   const formData = new FormData();
   formData.append('file', file);
-  return api.post('/master/import-residents', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return api.post('/master/import-residents', formData);
 };
 export const getResidentRecords = (params) => api.get('/master/resident-records', { params });
 export const getRegisteredResidents = (params) => api.get('/master/registered-residents', { params });

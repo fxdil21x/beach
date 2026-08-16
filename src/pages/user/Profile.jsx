@@ -1,19 +1,52 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Button from '../../components/ui/Button.jsx';
+import PhotoPicker from '../../components/resident/PhotoPicker.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { userNav } from '../../config/navigation.js';
+import * as passApi from '../../api/residentPassApi.js';
 
 export default function UserProfile() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [pass, setPass] = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [photoSuccess, setPhotoSuccess] = useState('');
+
+  useEffect(() => {
+    if (!user?.residentPassId) return undefined;
+    passApi.getMyPass()
+      .then(({ data }) => setPass(data.data.pass))
+      .catch(() => setPass(null));
+    return undefined;
+  }, [user?.residentPassId]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleUploadPhoto = async (file) => {
+    if (!file) return;
+    setPhotoUploading(true);
+    setPhotoError('');
+    setPhotoSuccess('');
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const { data } = await passApi.updateMyPhoto(formData);
+      setPass(data.data.pass);
+      setPhotoSuccess(t('resident.photoUpdated'));
+    } catch (err) {
+      setPhotoError(err.response?.data?.message || t('common.error'));
+    } finally {
+      setPhotoUploading(false);
+    }
   };
 
   return (
@@ -25,6 +58,18 @@ export default function UserProfile() {
           <p className="text-gray-600">@{user?.username}</p>
           <p className="mt-2 text-sm text-gray-500">{user?.role}</p>
         </div>
+        {pass && (
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <PhotoPicker
+              existingUrl={pass.photoUrl}
+              onSelect={handleUploadPhoto}
+              uploading={photoUploading}
+              error={photoError}
+              success={photoSuccess}
+              label={pass.photoUrl ? t('resident.changePhoto') : t('resident.addPhoto')}
+            />
+          </div>
+        )}
         <Button variant="secondary" onClick={handleLogout} className="w-full py-4">{t('common.logout')}</Button>
       </main>
       <BottomNavigation items={userNav} />

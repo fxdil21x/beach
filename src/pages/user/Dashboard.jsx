@@ -15,6 +15,7 @@ import * as passApi from '../../api/residentPassApi.js';
 export default function UserDashboard() {
   const { t } = useTranslation();
   const { user, setSession, logout } = useAuth();
+  const isResident = Boolean(user?.residentPassId);
   const [tab, setTab] = useState('register');
   const [query, setQuery] = useState('');
   const [records, setRecords] = useState([]);
@@ -26,9 +27,12 @@ export default function UserDashboard() {
   const [pass, setPass] = useState(null);
   const [qrToken, setQrToken] = useState('');
   const [credentials, setCredentials] = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [photoSuccess, setPhotoSuccess] = useState('');
 
   const loadPass = useCallback(async () => {
-    if (!user) {
+    if (!user?.residentPassId) {
       setPass(null);
       setQrToken('');
       return;
@@ -47,7 +51,7 @@ export default function UserDashboard() {
       setPass(null);
       setQrToken('');
     }
-  }, [user]);
+  }, [user?.residentPassId]);
 
   useEffect(() => {
     loadPass();
@@ -143,7 +147,25 @@ export default function UserDashboard() {
     }
   };
 
-  const showPass = user && pass;
+  const handleUploadPhoto = async (file) => {
+    if (!file) return;
+    setPhotoUploading(true);
+    setPhotoError('');
+    setPhotoSuccess('');
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const { data } = await passApi.updateMyPhoto(formData);
+      setPass(data.data.pass);
+      setPhotoSuccess(t('resident.photoUpdated'));
+    } catch (err) {
+      setPhotoError(err.response?.data?.message || t('common.error'));
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const showPass = isResident && pass;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -152,7 +174,7 @@ export default function UserDashboard() {
         showLanguage
         action={
           <div className="flex max-w-[11rem] flex-wrap items-center justify-end gap-1.5 sm:max-w-none">
-            {user && (
+            {isResident && (
               <Button variant="secondary" onClick={logout} className="px-2.5 py-2 text-xs sm:px-3 sm:text-sm">
                 {t('common.logout')}
               </Button>
@@ -180,7 +202,15 @@ export default function UserDashboard() {
         </div>
 
         {showPass ? (
-          <ResidentQrPanel pass={pass} qrToken={qrToken} credentials={credentials} />
+          <ResidentQrPanel
+            pass={pass}
+            qrToken={qrToken}
+            credentials={credentials}
+            onUploadPhoto={handleUploadPhoto}
+            photoUploading={photoUploading}
+            photoError={photoError}
+            photoSuccess={photoSuccess}
+          />
         ) : (
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <div className="mb-5 flex rounded-xl bg-gray-100 p-1">

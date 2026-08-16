@@ -20,8 +20,7 @@ export default function Login() {
     try {
       const user = await login(form.username, form.password);
       if (user.role === 'ADMIN') navigate('/admin/recent');
-      else if (user.role === 'MASTER_ADMIN') navigate('/master/dashboard');
-      else navigate('/user/home');
+      else navigate('/master/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || t('common.error'));
     } finally {

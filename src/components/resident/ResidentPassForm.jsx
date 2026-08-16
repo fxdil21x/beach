@@ -2,20 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Input from '../ui/Input.jsx';
 import Button from '../ui/Button.jsx';
+import PhotoPicker from './PhotoPicker.jsx';
 
 export default function ResidentPassForm({ resident, onSubmit, loading, error }) {
   const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [photo, setPhoto] = useState(null);
-  const [preview, setPreview] = useState(null);
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPhoto(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -47,19 +39,7 @@ export default function ResidentPassForm({ resident, onSubmit, loading, error })
           readOnly
           className="cursor-default bg-gray-50 text-gray-700"
         />
-        <div>
-          <p className="mb-2 text-sm font-medium text-gray-700">{t('resident.photoOptional')}</p>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/jpg"
-            capture="user"
-            onChange={handlePhotoChange}
-            className="w-full text-sm"
-          />
-          {preview && (
-            <img src={preview} alt="Preview" className="mt-3 h-40 w-full rounded-xl object-cover" />
-          )}
-        </div>
+        <PhotoPicker onSelect={setPhoto} />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" disabled={loading} className="w-full py-3.5 text-base sm:py-4 sm:text-lg">
           {loading ? t('common.loading') : t('resident.createPass')}

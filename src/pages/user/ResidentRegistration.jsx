@@ -5,6 +5,7 @@ import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Button from '../../components/ui/Button.jsx';
+import PhotoPicker from '../../components/resident/PhotoPicker.jsx';
 import { userNav } from '../../config/navigation.js';
 import * as passApi from '../../api/residentPassApi.js';
 
@@ -15,7 +16,6 @@ export default function ResidentRegistration() {
   const resident = state?.resident;
   const [phone, setPhone] = useState('');
   const [photo, setPhoto] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,14 +23,6 @@ export default function ResidentRegistration() {
     navigate('/user/search');
     return null;
   }
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPhoto(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,11 +52,7 @@ export default function ResidentRegistration() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input label={t('resident.phone')} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-          <div>
-            <p className="mb-2 text-sm font-medium text-gray-700">{t('resident.photoOptional')}</p>
-            <input type="file" accept="image/jpeg,image/png,image/jpg" capture="user" onChange={handlePhotoChange} className="w-full" />
-            {preview && <img src={preview} alt="Preview" className="mt-3 h-40 w-full rounded-xl object-cover" />}
-          </div>
+          <PhotoPicker onSelect={setPhoto} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" disabled={loading} className="w-full py-4 text-lg">
             {loading ? t('common.loading') : t('resident.createPass')}
