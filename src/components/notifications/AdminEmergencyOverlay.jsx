@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Siren, ShieldAlert, PhoneCall, CheckCircle2 } from 'lucide-react';
+import { Siren, ShieldAlert, PhoneCall, CheckCircle2, Volume2 } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 
 export default function AdminEmergencyOverlay() {
-  const { activeEmergencies, claimEmergency, retryAudioUnlock } = useEmergency();
+  const { activeEmergencies, claimEmergency, autoplayBlocked, retryAudioUnlock } = useEmergency();
 
   const emergencyList = Object.values(activeEmergencies);
 
-  // Automatically trigger audio unlock as soon as popup modal appears
+  // Automatically trigger audio unlock as soon as popup modal appears or refreshes
   useEffect(() => {
     if (emergencyList.length > 0) {
       retryAudioUnlock();
@@ -44,6 +44,26 @@ export default function AdminEmergencyOverlay() {
 
           <ShieldAlert className="h-8 w-8 text-red-200 opacity-80" />
         </div>
+
+        {/* Autoplay blocked banner after browser refresh */}
+        {autoplayBlocked && (
+          <div
+            onClick={retryAudioUnlock}
+            className="bg-amber-500 hover:bg-amber-400 px-6 py-3 text-slate-950 flex items-center justify-between gap-2 shadow-inner cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-2 text-xs font-black">
+              <Volume2 className="h-4 w-4 shrink-0 animate-bounce" />
+              <span>Page refreshed! Tap anywhere to activate siren alarm sound.</span>
+            </div>
+            <button
+              type="button"
+              onClick={retryAudioUnlock}
+              className="rounded-xl bg-slate-950 px-3 py-1.5 text-xs font-black text-white hover:bg-slate-800 transition-colors shrink-0"
+            >
+              Enable Sound 🔊
+            </button>
+          </div>
+        )}
 
         {/* Emergency Cards List */}
         <div className="max-h-[60vh] overflow-y-auto p-5 space-y-4">
