@@ -1,14 +1,24 @@
 import { createPortal } from 'react-dom';
-import { Siren, Volume2, ShieldAlert, PhoneCall, CheckCircle2 } from 'lucide-react';
+import { Siren, ShieldAlert, PhoneCall, CheckCircle2 } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 import Button from '../ui/Button.jsx';
 
 export default function AdminEmergencyOverlay() {
-  const { activeEmergencies, claimEmergency, autoplayBlocked, retryAudioUnlock } = useEmergency();
+  const { activeEmergencies, claimEmergency } = useEmergency();
 
   const emergencyList = Object.values(activeEmergencies);
 
   if (emergencyList.length === 0) return null;
+
+  const handleConnect = (item) => {
+    // 1. Claim emergency to stop sound & vibration across all admins
+    claimEmergency(item.emergencyId);
+
+    // 2. Automatically initiate phone call connection if user phone number exists
+    if (item.userPhone) {
+      window.location.href = `tel:${item.userPhone}`;
+    }
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-red-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
@@ -33,23 +43,6 @@ export default function AdminEmergencyOverlay() {
           <ShieldAlert className="h-8 w-8 text-red-200 opacity-80" />
         </div>
 
-        {/* Autoplay blocked banner */}
-        {autoplayBlocked && (
-          <div className="bg-amber-500 px-6 py-3 text-slate-950 flex items-center justify-between gap-2 shadow-inner">
-            <div className="flex items-center gap-2 text-xs font-bold">
-              <Volume2 className="h-4 w-4 shrink-0 animate-bounce" />
-              <span>Browser audio autoplay restricted! Tap to enable siren.</span>
-            </div>
-            <button
-              type="button"
-              onClick={retryAudioUnlock}
-              className="rounded-xl bg-slate-950 px-3 py-1.5 text-xs font-black text-white hover:bg-slate-800 transition-colors shrink-0"
-            >
-              Enable Sound 🔊
-            </button>
-          </div>
-        )}
-
         {/* Emergency Cards List */}
         <div className="max-h-[60vh] overflow-y-auto p-5 space-y-4">
           {emergencyList.map((item) => (
@@ -67,11 +60,13 @@ export default function AdminEmergencyOverlay() {
                     {item.userName}
                   </h3>
 
-                  {item.userPhone && (
-                    <p className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">
-                      <PhoneCall className="h-3.5 w-3.5 text-emerald-400" />
+                  {item.userPhone ? (
+                    <p className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                      <PhoneCall className="h-3.5 w-3.5" />
                       <span>{item.userPhone}</span>
                     </p>
+                  ) : (
+                    <p className="text-[11px] text-slate-400">No direct phone provided</p>
                   )}
 
                   <p className="text-xs text-slate-400">
@@ -84,11 +79,11 @@ export default function AdminEmergencyOverlay() {
                 </div>
 
                 <Button
-                  onClick={() => claimEmergency(item.emergencyId)}
+                  onClick={() => handleConnect(item)}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-600/30 shrink-0 flex items-center gap-1.5 cursor-pointer"
                 >
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Connect</span>
+                  <PhoneCall className="h-4 w-4" />
+                  <span>Connect & Call</span>
                 </Button>
               </div>
             </div>
@@ -98,7 +93,7 @@ export default function AdminEmergencyOverlay() {
         {/* Footer info */}
         <div className="border-t border-slate-800 bg-slate-950 px-6 py-3 text-center">
           <p className="text-[11px] font-medium text-slate-400">
-            Clicking <strong className="text-emerald-400">Connect</strong> will stop sound & vibration for all admins for that emergency.
+            Clicking <strong className="text-emerald-400">Connect & Call</strong> will stop alarm sound/vibration and initiate phone call.
           </p>
         </div>
       </div>
