@@ -271,6 +271,9 @@ export function EmergencyProvider({ children }) {
 
   // Admin Action: Claim / Connect Emergency
   const claimEmergency = async (emergencyId) => {
+    // Touch feedback vibration for admin
+    triggerUserFeedbackVibration();
+
     // Stop sound & vibration locally for this emergency immediately
     stopAlarmSound(emergencyId);
 
