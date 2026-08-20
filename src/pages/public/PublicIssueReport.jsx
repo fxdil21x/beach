@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Camera, MapPin, TriangleAlert, X } from 'lucide-react';
 import LanguageSwitcher from '../../components/language/LanguageSwitcher.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select.jsx';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/Select.jsx';
 import { createReport } from '../../api/reportApi.js';
 
 const CATEGORIES = [

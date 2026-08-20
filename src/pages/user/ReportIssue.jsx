@@ -5,7 +5,7 @@ import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Input from '../../components/ui/Input.jsx';
 import ImageModal from '../../components/ui/ImageModal.jsx';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select.jsx';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/Select.jsx';
 import Button from '../../components/ui/Button.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import { ReportsSkeleton } from '../../components/ui/Skeleton.jsx';

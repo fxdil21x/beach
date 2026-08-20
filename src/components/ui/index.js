@@ -1,7 +1,7 @@
 export { default as Button } from './Button.jsx';
 export { default as Input } from './Input.jsx';
 export { default as SimpleSelect } from './Select.jsx';
-export * from './select.jsx';
+export * from './Select.jsx';
 export * from './tabs.jsx';
 export * from './pagination.jsx';
 export * from './alert.jsx';

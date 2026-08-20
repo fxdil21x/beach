@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-} from '../ui/select.jsx';
+} from '../ui/Select.jsx';
 
 const LANGUAGES = [
   { code: 'en', short: 'EN', name: 'English' },
