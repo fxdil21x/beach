@@ -1,4 +1,4 @@
-import alarmSoundUrl from '../assets/sound/alarm.mp4';
+import alarmSoundUrl from '../assets/sound/alarm.wav';
 
 let globalAudioCtx = null;
 
@@ -15,7 +15,7 @@ function getAudioContext() {
   return globalAudioCtx;
 }
 
-// Global unlock listener on first touch/click
+// Global audio unlock listener on first gesture
 if (typeof window !== 'undefined') {
   const unlockAudio = () => {
     const ctx = getAudioContext();
@@ -34,8 +34,7 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Robust Emergency Alarm Sound Player.
- * Uses alarm.mp4 file with Web Audio API siren fallback so sound plays reliably on all browsers.
+ * Instant Emergency Alarm Sound Player (WAV 0ms latency + Web Audio API fallback).
  */
 export function createEmergencyAlarmSound() {
   let isPlaying = false;
@@ -69,20 +68,21 @@ export function createEmergencyAlarmSound() {
       if (isPlaying) return Promise.resolve();
       isPlaying = true;
 
-      // Primary attempt: HTML5 Audio Element with alarm.mp4
+      // 1. Primary: Instant WAV Audio Element
       try {
         if (!audioElem) {
           audioElem = new Audio(alarmSoundUrl);
           audioElem.loop = loop;
           audioElem.volume = 1.0;
+          audioElem.preload = 'auto';
         }
         await audioElem.play();
         return Promise.resolve();
-      } catch (mp4Err) {
-        console.warn('[soundUtils] HTML5 Audio play blocked/failed, switching to Web Audio synth fallback:', mp4Err);
+      } catch (wavErr) {
+        console.warn('[soundUtils] WAV audio play blocked, starting Web Audio synth:', wavErr);
       }
 
-      // Secondary fallback: Web Audio API Synthesized Siren
+      // 2. Secondary: Instant Web Audio Siren Oscillators
       try {
         const ctx = getAudioContext();
         if (!ctx) return Promise.reject(new Error('Audio not supported'));
