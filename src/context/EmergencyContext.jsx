@@ -233,8 +233,8 @@ export function EmergencyProvider({ children }) {
     const payload = {
       emergencyId,
       userId: user?.id || user?._id || 'ANONYMOUS',
-      userName: user?.name || user?.phone || 'Beach Visitor',
-      userPhone: user?.phone || '',
+      userName: user?.name || user?.phone || user?.username || 'Beach Visitor',
+      userPhone: user?.phone || user?.username || '',
       location: locationDetails || 'Muzhappilangad Beach Area',
       timestamp: new Date().toISOString(),
     };
