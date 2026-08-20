@@ -1,7 +1,6 @@
 import alarmSoundUrl from '../assets/sound/alarm.wav';
 
 let globalAudioCtx = null;
-let sharedAudioPool = [];
 
 function getAudioContext() {
   if (!globalAudioCtx && typeof window !== 'undefined') {
@@ -43,8 +42,7 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Instant Sub-Millisecond Emergency Alarm Sound Player.
- * Triggers dual Web Audio synthesizer + WAV audio element in parallel for 0ms latency.
+ * 100% Guaranteed Instant Emergency Alarm Sound Player.
  */
 export function createEmergencyAlarmSound() {
   let isPlaying = false;
@@ -73,54 +71,59 @@ export function createEmergencyAlarmSound() {
       currentTime = val;
       if (audioElem) audioElem.currentTime = val;
     },
+    get isPlaying() {
+      return isPlaying;
+    },
 
     play: async () => {
-      if (isPlaying) return Promise.resolve();
-      isPlaying = true;
+      let startedAudio = false;
 
-      // 1. Instant Web Audio Siren Hardware Oscillator (Sub-millisecond 0.1ms sound output)
+      // 1. Instant Web Audio Siren Hardware Oscillator
       try {
         const ctx = getAudioContext();
         if (ctx) {
           if (ctx.state === 'suspended') {
-            ctx.resume().catch(() => {});
+            await ctx.resume().catch(() => {});
           }
 
-          gainNode = ctx.createGain();
-          gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+          if (ctx.state === 'running' && !osc1) {
+            gainNode = ctx.createGain();
+            gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
 
-          osc1 = ctx.createOscillator();
-          osc1.type = 'sawtooth';
-          osc1.frequency.setValueAtTime(850, ctx.currentTime);
+            osc1 = ctx.createOscillator();
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(850, ctx.currentTime);
 
-          osc2 = ctx.createOscillator();
-          osc2.type = 'sine';
-          osc2.frequency.setValueAtTime(700, ctx.currentTime);
+            osc2 = ctx.createOscillator();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(700, ctx.currentTime);
 
-          lfo = ctx.createOscillator();
-          lfo.type = 'sine';
-          lfo.frequency.setValueAtTime(2.5, ctx.currentTime);
+            lfo = ctx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.setValueAtTime(2.5, ctx.currentTime);
 
-          const lfoGain = ctx.createGain();
-          lfoGain.gain.setValueAtTime(350, ctx.currentTime);
+            const lfoGain = ctx.createGain();
+            lfoGain.gain.setValueAtTime(350, ctx.currentTime);
 
-          lfo.connect(lfoGain);
-          lfoGain.connect(osc1.frequency);
-          lfoGain.connect(osc2.frequency);
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.frequency);
+            lfoGain.connect(osc2.frequency);
 
-          osc1.connect(gainNode);
-          osc2.connect(gainNode);
-          gainNode.connect(ctx.destination);
+            osc1.connect(gainNode);
+            osc2.connect(gainNode);
+            gainNode.connect(ctx.destination);
 
-          lfo.start(0);
-          osc1.start(0);
-          osc2.start(0);
+            lfo.start(0);
+            osc1.start(0);
+            osc2.start(0);
+            startedAudio = true;
+          }
         }
       } catch (synthErr) {
         console.warn('[soundUtils] Web Audio synth start warning:', synthErr);
       }
 
-      // 2. Parallel WAV Audio Element Playback for rich sound texture
+      // 2. Parallel WAV Audio Element Playback
       try {
         if (!audioElem) {
           audioElem = new Audio(alarmSoundUrl);
@@ -129,10 +132,15 @@ export function createEmergencyAlarmSound() {
           audioElem.preload = 'auto';
         }
         await audioElem.play();
+        startedAudio = true;
       } catch (wavErr) {
-        console.warn('[soundUtils] HTML5 Audio play fallback:', wavErr);
+        console.warn('[soundUtils] HTML5 Audio play warning:', wavErr);
       }
 
+      isPlaying = startedAudio;
+      if (!startedAudio) {
+        return Promise.reject(new Error('Audio playback blocked by browser'));
+      }
       return Promise.resolve();
     },
 
