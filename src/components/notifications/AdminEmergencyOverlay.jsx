@@ -1,7 +1,6 @@
 import { createPortal } from 'react-dom';
 import { Siren, ShieldAlert, PhoneCall, CheckCircle2 } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
-import Button from '../ui/Button.jsx';
 
 export default function AdminEmergencyOverlay() {
   const { activeEmergencies, claimEmergency } = useEmergency();
@@ -9,16 +8,6 @@ export default function AdminEmergencyOverlay() {
   const emergencyList = Object.values(activeEmergencies);
 
   if (emergencyList.length === 0) return null;
-
-  const handleConnect = (item) => {
-    // 1. Claim emergency to stop sound & vibration across all admins
-    claimEmergency(item.emergencyId);
-
-    // 2. Automatically initiate phone call connection if user phone number exists
-    if (item.userPhone) {
-      window.location.href = `tel:${item.userPhone}`;
-    }
-  };
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-red-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
@@ -45,55 +34,75 @@ export default function AdminEmergencyOverlay() {
 
         {/* Emergency Cards List */}
         <div className="max-h-[60vh] overflow-y-auto p-5 space-y-4">
-          {emergencyList.map((item) => (
-            <div
-              key={item.emergencyId}
-              className="relative overflow-hidden rounded-2xl border border-red-500/40 bg-slate-800/90 p-4 shadow-lg transition-all"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <span className="inline-block rounded-md bg-red-500/20 border border-red-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-red-400">
-                    ID: {item.emergencyId}
-                  </span>
+          {emergencyList.map((item) => {
+            const hasPhone = Boolean(item.userPhone);
+            const telUri = hasPhone ? `tel:${item.userPhone}` : null;
 
-                  <h3 className="text-base font-bold text-white">
-                    {item.userName}
-                  </h3>
+            return (
+              <div
+                key={item.emergencyId}
+                className="relative overflow-hidden rounded-2xl border border-red-500/40 bg-slate-800/90 p-4 shadow-lg transition-all space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <span className="inline-block rounded-md bg-red-500/20 border border-red-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-red-400">
+                      ID: {item.emergencyId}
+                    </span>
 
-                  {item.userPhone ? (
-                    <p className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
-                      <PhoneCall className="h-3.5 w-3.5" />
-                      <span>{item.userPhone}</span>
+                    <h3 className="text-base font-bold text-white">
+                      {item.userName}
+                    </h3>
+
+                    {hasPhone ? (
+                      <p className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                        <PhoneCall className="h-3.5 w-3.5" />
+                        <span>Phone: {item.userPhone}</span>
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-400">No phone number provided</p>
+                    )}
+
+                    <p className="text-xs text-slate-400">
+                      📍 Location: <strong className="text-slate-200">{item.location}</strong>
                     </p>
-                  ) : (
-                    <p className="text-[11px] text-slate-400">No direct phone provided</p>
-                  )}
 
-                  <p className="text-xs text-slate-400">
-                    📍 Location: <strong className="text-slate-200">{item.location}</strong>
-                  </p>
-
-                  <p className="text-[11px] text-slate-500">
-                    ⏰ Time: {new Date(item.timestamp).toLocaleTimeString()}
-                  </p>
+                    <p className="text-[11px] text-slate-500">
+                      ⏰ Time: {new Date(item.timestamp).toLocaleTimeString()}
+                    </p>
+                  </div>
                 </div>
 
-                <Button
-                  onClick={() => handleConnect(item)}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-600/30 shrink-0 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <PhoneCall className="h-4 w-4" />
-                  <span>Connect & Call</span>
-                </Button>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-700/60">
+                  {hasPhone ? (
+                    <a
+                      href={telUri}
+                      onClick={() => claimEmergency(item.emergencyId)}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer text-center"
+                    >
+                      <PhoneCall className="h-4 w-4" />
+                      <span>CONNECT & CALL USER ({item.userPhone})</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => claimEmergency(item.emergencyId)}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>CLAIM & RESPOND TO EMERGENCY</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer info */}
         <div className="border-t border-slate-800 bg-slate-950 px-6 py-3 text-center">
           <p className="text-[11px] font-medium text-slate-400">
-            Clicking <strong className="text-emerald-400">Connect & Call</strong> will stop alarm sound/vibration and initiate phone call.
+            Tapping <strong className="text-emerald-400">CONNECT & CALL</strong> dials the user's phone directly and stops the alarm for all admins.
           </p>
         </div>
       </div>
