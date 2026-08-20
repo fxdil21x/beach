@@ -13,7 +13,7 @@ export function FeatureProvider({ children }) {
 
   const fetchFeatures = useCallback(async () => {
     try {
-      const { data } = await axios.get('/api/public/features');
+      const { data } = await axios.get('/public/features');
       if (data.data?.settings) {
         setFeatureSettings(data.data.settings);
       }
@@ -29,10 +29,7 @@ export function FeatureProvider({ children }) {
   }, [fetchFeatures]);
 
   const updateFeatures = async (newSettings) => {
-    const token = localStorage.getItem('beach_app_token');
-    const { data } = await axios.put('/api/master/features', newSettings, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const { data } = await axios.put('/master/features', newSettings);
     if (data.data?.settings) {
       setFeatureSettings(data.data.settings);
     }
