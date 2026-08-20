@@ -34,8 +34,12 @@ export function EmergencyProvider({ children }) {
   // Connect socket
   useEffect(() => {
     const s = io(SOCKET_SERVER_URL, {
+      path: '/api/socket.io',
       withCredentials: true,
       autoConnect: true,
+      reconnectionAttempts: 3,
+      timeout: 5000,
+      transports: ['websocket', 'polling'],
     });
 
     setSocket(s);
@@ -48,6 +52,11 @@ export function EmergencyProvider({ children }) {
       if (user?.id || user?._id) {
         s.emit('join:user', user.id || user._id);
       }
+    });
+
+    s.on('connect_error', (err) => {
+      console.warn('[EmergencyContext] Socket connection unavailable (serverless / 404), stopping socket retries:', err.message);
+      s.disconnect();
     });
 
     return () => {
