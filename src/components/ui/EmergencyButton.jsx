@@ -7,7 +7,7 @@ import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 export default function EmergencyButton({ variant = 'banner' }) {
   const { user } = useAuth();
   const { featureSettings } = useFeatureSettings();
-  const { triggerEmergency, userEmergencyState, setUserEmergencyState } = useEmergency();
+  const { triggerEmergency, userEmergencyState, cancelUserEmergency } = useEmergency();
   const [loading, setLoading] = useState(false);
 
   // Strictly ONLY show for logged-in users AND when emergencySosEnabled toggle is true
@@ -25,7 +25,7 @@ export default function EmergencyButton({ variant = 'banner' }) {
   };
 
   const handleClearState = () => {
-    setUserEmergencyState(null);
+    cancelUserEmergency(userEmergencyState?.emergencyId);
   };
 
   if (userEmergencyState) {
@@ -48,8 +48,8 @@ export default function EmergencyButton({ variant = 'banner' }) {
           <button
             type="button"
             onClick={handleClearState}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-200 text-red-800 hover:bg-red-300 transition-colors"
-            title="Dismiss notification"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-200 text-red-800 hover:bg-red-300 transition-colors cursor-pointer"
+            title="Cancel & Dismiss Emergency Alert"
           >
             <X className="h-4 w-4" />
           </button>

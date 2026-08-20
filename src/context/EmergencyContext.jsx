@@ -315,6 +315,35 @@ export function EmergencyProvider({ children }) {
     }
   };
 
+  // User Action: Cancel / Clear Emergency
+  const cancelUserEmergency = async (emergencyId) => {
+    const targetId = emergencyId || userEmergencyState?.emergencyId;
+
+    // Reset user emergency state immediately
+    setUserEmergencyState(null);
+
+    if (!targetId) return;
+
+    // Emit socket cancel event
+    if (socket && socket.connected) {
+      socket.emit('emergency:cancel', { emergencyId: targetId });
+    }
+
+    // Fallback REST cancel request
+    try {
+      const token = localStorage.getItem('beach_app_token');
+      await fetch(`${SOCKET_SERVER_URL}/api/emergency/cancel/${targetId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+    } catch {
+      // socket handled it
+    }
+  };
+
   // Manually unlock audio if autoplay was blocked
   const retryAudioUnlock = () => {
     audioMapRef.current.forEach((alarmAudio) => {
@@ -330,6 +359,7 @@ export function EmergencyProvider({ children }) {
         autoplayBlocked,
         triggerEmergency,
         claimEmergency,
+        cancelUserEmergency,
         retryAudioUnlock,
         setUserEmergencyState,
       }}
