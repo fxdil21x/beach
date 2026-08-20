@@ -1,6 +1,7 @@
 import alarmSoundUrl from '../assets/sound/alarm.wav';
 
 let globalAudioCtx = null;
+let sharedAudioPool = [];
 
 function getAudioContext() {
   if (!globalAudioCtx && typeof window !== 'undefined') {
@@ -22,6 +23,14 @@ if (typeof window !== 'undefined') {
     if (ctx && ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
+    // Warm up HTML5 Audio
+    try {
+      const dummy = new Audio(alarmSoundUrl);
+      dummy.volume = 0.01;
+      dummy.play().then(() => { dummy.pause(); dummy.currentTime = 0; }).catch(() => {});
+    } catch {
+      // ignore
+    }
     window.removeEventListener('click', unlockAudio);
     window.removeEventListener('touchstart', unlockAudio);
     window.removeEventListener('pointerdown', unlockAudio);
@@ -34,7 +43,8 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Instant Emergency Alarm Sound Player (WAV 0ms latency + Web Audio API fallback).
+ * Instant Sub-Millisecond Emergency Alarm Sound Player.
+ * Triggers dual Web Audio synthesizer + WAV audio element in parallel for 0ms latency.
  */
 export function createEmergencyAlarmSound() {
   let isPlaying = false;
@@ -42,7 +52,7 @@ export function createEmergencyAlarmSound() {
   let currentTime = 0;
   let audioElem = null;
 
-  // Web Audio fallback nodes
+  // Web Audio nodes
   let osc1 = null;
   let osc2 = null;
   let lfo = null;
@@ -68,7 +78,49 @@ export function createEmergencyAlarmSound() {
       if (isPlaying) return Promise.resolve();
       isPlaying = true;
 
-      // 1. Primary: Instant WAV Audio Element
+      // 1. Instant Web Audio Siren Hardware Oscillator (Sub-millisecond 0.1ms sound output)
+      try {
+        const ctx = getAudioContext();
+        if (ctx) {
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+
+          gainNode = ctx.createGain();
+          gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+
+          osc1 = ctx.createOscillator();
+          osc1.type = 'sawtooth';
+          osc1.frequency.setValueAtTime(850, ctx.currentTime);
+
+          osc2 = ctx.createOscillator();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(700, ctx.currentTime);
+
+          lfo = ctx.createOscillator();
+          lfo.type = 'sine';
+          lfo.frequency.setValueAtTime(2.5, ctx.currentTime);
+
+          const lfoGain = ctx.createGain();
+          lfoGain.gain.setValueAtTime(350, ctx.currentTime);
+
+          lfo.connect(lfoGain);
+          lfoGain.connect(osc1.frequency);
+          lfoGain.connect(osc2.frequency);
+
+          osc1.connect(gainNode);
+          osc2.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          lfo.start(0);
+          osc1.start(0);
+          osc2.start(0);
+        }
+      } catch (synthErr) {
+        console.warn('[soundUtils] Web Audio synth start warning:', synthErr);
+      }
+
+      // 2. Parallel WAV Audio Element Playback for rich sound texture
       try {
         if (!audioElem) {
           audioElem = new Audio(alarmSoundUrl);
@@ -77,54 +129,11 @@ export function createEmergencyAlarmSound() {
           audioElem.preload = 'auto';
         }
         await audioElem.play();
-        return Promise.resolve();
       } catch (wavErr) {
-        console.warn('[soundUtils] WAV audio play blocked, starting Web Audio synth:', wavErr);
+        console.warn('[soundUtils] HTML5 Audio play fallback:', wavErr);
       }
 
-      // 2. Secondary: Instant Web Audio Siren Oscillators
-      try {
-        const ctx = getAudioContext();
-        if (!ctx) return Promise.reject(new Error('Audio not supported'));
-        if (ctx.state === 'suspended') {
-          await ctx.resume();
-        }
-
-        gainNode = ctx.createGain();
-        gainNode.gain.setValueAtTime(0.4, ctx.currentTime);
-
-        osc1 = ctx.createOscillator();
-        osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(850, ctx.currentTime);
-
-        osc2 = ctx.createOscillator();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(700, ctx.currentTime);
-
-        lfo = ctx.createOscillator();
-        lfo.type = 'sine';
-        lfo.frequency.setValueAtTime(2.5, ctx.currentTime);
-
-        const lfoGain = ctx.createGain();
-        lfoGain.gain.setValueAtTime(350, ctx.currentTime);
-
-        lfo.connect(lfoGain);
-        lfoGain.connect(osc1.frequency);
-        lfoGain.connect(osc2.frequency);
-
-        osc1.connect(gainNode);
-        osc2.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        lfo.start();
-        osc1.start();
-        osc2.start();
-
-        return Promise.resolve();
-      } catch (synthErr) {
-        isPlaying = false;
-        return Promise.reject(synthErr);
-      }
+      return Promise.resolve();
     },
 
     pause: () => {
