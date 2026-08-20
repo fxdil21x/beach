@@ -10,7 +10,9 @@ import ResidentSearchPanel from '../../components/resident/ResidentSearchPanel.j
 import ResidentPassForm from '../../components/resident/ResidentPassForm.jsx';
 import ResidentPhoneLoginForm from '../../components/resident/ResidentPhoneLoginForm.jsx';
 import ResidentQrPanel from '../../components/resident/ResidentQrPanel.jsx';
+import EmergencyButton from '../../components/ui/EmergencyButton.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 import { userNav } from '../../config/navigation.js';
 import * as publicApi from '../../api/publicApi.js';
 import * as passApi from '../../api/residentPassApi.js';
@@ -21,7 +23,11 @@ export default function UserDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, setSession, logout } = useAuth();
+  const { featureSettings } = useFeatureSettings();
   const isResident = Boolean(user?.residentPassId);
+
+  const showReportButton = user ? featureSettings.userReportEnabled : featureSettings.publicReportEnabled;
+  const showEmergencySos = Boolean(user) && featureSettings.emergencySosEnabled;
   const [tab, setTab] = useState('register');
   const [query, setQuery] = useState('');
   const [records, setRecords] = useState([]);
@@ -219,17 +225,21 @@ export default function UserDashboard() {
             <p className="text-sm font-medium text-slate-200 drop-shadow-xs">
               {t('beach.name')} — Asia's premier drive-in beach entrance system.
             </p>
-            <div className="pt-2">
-              <Link
-                to="/user/report"
-                className="inline-flex items-center gap-2 rounded-xl bg-white/20 border border-white/30 px-4 py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-xs"
-              >
-                <TriangleAlert className="h-4 w-4 text-amber-300" />
-                {t('report.reportButton')}
-              </Link>
-            </div>
+            {showReportButton && (
+              <div className="pt-2">
+                <Link
+                  to="/user/report"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/20 border border-white/30 px-4 py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-xs"
+                >
+                  <TriangleAlert className="h-4 w-4 text-amber-300" />
+                  {t('report.reportButton')}
+                </Link>
+              </div>
+            )}
           </div>
         </div>
+
+        {showEmergencySos && <EmergencyButton />}
 
         {showPass ? (
           <ResidentQrPanel
