@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import axios from '../api/axios.js';
 import { useAuth } from './AuthContext.jsx';
 import {
   createEmergencyAlarmSound,
@@ -107,6 +108,47 @@ export function EmergencyProvider({ children }) {
     });
     audioMapRef.current.clear();
   }, []);
+
+  // Admin Polling Fallback (ensures Vercel / serverless deployments fetch & sync active pending emergencies)
+  const pollActiveEmergencies = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const { data } = await axios.get('/emergency/active');
+      const list = data.data?.emergencies || [];
+
+      const currentPendingIds = new Set(list.map((e) => e.emergencyId));
+      const emgMap = {};
+
+      list.forEach((item) => {
+        emgMap[item.emergencyId] = item;
+        startAlarmSound(item.emergencyId);
+      });
+
+      // Stop sounds for emergencies that were claimed/resolved and are no longer pending
+      audioMapRef.current.forEach((_audioObj, id) => {
+        if (!currentPendingIds.has(id)) {
+          stopAlarmSound(id);
+        }
+      });
+
+      setActiveEmergencies(emgMap);
+
+      if (list.length > 0) {
+        startEmergencyVibrationLoop();
+      } else {
+        stopEmergencyVibration();
+      }
+    } catch {
+      // Ignore polling errors
+    }
+  }, [isAdmin, startAlarmSound, stopAlarmSound]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    pollActiveEmergencies();
+    const interval = setInterval(pollActiveEmergencies, 3500);
+    return () => clearInterval(interval);
+  }, [isAdmin, pollActiveEmergencies]);
 
   // Listen to emergency socket events for Admin
   useEffect(() => {
