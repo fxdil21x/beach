@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Siren, ShieldAlert, PhoneCall, CheckCircle2 } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
@@ -6,6 +7,13 @@ export default function AdminEmergencyOverlay() {
   const { activeEmergencies, claimEmergency, retryAudioUnlock } = useEmergency();
 
   const emergencyList = Object.values(activeEmergencies);
+
+  // Automatically trigger audio unlock as soon as popup modal appears
+  useEffect(() => {
+    if (emergencyList.length > 0) {
+      retryAudioUnlock();
+    }
+  }, [emergencyList.length, retryAudioUnlock]);
 
   if (emergencyList.length === 0) return null;
 

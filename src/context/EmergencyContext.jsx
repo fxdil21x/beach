@@ -67,21 +67,24 @@ export function EmergencyProvider({ children }) {
 
   // Handle emergency audio for a specific emergencyId
   const startAlarmSound = useCallback((emergencyId) => {
-    if (audioMapRef.current.has(emergencyId)) return;
+    let alarmAudio = audioMapRef.current.get(emergencyId);
+    if (!alarmAudio) {
+      alarmAudio = createEmergencyAlarmSound();
+      alarmAudio.loop = true;
+      audioMapRef.current.set(emergencyId, alarmAudio);
+    }
 
-    const alarmAudio = createEmergencyAlarmSound();
-    alarmAudio.loop = true;
-    audioMapRef.current.set(emergencyId, alarmAudio);
-
-    alarmAudio
-      .play()
-      .then(() => {
-        setAutoplayBlocked(false);
-      })
-      .catch((err) => {
-        console.warn(`[EmergencyContext] Autoplay blocked for ${emergencyId}:`, err);
-        setAutoplayBlocked(true);
-      });
+    if (!alarmAudio.isPlaying) {
+      alarmAudio
+        .play()
+        .then(() => {
+          setAutoplayBlocked(false);
+        })
+        .catch((err) => {
+          console.warn(`[EmergencyContext] Autoplay blocked for ${emergencyId}, will retry:`, err);
+          setAutoplayBlocked(true);
+        });
+    }
   }, []);
 
   const stopAlarmSound = useCallback((emergencyId) => {
