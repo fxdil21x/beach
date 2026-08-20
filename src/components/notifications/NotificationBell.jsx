@@ -8,15 +8,14 @@ export default function NotificationBell({ targetRole = 'user' }) {
   const [hasUnread, setHasUnread] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const STORAGE_KEY = `last_seen_announcement_${targetRole}`;
-
   const fetchAnnouncements = useCallback(async () => {
     try {
       const { data } = await getPublicAnnouncements(targetRole);
       const list = data.data.announcements || [];
       setAnnouncements(list);
 
-      const lastSeen = localStorage.getItem(STORAGE_KEY);
+      const storageKey = `last_seen_announcement_${targetRole}`;
+      const lastSeen = localStorage.getItem(storageKey);
       if (list.length > 0) {
         const latestTime = new Date(list[0].createdAt).getTime();
         if (!lastSeen || latestTime > parseInt(lastSeen, 10)) {
@@ -31,19 +30,17 @@ export default function NotificationBell({ targetRole = 'user' }) {
       setAnnouncements([]);
       setHasUnread(false);
     }
-  }, [targetRole, STORAGE_KEY]);
+  }, [targetRole]);
 
   useEffect(() => {
     fetchAnnouncements();
-    // Poll every 60 seconds
-    const interval = setInterval(fetchAnnouncements, 60000);
-    return () => clearInterval(interval);
   }, [fetchAnnouncements]);
 
   const handleOpen = () => {
     setIsOpen(true);
     setHasUnread(false);
-    localStorage.setItem(STORAGE_KEY, Date.now().toString());
+    const storageKey = `last_seen_announcement_${targetRole}`;
+    localStorage.setItem(storageKey, Date.now().toString());
   };
 
   return (
@@ -51,7 +48,7 @@ export default function NotificationBell({ targetRole = 'user' }) {
       <button
         type="button"
         onClick={handleOpen}
-        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-700 shadow-2xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-700 shadow-2xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-95 cursor-pointer"
         title="Notifications"
         aria-label="View feature notifications"
       >
