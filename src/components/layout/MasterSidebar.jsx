@@ -14,11 +14,13 @@ import {
   Bell,
   LogOut,
   Waves,
+  Sliders,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const links = [
   { to: '/master/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { to: '/master/features', labelKey: 'Feature Controls', icon: Sliders },
   { to: '/master/import', labelKey: 'nav.import', icon: Upload },
   { to: '/master/resident-records', labelKey: 'nav.residentRecords', icon: Database },
   { to: '/master/registered-residents', labelKey: 'nav.registeredResidents', icon: BadgeCheck },
@@ -71,7 +73,7 @@ export default function MasterSidebar() {
               }
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-              <span className="truncate">{t(link.labelKey)}</span>
+              <span className="truncate">{link.labelKey.startsWith('nav.') ? t(link.labelKey) : link.labelKey}</span>
             </NavLink>
           );
         })}

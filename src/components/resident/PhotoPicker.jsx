@@ -85,9 +85,7 @@ export default function PhotoPicker({
 
   return (
     <div>
-      {label !== false && label !== null && label !== '' && (
-        <p className="mb-3 text-sm font-medium text-gray-700">{label || t('resident.photoOptional')}</p>
-      )}
+      <p className="mb-3 text-sm font-medium text-gray-700">{label || t('resident.photoOptional')}</p>
       <input
         ref={fileInputRef}
         type="file"

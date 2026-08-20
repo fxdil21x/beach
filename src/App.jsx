@@ -31,67 +31,78 @@ import VisitorEntries from './pages/master/VisitorEntries.jsx';
 import Analytics from './pages/master/Analytics.jsx';
 import MasterReports from './pages/master/Reports.jsx';
 import MasterNotifications from './pages/master/Notifications.jsx';
+import MasterFeatureSettings from './pages/master/FeatureSettings.jsx';
 
 import VisitorEntry from './pages/public/VisitorEntry.jsx';
 import EntrySuccess from './pages/public/EntrySuccess.jsx';
 import PublicIssueReport from './pages/public/PublicIssueReport.jsx';
 
+import { EmergencyProvider } from './context/EmergencyContext.jsx';
+import { FeatureProvider } from './context/FeatureContext.jsx';
+import AdminEmergencyOverlay from './components/notifications/AdminEmergencyOverlay.jsx';
+
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<RoleRedirect />} />
+      <FeatureProvider>
+        <EmergencyProvider>
+          <AdminEmergencyOverlay />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<RoleRedirect />} />
 
-          <Route element={<DeviceFrameLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+              <Route element={<DeviceFrameLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-            <Route path="/entry" element={<VisitorEntry />} />
-            <Route path="/entry/success" element={<EntrySuccess />} />
-            <Route path="/report" element={<PublicIssueReport />} />
-            <Route path="/user/home" element={<UserDashboard />} />
-            <Route path="/user/search" element={<Navigate to="/user/home" replace />} />
-            <Route path="/user/beach-rules" element={<BeachRules />} />
-            <Route path="/user/report" element={<UserReportIssue />} />
+                <Route path="/entry" element={<VisitorEntry />} />
+                <Route path="/entry/success" element={<EntrySuccess />} />
+                <Route path="/report" element={<PublicIssueReport />} />
+                <Route path="/user/home" element={<UserDashboard />} />
+                <Route path="/user/search" element={<Navigate to="/user/home" replace />} />
+                <Route path="/user/beach-rules" element={<BeachRules />} />
+                <Route path="/user/report" element={<UserReportIssue />} />
 
-            <Route element={<ProtectedRoute roles={['USER']} />}>
-              <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
-              <Route path="/user/my-pass" element={<MyPass />} />
-              <Route path="/user/my-visits" element={<MyVisits />} />
-              <Route path="/user/profile" element={<UserProfile />} />
-            </Route>
+                <Route element={<ProtectedRoute roles={['USER']} />}>
+                  <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
+                  <Route path="/user/my-pass" element={<MyPass />} />
+                  <Route path="/user/my-visits" element={<MyVisits />} />
+                  <Route path="/user/profile" element={<UserProfile />} />
+                </Route>
 
-            <Route element={<ProtectedRoute roles={['ADMIN']} />}>
-              <Route path="/admin/scan" element={<Scanner />} />
-              <Route path="/admin/search" element={<AdminResidentSearch />} />
-              <Route path="/admin/recent" element={<RecentEntries />} />
-              <Route path="/admin/reports" element={<AdminReports />} />
-              <Route path="/admin/profile" element={<AdminProfile />} />
-              <Route path="/admin" element={<Navigate to="/admin/recent" replace />} />
-            </Route>
-          </Route>
+                <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+                  <Route path="/admin/scan" element={<Scanner />} />
+                  <Route path="/admin/search" element={<AdminResidentSearch />} />
+                  <Route path="/admin/recent" element={<RecentEntries />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/profile" element={<AdminProfile />} />
+                  <Route path="/admin" element={<Navigate to="/admin/recent" replace />} />
+                </Route>
+              </Route>
 
-          <Route element={<ProtectedRoute roles={['MASTER_ADMIN']} />}>
-            <Route path="/master" element={<MasterLayout />}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<MasterDashboard />} />
-              <Route path="import" element={<ImportResidents />} />
-              <Route path="resident-records" element={<ResidentRecords />} />
-              <Route path="registered-residents" element={<RegisteredResidents />} />
-              <Route path="users" element={<Users />} />
-              <Route path="admins" element={<Admins />} />
-              <Route path="resident-entries" element={<ResidentEntries />} />
-              <Route path="visitor-entries" element={<VisitorEntries />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="notifications" element={<MasterNotifications />} />
-              <Route path="reports" element={<MasterReports />} />
-            </Route>
-          </Route>
+              <Route element={<ProtectedRoute roles={['MASTER_ADMIN']} />}>
+                <Route path="/master" element={<MasterLayout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<MasterDashboard />} />
+                  <Route path="features" element={<MasterFeatureSettings />} />
+                  <Route path="import" element={<ImportResidents />} />
+                  <Route path="resident-records" element={<ResidentRecords />} />
+                  <Route path="registered-residents" element={<RegisteredResidents />} />
+                  <Route path="users" element={<Users />} />
+                  <Route path="admins" element={<Admins />} />
+                  <Route path="resident-entries" element={<ResidentEntries />} />
+                  <Route path="visitor-entries" element={<VisitorEntries />} />
+                  <Route path="analytics" element={<Analytics />} />
+                  <Route path="notifications" element={<MasterNotifications />} />
+                  <Route path="reports" element={<MasterReports />} />
+                </Route>
+              </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </EmergencyProvider>
+      </FeatureProvider>
     </AuthProvider>
   );
 }
