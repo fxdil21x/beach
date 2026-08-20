@@ -186,14 +186,14 @@ export default function UserDashboard() {
         title={t('nav.home')}
         showLanguage
         action={
-          <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+          <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
             {isResident && (
-              <Button variant="secondary" size="sm" onClick={handleLogout}>
+              <Button variant="secondary" size="sm" onClick={handleLogout} className="shrink-0">
                 {t('common.logout')}
               </Button>
             )}
-            <Link to="/entry">
-              <Button variant="default" size="sm">
+            <Link to="/entry" className="shrink-0">
+              <Button variant="default" size="sm" className="shrink-0">
                 {t('common.guest')}
               </Button>
             </Link>

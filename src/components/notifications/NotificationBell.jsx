@@ -51,7 +51,7 @@ export default function NotificationBell({ targetRole = 'user' }) {
       <button
         type="button"
         onClick={handleOpen}
-        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-700 shadow-2xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-700 shadow-2xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-95"
         title="Notifications"
         aria-label="View feature notifications"
       >
