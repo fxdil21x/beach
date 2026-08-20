@@ -36,7 +36,7 @@ export default function ResidentQrPanel({
             uploading={photoUploading}
             error={photoError}
             success={photoSuccess}
-            label={pass.photoUrl ? t('resident.changePhoto') : t('resident.addPhoto')}
+            label={false}
           />
         </div>
       )}

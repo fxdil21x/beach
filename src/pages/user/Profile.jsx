@@ -66,7 +66,6 @@ export default function UserProfile() {
               uploading={photoUploading}
               error={photoError}
               success={photoSuccess}
-              label={pass.photoUrl ? t('resident.changePhoto') : t('resident.addPhoto')}
             />
           </div>
         )}

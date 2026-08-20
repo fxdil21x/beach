@@ -66,8 +66,9 @@ html.device-frame-active body {
 .device-app-root {
   height: 100%;
   width: 100%;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
   position: relative;
   background: #f3f4f6;
   -webkit-overflow-scrolling: touch;
