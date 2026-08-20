@@ -3,14 +3,19 @@ import { Siren, ShieldAlert, PhoneCall, CheckCircle2 } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 
 export default function AdminEmergencyOverlay() {
-  const { activeEmergencies, claimEmergency } = useEmergency();
+  const { activeEmergencies, claimEmergency, retryAudioUnlock } = useEmergency();
 
   const emergencyList = Object.values(activeEmergencies);
 
   if (emergencyList.length === 0) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-red-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <div
+      onMouseEnter={retryAudioUnlock}
+      onPointerDown={retryAudioUnlock}
+      onClick={retryAudioUnlock}
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-red-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
+    >
       <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900 border-2 border-red-500 shadow-2xl shadow-red-600/50">
         
         {/* Pulsing Alarm Top Header */}
