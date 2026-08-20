@@ -12,14 +12,14 @@ export default function AdminProfile() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('nav.profile')} />
-      <main className="space-y-4 px-4 py-6">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+      <MobileHeader title={t('nav.profile')} targetRole="admin" />
+      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-6">
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-xl font-bold">{user?.name}</p>
           <p className="text-gray-600">@{user?.username}</p>
         </div>
-        <Button variant="secondary" onClick={() => { logout(); navigate('/login'); }} className="w-full py-4">{t('common.logout')}</Button>
+        <Button variant="secondary" onClick={() => { logout(); navigate('/login', { replace: true }); }} className="w-full py-4">{t('common.logout')}</Button>
       </main>
       <BottomNavigation items={adminNav} />
     </div>

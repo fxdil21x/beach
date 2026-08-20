@@ -5,6 +5,7 @@ import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import SearchInput from '../../components/ui/SearchInput.jsx';
 import ResidentPhoto from '../../components/resident/ResidentPhoto.jsx';
+import { ResidentSearchSkeleton } from '../../components/ui/Skeleton.jsx';
 import { adminNav } from '../../config/navigation.js';
 import * as adminApi from '../../api/adminApi.js';
 
@@ -35,9 +36,9 @@ export default function AdminResidentSearch() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('admin.searchTitle')} />
-      <main className="space-y-4 px-4 py-6">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+      <MobileHeader title={t('admin.searchTitle')} targetRole="admin" />
+      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-6">
         <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white sm:p-6">
           <h2 className="text-xl font-bold leading-snug sm:text-2xl">{t('admin.searchTitle')}</h2>
           <p className="mt-2 text-sm opacity-90">{t('admin.searchHint')}</p>
@@ -47,9 +48,7 @@ export default function AdminResidentSearch() {
           <SearchInput value={query} onChange={setQuery} onSearch={handleSearch} />
         </div>
 
-        {searching && (
-          <p className="text-center text-sm text-gray-500">{t('common.loading')}</p>
-        )}
+        {searching && <ResidentSearchSkeleton count={3} />}
 
         {!searching && searched && residents.length === 0 && (
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm">

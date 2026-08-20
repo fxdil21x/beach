@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Camera, MapPin, TriangleAlert } from 'lucide-react';
+import { Camera, MapPin, TriangleAlert, X } from 'lucide-react';
 import LanguageSwitcher from '../../components/language/LanguageSwitcher.jsx';
 import Button from '../../components/ui/Button.jsx';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select.jsx';
 import { createReport } from '../../api/reportApi.js';
 
 const CATEGORIES = [
@@ -87,7 +88,8 @@ export default function PublicIssueReport() {
       const formData = new FormData();
       formData.append('category', category);
       formData.append('description', description.trim());
-      formData.append('forceAnonymous', 'true');
+      const hasUserToken = Boolean(localStorage.getItem('beach_app_token'));
+      formData.append('forceAnonymous', hasUserToken ? 'false' : 'true');
       formData.append('deviceInfo', JSON.stringify(collectDeviceInfo()));
       if (liveLocation) {
         formData.append('latitude', String(liveLocation.latitude));
@@ -134,20 +136,23 @@ export default function PublicIssueReport() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-2xl bg-white p-5 shadow-sm">
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-gray-700">{t('report.category')}</span>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:border-blue-500"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {t(`report.categories.${c}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="w-full space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                {t('report.category')}
+              </label>
+              <Select value={category} onValueChange={(val) => setCategory(val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {t(`report.categories.${c}`, c)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div>
               <p className="mb-2 text-sm font-medium text-gray-700">{t('report.takePhoto')}</p>
@@ -168,11 +173,21 @@ export default function PublicIssueReport() {
                 {photo ? t('report.retakePhoto') : t('report.openCamera')}
               </Button>
               {preview && (
-                <img
-                  src={preview}
-                  alt="Report preview"
-                  className="mt-3 h-48 w-full rounded-xl object-cover"
-                />
+                <div className="relative mt-3 block overflow-hidden rounded-xl border border-gray-200">
+                  <img
+                    src={preview}
+                    alt="Report preview"
+                    className="h-48 w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setPhoto(null); setPreview(null); }}
+                    className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white transition-transform hover:scale-110 active:scale-95"
+                    title="Remove photo"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               )}
             </div>
 

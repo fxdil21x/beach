@@ -14,7 +14,7 @@ import {
 import MasterSidebar from '../../components/layout/MasterSidebar.jsx';
 import MasterHeader from '../../components/layout/MasterHeader.jsx';
 import PageContainer from '../../components/layout/PageContainer.jsx';
-import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
+import { MasterDashboardSkeleton } from '../../components/ui/Skeleton.jsx';
 import * as masterApi from '../../api/masterApi.js';
 
 export function MasterLayout() {
@@ -59,11 +59,7 @@ export default function MasterDashboard() {
   }, [load]);
 
   if (!metrics) {
-    return (
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <MasterDashboardSkeleton />;
   }
 
   const todayLabel = new Date().toLocaleDateString(undefined, {

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import SearchInput from '../ui/SearchInput.jsx';
 import ResidentSearchCard from './ResidentSearchCard.jsx';
-import LoadingSpinner from '../ui/LoadingSpinner.jsx';
+import { ResidentSearchSkeleton } from '../ui/Skeleton.jsx';
 
 export default function ResidentSearchPanel({
   query,
@@ -24,7 +24,8 @@ export default function ResidentSearchPanel({
         onSearch={onSearch}
         placeholder={t('resident.searchPlaceholder')}
       />
-      {searching && <LoadingSpinner size="lg" className="mx-auto" />}
+      {searching && <ResidentSearchSkeleton count={2} />}
+
       {!searching && searched && records.length === 0 && (
         <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {t('resident.notInData')}

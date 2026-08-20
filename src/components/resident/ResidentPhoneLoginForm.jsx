@@ -33,7 +33,7 @@ export default function ResidentPhoneLoginForm({ resident, onSubmit, loading, er
         <p className="text-xs text-gray-500">{t('resident.phoneAsPassword')}</p>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" disabled={loading} className="w-full py-3.5 text-base sm:py-4 sm:text-lg">
-          {loading ? t('common.loading') : t('auth.loginButton')}
+          {loading ? t('common.loading') : t('resident.showQrPass')}
         </Button>
       </form>
     </div>

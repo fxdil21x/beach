@@ -11,6 +11,7 @@ import {
   Ticket,
   ChartColumn,
   TriangleAlert,
+  Bell,
   LogOut,
   Waves,
 } from 'lucide-react';
@@ -26,6 +27,7 @@ const links = [
   { to: '/master/resident-entries', labelKey: 'nav.residentEntries', icon: Footprints },
   { to: '/master/visitor-entries', labelKey: 'nav.visitorEntries', icon: Ticket },
   { to: '/master/analytics', labelKey: 'nav.analytics', icon: ChartColumn },
+  { to: '/master/notifications', labelKey: 'nav.notifications', icon: Bell },
   { to: '/master/reports', labelKey: 'nav.reports', icon: TriangleAlert },
 ];
 
@@ -36,7 +38,7 @@ export default function MasterSidebar() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   return (

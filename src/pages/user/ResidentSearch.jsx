@@ -7,7 +7,7 @@ import { userNav } from '../../config/navigation.js';
 import SearchInput from '../../components/ui/SearchInput.jsx';
 import ResidentSearchCard from '../../components/resident/ResidentSearchCard.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
+import { ResidentSearchSkeleton } from '../../components/ui/Skeleton.jsx';
 import * as residentApi from '../../api/residentApi.js';
 
 export default function ResidentSearch() {
@@ -42,7 +42,7 @@ export default function ResidentSearch() {
       <main className="space-y-4 px-4 py-6">
         <p className="text-sm text-gray-600">{t('resident.searchHint')}</p>
         <SearchInput value={query} onChange={setQuery} onSearch={handleSearch} placeholder={t('resident.searchPlaceholder')} />
-        {loading && <LoadingSpinner size="lg" className="mx-auto" />}
+        {loading && <ResidentSearchSkeleton count={3} />}
         {!loading && searched && records.length === 0 && (
           <EmptyState title={t('common.noResults')} />
         )}

@@ -1,20 +1,23 @@
 const styles = {
-  OPEN: 'bg-amber-500/15 text-amber-300',
-  IN_PROGRESS: 'bg-sky-500/15 text-sky-300',
-  RESOLVED: 'bg-emerald-500/15 text-emerald-300',
-  GRANTED: 'bg-emerald-500/15 text-emerald-300',
-  DENIED: 'bg-rose-500/15 text-rose-300',
-  active: 'bg-emerald-500/15 text-emerald-300',
-  disabled: 'bg-zinc-700/60 text-zinc-300',
-  master: 'bg-zinc-700/60 text-zinc-300',
+  OPEN: 'bg-amber-50 text-amber-700 border-amber-200/80',
+  IN_PROGRESS: 'bg-blue-50 text-blue-700 border-blue-200/80',
+  RESOLVED: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  GRANTED: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  DENIED: 'bg-rose-50 text-rose-700 border-rose-200/80',
+  APPROVED: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  REJECTED: 'bg-rose-50 text-rose-700 border-rose-200/80',
+  PENDING: 'bg-amber-50 text-amber-700 border-amber-200/80',
+  active: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  disabled: 'bg-slate-100 text-slate-600 border-slate-200',
+  master: 'bg-slate-100 text-slate-700 border-slate-200',
 };
 
-export default function StatusBadge({ status, label }) {
+export default function StatusBadge({ status, label, className = '' }) {
+  const style = styles[status] || 'bg-slate-100 text-slate-700 border-slate-200';
+
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-        styles[status] || 'bg-zinc-700/60 text-zinc-300'
-      }`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-tight transition-colors shadow-2xs ${style} ${className}`}
     >
       {label || status}
     </span>

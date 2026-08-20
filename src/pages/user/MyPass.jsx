@@ -5,7 +5,7 @@ import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import ResidentQrPanel from '../../components/resident/ResidentQrPanel.jsx';
 import Button from '../../components/ui/Button.jsx';
-import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
+import { MyPassSkeleton } from '../../components/ui/Skeleton.jsx';
 import { userNav } from '../../config/navigation.js';
 import * as passApi from '../../api/residentPassApi.js';
 
@@ -50,13 +50,13 @@ export default function MyPass() {
     }
   };
 
-  if (loading) return <LoadingSpinner size="lg" className="mx-auto mt-20" />;
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('pass.title')} showLanguage />
-      <main className="px-4 py-6">
-        {!pass ? (
+      <main className="flex-1 overflow-y-auto px-4 py-6">
+        {loading ? (
+          <MyPassSkeleton />
+        ) : !pass ? (
           <div className="text-center">
             <p className="text-gray-600">{t('pass.noPass')}</p>
             <Link to="/user/search"><Button className="mt-4">{t('pass.getPass')}</Button></Link>
@@ -76,3 +76,4 @@ export default function MyPass() {
     </div>
   );
 }
+

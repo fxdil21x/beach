@@ -42,6 +42,7 @@
     "myVisits": "मेरी यात्राएं",
     "beachRules": "बीच नियम",
     "reportIssue": "समस्या रिपोर्ट करें",
+    "myReports": "मेरी रिपोर्ट",
     "profile": "प्रोफ़ाइल",
     "scan": "स्कैन",
     "search": "खोज",
@@ -56,6 +57,7 @@
     "residentEntries": "निवासी प्रवेश",
     "visitorEntries": "आगंतुक प्रवेश",
     "analytics": "विश्लेषण",
+    "notifications": "सूचनाएं",
     "auditLogs": "ऑडिट लॉग",
     "settings": "सेटिंग्स"
   },
@@ -93,6 +95,7 @@
 
     "thisIsMe": "यह मैं हूं",
     "selectRecord": "यह रिकॉर्ड चुनें",
+    "showQrPass": "QR पास देखें",
     "registerTab": "रजिस्टर",
     "loginTab": "लॉगिन",
     "fatherName": "पिता",
@@ -205,7 +208,11 @@
     "totalRecords": "कुल रिकॉर्ड",
     "importedRecords": "आयातित",
     "duplicateRecords": "डुप्लिकेट",
-    "failedRecords": "विफल"
+    "failedRecords": "विफल",
+    "addResident": "निवासी जोड़ें",
+    "addResidentTitle": "नया निवासी रिकॉर्ड जोड़ें",
+    "secIdOptional": "Sec ID (वैकल्पिक)",
+    "residentAddedSuccess": "निवासी रिकॉर्ड सफलतापूर्वक जोड़ा गया"
   },
   "report": {
     "title": "समस्या रिपोर्ट करें",

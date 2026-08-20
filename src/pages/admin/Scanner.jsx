@@ -4,7 +4,7 @@ import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import QRScanner from '../../components/qr/QRScanner.jsx';
 import ScanResult from '../../components/qr/ScanResult.jsx';
-import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
+import { ScannerSkeleton } from '../../components/ui/Skeleton.jsx';
 import { adminNav } from '../../config/navigation.js';
 import * as adminApi from '../../api/adminApi.js';
 
@@ -39,20 +39,15 @@ export default function Scanner() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 pb-24 text-white">
-      <MobileHeader title={t('admin.scanTitle')} />
-      <main className="px-4 py-6">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-900 text-white">
+      <MobileHeader title={t('admin.scanTitle')} targetRole="admin" />
+      <main className="flex-1 overflow-y-auto px-4 py-6">
         {scanning && !searching && <QRScanner onScan={handleScan} active={scanning} />}
-        {searching && (
-          <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-2xl bg-gray-800 px-6 py-12 text-center">
-            <LoadingSpinner size="lg" className="mx-auto" />
-            <p className="mt-6 text-xl font-semibold text-white">{t('admin.searchingResident')}</p>
-            <p className="mt-2 text-sm text-gray-300">{t('admin.searchingHint')}</p>
-          </div>
-        )}
+        {searching && <ScannerSkeleton />}
       </main>
       {result && !searching && <ScanResult result={result} onClose={handleClose} />}
       <BottomNavigation items={adminNav} />
     </div>
   );
 }
+

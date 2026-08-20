@@ -30,6 +30,7 @@ import ResidentEntries from './pages/master/ResidentEntries.jsx';
 import VisitorEntries from './pages/master/VisitorEntries.jsx';
 import Analytics from './pages/master/Analytics.jsx';
 import MasterReports from './pages/master/Reports.jsx';
+import MasterNotifications from './pages/master/Notifications.jsx';
 
 import VisitorEntry from './pages/public/VisitorEntry.jsx';
 import EntrySuccess from './pages/public/EntrySuccess.jsx';
@@ -83,6 +84,7 @@ export default function App() {
               <Route path="resident-entries" element={<ResidentEntries />} />
               <Route path="visitor-entries" element={<VisitorEntries />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="notifications" element={<MasterNotifications />} />
               <Route path="reports" element={<MasterReports />} />
             </Route>
           </Route>

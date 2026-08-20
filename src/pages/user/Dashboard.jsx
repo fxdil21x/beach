@@ -1,19 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TriangleAlert } from 'lucide-react';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
+import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Button from '../../components/ui/Button.jsx';
+import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs.jsx';
 import ResidentSearchPanel from '../../components/resident/ResidentSearchPanel.jsx';
 import ResidentPassForm from '../../components/resident/ResidentPassForm.jsx';
 import ResidentPhoneLoginForm from '../../components/resident/ResidentPhoneLoginForm.jsx';
 import ResidentQrPanel from '../../components/resident/ResidentQrPanel.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { userNav } from '../../config/navigation.js';
 import * as publicApi from '../../api/publicApi.js';
 import * as passApi from '../../api/residentPassApi.js';
 
+import heroBannerImage from '../public/image/Gemini_Generated_Image_kxdt3pkxdt3pkxdt.png';
+
 export default function UserDashboard() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, setSession, logout } = useAuth();
   const isResident = Boolean(user?.residentPassId);
   const [tab, setTab] = useState('register');
@@ -165,40 +171,63 @@ export default function UserDashboard() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    setPass(null);
+    setSelected(null);
+    navigate('/user/home', { replace: true });
+  };
+
   const showPass = isResident && pass;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader
         title={t('nav.home')}
         showLanguage
         action={
-          <div className="flex max-w-[11rem] flex-wrap items-center justify-end gap-1.5 sm:max-w-none">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2">
             {isResident && (
-              <Button variant="secondary" onClick={logout} className="px-2.5 py-2 text-xs sm:px-3 sm:text-sm">
+              <Button variant="secondary" size="sm" onClick={handleLogout}>
                 {t('common.logout')}
               </Button>
             )}
-            <Link
-              to="/entry"
-              className="rounded-xl bg-blue-600 px-2.5 py-2 text-xs font-semibold text-white sm:px-3 sm:text-sm"
-            >
-              {t('common.guest')}
+            <Link to="/entry">
+              <Button variant="default" size="sm">
+                {t('common.guest')}
+              </Button>
             </Link>
           </div>
         }
       />
-      <main className="space-y-4 px-4 py-6">
-        <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white sm:p-6">
-          <h2 className="text-xl font-bold leading-snug sm:text-2xl">{t('beach.welcome')}</h2>
-          <p className="mt-2 text-sm opacity-90 sm:text-base">{t('beach.name')}</p>
-          <Link
-            to="/report"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur hover:bg-white/25"
-          >
-            <TriangleAlert className="h-4 w-4" />
-            {t('report.reportButton')}
-          </Link>
+      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-6">
+        <div className="relative min-h-[210px] overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl border border-slate-800 flex flex-col justify-end p-5 sm:p-6">
+          {/* Hero Image Background with Sleek Dark Overlay */}
+          <img
+            src={heroBannerImage}
+            alt="Muzhappilangad Beach Banner"
+            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/40" />
+
+          {/* Banner Content */}
+          <div className="relative z-10 space-y-2">
+            <h2 className="text-xl font-extrabold leading-snug sm:text-2xl text-white drop-shadow-md">
+              {t('beach.welcome')}
+            </h2>
+            <p className="text-sm font-medium text-slate-200 drop-shadow-xs">
+              {t('beach.name')} — Asia's premier drive-in beach entrance system.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/user/report"
+                className="inline-flex items-center gap-2 rounded-xl bg-white/20 border border-white/30 px-4 py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-xs"
+              >
+                <TriangleAlert className="h-4 w-4 text-amber-300" />
+                {t('report.reportButton')}
+              </Link>
+            </div>
+          </div>
         </div>
 
         {showPass ? (
@@ -213,25 +242,17 @@ export default function UserDashboard() {
           />
         ) : (
           <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="mb-5 flex rounded-xl bg-gray-100 p-1">
-              <button
-                type="button"
-                onClick={() => handleTabChange('register')}
-                className={`min-w-0 flex-1 rounded-lg px-2 py-2.5 text-center text-xs font-semibold leading-snug transition sm:text-sm ${
-                  tab === 'register' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'
-                }`}
-              >
-                {t('resident.registerTab')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange('login')}
-                className={`min-w-0 flex-1 rounded-lg px-2 py-2.5 text-center text-xs font-semibold leading-snug transition sm:text-sm ${
-                  tab === 'login' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'
-                }`}
-              >
-                {t('resident.loginTab')}
-              </button>
+            <div className="mb-5">
+              <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
+                <TabsList className="h-11 w-full bg-slate-100 p-1">
+                  <TabsTrigger value="register" className="h-9 text-xs sm:text-sm font-semibold">
+                    {t('resident.registerTab')}
+                  </TabsTrigger>
+                  <TabsTrigger value="login" className="h-9 text-xs sm:text-sm font-semibold">
+                    {t('resident.loginTab')}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
             {!selected && (
@@ -282,6 +303,7 @@ export default function UserDashboard() {
           </div>
         )}
       </main>
+      <BottomNavigation items={userNav} />
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Shield, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Button from '../../components/ui/Button.jsx';
+import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert.jsx';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -29,24 +31,54 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-blue-50 to-white px-4 py-8">
-      <div className="mx-auto w-full max-w-md flex-1">
-        <h1 className="text-3xl font-bold text-gray-900">{t('auth.loginTitle')}</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          {t('auth.residentLoginHint')}{' '}
-          <Link to="/user/home" className="font-medium text-blue-600">
-            {t('nav.home')}
-          </Link>
-        </p>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <Input label={t('auth.username')} value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
-          <Input label={t('auth.password')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" disabled={loading} className="w-full py-4 text-lg">{loading ? t('common.loading') : t('auth.loginButton')}</Button>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50/80 via-slate-50 to-slate-100 px-4 py-8">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-xl border border-slate-100 space-y-6">
+        <div className="text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-inner">
+            <Shield className="h-6 w-6" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{t('auth.loginTitle')}</h1>
+          <p className="mt-2 text-xs sm:text-sm text-slate-500">
+            {t('auth.residentLoginHint')}{' '}
+            <Link to="/user/home" className="font-semibold text-blue-600 hover:underline">
+              {t('nav.home')}
+            </Link>
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label={t('auth.username')}
+            placeholder="Enter username"
+            value={form.username}
+            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            error={error ? 'Invalid credentials' : undefined}
+            required
+          />
+          <Input
+            label={t('auth.password')}
+            type="password"
+            placeholder="Enter password"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            error={error ? 'Invalid credentials' : undefined}
+            required
+          />
+
+          {error && (
+            <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-1 duration-200">
+              <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <AlertTitle className="text-red-900 font-bold">Invalid Credentials</AlertTitle>
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              </div>
+            </Alert>
+          )}
+
+          <Button type="submit" disabled={loading} className="w-full py-3.5 text-base font-bold shadow-md">
+            {loading ? t('common.loading') : t('auth.loginButton')}
+          </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-gray-600">
-          {t('auth.noAccount')} <Link to="/register" className="font-medium text-blue-600">{t('auth.registerButton')}</Link>
-        </p>
       </div>
     </div>
   );

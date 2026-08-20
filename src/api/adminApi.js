@@ -11,3 +11,6 @@ export const getPendingVisitorEventsUrl = (token) =>
   `${api.defaults.baseURL}/admin/visitor-entries/events?token=${encodeURIComponent(token)}`;
 export const getReports = (params) => api.get('/admin/beach-reports', { params });
 export const updateReportStatus = (id, status) => api.patch(`/admin/beach-reports/${id}`, { status });
+export const getAdminReportEventsUrl = (token) =>
+  `${api.defaults.baseURL}/admin/beach-reports/events?token=${encodeURIComponent(token)}`;
+

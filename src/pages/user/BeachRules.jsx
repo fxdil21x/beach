@@ -18,9 +18,9 @@ export default function BeachRules() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('nav.beachRules')} showLanguage />
-      <main className="space-y-3 px-4 py-6">
+      <main className="flex-1 overflow-y-auto space-y-3 px-4 py-6">
         <h2 className="text-xl font-bold">{t('beach.rulesTitle')}</h2>
         {INSTRUCTIONS.map((key) => (
           <BeachInstructionCard key={key} instructionKey={key} />

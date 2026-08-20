@@ -43,6 +43,7 @@
     "myVisits": "My Visits",
     "beachRules": "Beach Rules",
     "reportIssue": "Report Issue",
+    "myReports": "My Reports",
     "profile": "Profile",
     "scan": "Scan",
     "search": "Search",
@@ -57,6 +58,7 @@
     "residentEntries": "Resident Entries",
     "visitorEntries": "Visitor Entries",
     "analytics": "Analytics",
+    "notifications": "Notifications",
     "settings": "Settings"
   },
   "beach": {
@@ -92,6 +94,7 @@
 "progressiveSearchHint": "Enter your name and select the correct person using your house and father's name." ,
    "thisIsMe": "This is me",
     "selectRecord": "Select this record",
+    "showQrPass": "Show QR Pass",
     "registerTab": "Register",
     "loginTab": "Login",
     "fatherName": "Father",
@@ -204,7 +207,11 @@
     "totalRecords": "Total Records",
     "importedRecords": "Imported",
     "duplicateRecords": "Duplicates",
-    "failedRecords": "Failed"
+    "failedRecords": "Failed",
+    "addResident": "Add Resident",
+    "addResidentTitle": "Add New Resident Record",
+    "secIdOptional": "Sec ID (Optional)",
+    "residentAddedSuccess": "Resident record added successfully"
   },
   "report": {
     "title": "Report an Issue",

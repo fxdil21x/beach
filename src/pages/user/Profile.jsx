@@ -28,7 +28,7 @@ export default function UserProfile() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/user/home');
   };
 
   const handleUploadPhoto = async (file) => {
@@ -50,9 +50,9 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('nav.profile')} showLanguage />
-      <main className="space-y-4 px-4 py-6">
+      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-6">
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-xl font-bold">{user?.name}</p>
           <p className="text-gray-600">@{user?.username}</p>
