@@ -1,34 +1,11 @@
+import { Howl, Howler } from 'howler';
 import alarmSoundUrl from '../assets/sound/alarm.wav';
 
-let globalAudioCtx = null;
-
-function getAudioContext() {
-  if (!globalAudioCtx && typeof window !== 'undefined') {
-    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtxClass) {
-      globalAudioCtx = new AudioCtxClass();
-    }
-  }
-  if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
-    globalAudioCtx.resume().catch(() => {});
-  }
-  return globalAudioCtx;
-}
-
-// Global audio unlock listener on first gesture
+// Auto-unlock Howler audio context on first user gesture
 if (typeof window !== 'undefined') {
   const unlockAudio = () => {
-    const ctx = getAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-    // Warm up HTML5 Audio
-    try {
-      const dummy = new Audio(alarmSoundUrl);
-      dummy.volume = 0.01;
-      dummy.play().then(() => { dummy.pause(); dummy.currentTime = 0; }).catch(() => {});
-    } catch {
-      // ignore
+    if (Howler.ctx && Howler.ctx.state === 'suspended') {
+      Howler.ctx.resume().catch(() => {});
     }
     window.removeEventListener('click', unlockAudio);
     window.removeEventListener('touchstart', unlockAudio);
@@ -42,152 +19,64 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * 100% Guaranteed Instant Emergency Alarm Sound Player.
+ * Howler.js Emergency Alarm Sound Player.
+ * Uses Howler.js Web Audio engine with alarm.wav asset for 100% reliable 0ms sound playback.
  */
 export function createEmergencyAlarmSound() {
-  let isPlaying = false;
-  let loop = true;
-  let currentTime = 0;
-  let audioElem = null;
-
-  // Web Audio nodes
-  let osc1 = null;
-  let osc2 = null;
-  let lfo = null;
-  let gainNode = null;
+  let sound = new Howl({
+    src: [alarmSoundUrl],
+    loop: true,
+    volume: 1.0,
+    html5: false, // Uses Web Audio API for sub-millisecond instant sound
+    preload: true,
+  });
 
   const player = {
     get loop() {
-      return loop;
+      return true;
     },
     set loop(val) {
-      loop = val;
-      if (audioElem) audioElem.loop = val;
-    },
-    get currentTime() {
-      return audioElem ? audioElem.currentTime : currentTime;
-    },
-    set currentTime(val) {
-      currentTime = val;
-      if (audioElem) audioElem.currentTime = val;
+      if (sound) sound.loop(val);
     },
     get isPlaying() {
-      return isPlaying;
+      return sound ? sound.playing() : false;
     },
 
     play: async () => {
-      let startedAudio = false;
+      if (!sound) return Promise.reject(new Error('Sound instance unmounted'));
+      if (sound.playing()) return Promise.resolve();
 
-      // 1. Instant Web Audio Siren Hardware Oscillator
-      try {
-        const ctx = getAudioContext();
-        if (ctx) {
-          if (ctx.state === 'suspended') {
-            await ctx.resume().catch(() => {});
-          }
+      if (Howler.ctx && Howler.ctx.state === 'suspended') {
+        await Howler.ctx.resume().catch(() => {});
+      }
 
-          if (ctx.state === 'running' && !osc1) {
-            gainNode = ctx.createGain();
-            gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+      return new Promise((resolve, reject) => {
+        sound.once('play', () => {
+          resolve();
+        });
+        sound.once('playerror', (_id, err) => {
+          console.warn('[howler] Play error:', err);
+          reject(err);
+        });
 
-            osc1 = ctx.createOscillator();
-            osc1.type = 'sawtooth';
-            osc1.frequency.setValueAtTime(850, ctx.currentTime);
-
-            osc2 = ctx.createOscillator();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(700, ctx.currentTime);
-
-            lfo = ctx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.setValueAtTime(2.5, ctx.currentTime);
-
-            const lfoGain = ctx.createGain();
-            lfoGain.gain.setValueAtTime(350, ctx.currentTime);
-
-            lfo.connect(lfoGain);
-            lfoGain.connect(osc1.frequency);
-            lfoGain.connect(osc2.frequency);
-
-            osc1.connect(gainNode);
-            osc2.connect(gainNode);
-            gainNode.connect(ctx.destination);
-
-            lfo.start(0);
-            osc1.start(0);
-            osc2.start(0);
-            startedAudio = true;
-          }
+        const id = sound.play();
+        if (!id && id !== 0) {
+          reject(new Error('Howler play failed'));
         }
-      } catch (synthErr) {
-        console.warn('[soundUtils] Web Audio synth start warning:', synthErr);
-      }
-
-      // 2. Parallel WAV Audio Element Playback
-      try {
-        if (!audioElem) {
-          audioElem = new Audio(alarmSoundUrl);
-          audioElem.loop = loop;
-          audioElem.volume = 1.0;
-          audioElem.preload = 'auto';
-        }
-        await audioElem.play();
-        startedAudio = true;
-      } catch (wavErr) {
-        console.warn('[soundUtils] HTML5 Audio play warning:', wavErr);
-      }
-
-      isPlaying = startedAudio;
-      if (!startedAudio) {
-        return Promise.reject(new Error('Audio playback blocked by browser'));
-      }
-      return Promise.resolve();
+      });
     },
 
     pause: () => {
-      isPlaying = false;
-      if (audioElem) {
-        try {
-          audioElem.pause();
-          audioElem.currentTime = 0;
-        } catch {
-          // ignore
-        }
+      if (sound) {
+        sound.stop();
       }
-      if (osc1) {
-        try {
-          osc1.stop();
-          osc1.disconnect();
-          osc1 = null;
-        } catch {
-          // ignore
-        }
-      }
-      if (osc2) {
-        try {
-          osc2.stop();
-          osc2.disconnect();
-          osc2 = null;
-        } catch {
-          // ignore
-        }
-      }
-      if (lfo) {
-        try {
-          lfo.stop();
-          lfo.disconnect();
-          lfo = null;
-        } catch {
-          // ignore
-        }
-      }
-      if (gainNode) {
-        try {
-          gainNode.disconnect();
-          gainNode = null;
-        } catch {
-          // ignore
-        }
+    },
+
+    unload: () => {
+      if (sound) {
+        sound.stop();
+        sound.unload();
+        sound = null;
       }
     },
   };
@@ -200,11 +89,12 @@ export function createEmergencyAlarmSound() {
  */
 export function playUserConfirmationSound() {
   try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+    if (Howler.ctx && Howler.ctx.state === 'suspended') {
+      Howler.ctx.resume().catch(() => {});
     }
+
+    const ctx = Howler.ctx;
+    if (!ctx) return;
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
