@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { DeviceFrameset } from 'react-device-frameset';
 import 'react-device-frameset/styles/marvel-devices.min.css';
+import UserLocationTracker from '../../pages/user/home/components/UserLocationTracker.jsx';
 
 const DESKTOP_QUERY = '(min-width: 768px)';
 
@@ -30,7 +31,14 @@ export default function DeviceFrameLayout() {
     return () => document.documentElement.classList.remove('device-frame-active');
   }, [isDesktop]);
 
-  if (!isDesktop) return <Outlet />;
+  if (!isDesktop) {
+    return (
+      <>
+        <UserLocationTracker />
+        <Outlet />
+      </>
+    );
+  }
 
   return (
     <div className="device-frame-stage">
@@ -38,6 +46,7 @@ export default function DeviceFrameLayout() {
         <div className="device-frame-scale-inner">
           <DeviceFrameset device="iPad Mini" color="black">
             <div className="device-app-root">
+              <UserLocationTracker />
               <Outlet />
             </div>
           </DeviceFrameset>

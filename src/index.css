@@ -72,6 +72,7 @@ html.device-frame-active body {
   position: relative;
   background: #f3f4f6;
   -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
 }
 
 .device-app-root .min-h-screen {

@@ -8,6 +8,7 @@ export function FeatureProvider({ children }) {
     emergencySosEnabled: true,
     publicReportEnabled: true,
     userReportEnabled: true,
+    trackUserEnabled: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -15,10 +16,13 @@ export function FeatureProvider({ children }) {
     try {
       const { data } = await axios.get('/public/features');
       if (data.data?.settings) {
-        setFeatureSettings(data.data.settings);
+        setFeatureSettings((prev) => ({
+          ...prev,
+          ...data.data.settings,
+        }));
       }
     } catch {
-      // Fallback default true
+      // Fallback
     } finally {
       setLoading(false);
     }
