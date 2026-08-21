@@ -60,9 +60,12 @@ export function stopEmergencyVibration() {
   }
   if (isVibrationSupported()) {
     try {
-      navigator.vibrate(0);
+      const res = navigator.vibrate(0);
+      if (res === false) {
+        // Suppress Chrome intervention warning
+      }
     } catch {
-      // Ignore
+      // Ignore intervention errors
     }
   }
 }

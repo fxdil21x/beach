@@ -16,6 +16,7 @@ export default function UserLocationTracker() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [hasDeclined, setHasDeclined] = useState(false);
+  const [locationError, setLocationError] = useState('');
   const watchIdRef = useRef(null);
   const lastRestCallRef = useRef(0);
   const lastSocketCallRef = useRef(0);
