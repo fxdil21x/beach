@@ -16,8 +16,9 @@ export default function UserLocationTracker() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [hasDeclined, setHasDeclined] = useState(false);
-  const [locationError, setLocationError] = useState('');
   const watchIdRef = useRef(null);
+  const lastRestCallRef = useRef(0);
+  const lastSocketCallRef = useRef(0);
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
   const isRegisteredUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
@@ -68,6 +69,8 @@ export default function UserLocationTracker() {
 
   const sendLocationData = (position) => {
     if (!user) return;
+    const now = Date.now();
+
     const payload = {
       userId: String(user.id || user._id),
       userName: user.name || user.fullName || 'Registered Resident',
@@ -81,13 +84,17 @@ export default function UserLocationTracker() {
       timestamp: new Date().toISOString(),
     };
 
-    // Socket update
-    if (socket && socket.connected) {
+    // Throttle WebSocket updates (max once per 3 seconds)
+    if (socket && socket.connected && now - lastSocketCallRef.current >= 3000) {
+      lastSocketCallRef.current = now;
       socket.emit('user:location-update', payload);
     }
 
-    // REST fallback update
-    axios.post('/user/location', payload).catch(() => {});
+    // Throttle REST HTTP POST updates (max once per 15 seconds)
+    if (now - lastRestCallRef.current >= 15000) {
+      lastRestCallRef.current = now;
+      axios.post('/user/location', payload).catch(() => {});
+    }
   };
 
   const startGeolocationWatch = () => {
