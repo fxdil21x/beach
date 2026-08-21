@@ -100,11 +100,6 @@ export default function UserLocationTracker() {
       hasMoved = true;
     }
 
-    // Zero traffic if idle (no movement > 10m and no menu action)
-    if (!hasMoved && !isNavigation) {
-      return;
-    }
-
     lastPosRef.current = { lat, lng };
 
     const payload = {
@@ -120,13 +115,14 @@ export default function UserLocationTracker() {
       timestamp: new Date().toISOString(),
     };
 
-    // 100% FREE WebSocket update for live tracking (throttled to 3s)
-    if (socket && socket.connected && now - lastSocketCallRef.current >= 3000) {
+    // 100% FREE WebSocket update: Send on initial acquisition, movement > 10m, navigation, OR every 10s heartbeat
+    const timeSinceLastSocket = now - lastSocketCallRef.current;
+    if (socket && socket.connected && (isNavigation || hasMoved || timeSinceLastSocket >= 10000)) {
       lastSocketCallRef.current = now;
       socket.emit('user:location-update', payload);
     }
 
-    // REST HTTP API POST call ONLY on menu navigation actions
+    // REST HTTP API POST call ONLY on menu navigation actions (protects API cost/quotas)
     if (isNavigation) {
       lastPathnameRef.current = location.pathname;
       axios.post('/user/location', payload).catch(() => {});
@@ -156,7 +152,7 @@ export default function UserLocationTracker() {
     // Trigger initial position call immediately (forces browser native GPS prompt)
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        sendLocationData(position);
+        sendLocationData(position, true);
         setIsTracking(true);
         setShowPrompt(false);
       },
