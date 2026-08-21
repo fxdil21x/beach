@@ -18,8 +18,8 @@ export default function UserLocationTracker() {
   const [hasDeclined, setHasDeclined] = useState(false);
   const [locationError, setLocationError] = useState('');
   const watchIdRef = useRef(null);
-  const lastRestCallRef = useRef(0);
   const lastSocketCallRef = useRef(0);
+  const lastPathnameRef = useRef(location.pathname);
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
   const isRegisteredUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
@@ -68,7 +68,7 @@ export default function UserLocationTracker() {
     };
   }, []);
 
-  const sendLocationData = (position) => {
+  const sendLocationData = (position, isNavigationAction = false) => {
     if (!user) return;
     const now = Date.now();
 
@@ -85,15 +85,15 @@ export default function UserLocationTracker() {
       timestamp: new Date().toISOString(),
     };
 
-    // Throttle WebSocket updates (max once per 3 seconds)
+    // 100% FREE WebSocket update for live tracking (throttled to 3s)
     if (socket && socket.connected && now - lastSocketCallRef.current >= 3000) {
       lastSocketCallRef.current = now;
       socket.emit('user:location-update', payload);
     }
 
-    // Throttle REST HTTP POST updates (max once per 15 seconds)
-    if (now - lastRestCallRef.current >= 15000) {
-      lastRestCallRef.current = now;
+    // REST HTTP API POST call ONLY on menu navigation actions (prevents quota/cost overuse)
+    if (isNavigationAction || location.pathname !== lastPathnameRef.current) {
+      lastPathnameRef.current = location.pathname;
       axios.post('/user/location', payload).catch(() => {});
     }
   };
