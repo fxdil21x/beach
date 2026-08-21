@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sliders, Siren, ShieldAlert, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Sliders, Siren, ShieldAlert, FileText, MapPin, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 import Button from '../../components/ui/Button.jsx';
 
@@ -190,6 +190,47 @@ export default function MasterFeatureSettings() {
               <span
                 className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
                   settings.userReportEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Card 4: Track User System */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 shadow-xl transition-all hover:border-zinc-700">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                <MapPin className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-white">Track User System (Live GPS Location)</h3>
+                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                    settings.trackUserEnabled
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-zinc-800 text-zinc-400'
+                  }`}>
+                    {settings.trackUserEnabled ? 'ACTIVE' : 'DISABLED'}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Controls the live user location tracking system. When <strong>ON</strong>, registered users see a location permission prompt on login and stream live GPS coordinates to the Master Admin Live Map. When <strong>OFF</strong>, no location messages appear, tracking is disabled, and the "Track User" tab is hidden.
+                </p>
+              </div>
+            </div>
+
+            {/* Switch Toggle */}
+            <button
+              type="button"
+              onClick={() => handleToggle('trackUserEnabled')}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                settings.trackUserEnabled ? 'bg-orange-500' : 'bg-zinc-800'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                  settings.trackUserEnabled ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
             </button>

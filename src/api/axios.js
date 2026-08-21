@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const configuredBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const configuredBaseUrl = import.meta.env.VITE_API_URL || 'https://beachbackend.vercel.app/api';
 const baseURL = /^https?:\/\//i.test(configuredBaseUrl)
   ? configuredBaseUrl
   : `https://${configuredBaseUrl}`;

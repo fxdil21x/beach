@@ -16,9 +16,7 @@ const EmergencyContext = createContext(null);
 
 const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL
   ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-  : window.location.origin.includes('5173')
-  ? 'http://localhost:5000'
-  : window.location.origin;
+  : 'https://beachbackend.vercel.app';
 
 export function EmergencyProvider({ children }) {
   const { user } = useAuth();
@@ -354,6 +352,7 @@ export function EmergencyProvider({ children }) {
   return (
     <EmergencyContext.Provider
       value={{
+        socket,
         activeEmergencies,
         userEmergencyState,
         autoplayBlocked,

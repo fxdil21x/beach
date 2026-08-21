@@ -6,7 +6,7 @@ import DeviceFrameLayout from './components/layout/DeviceFrameLayout.jsx';
 import Login from './pages/auth/Login.jsx';
 import Register from './pages/auth/Register.jsx';
 
-import UserDashboard from './pages/user/Dashboard.jsx';
+import UserDashboard from './pages/user/home/index.js';
 import MyPass from './pages/user/MyPass.jsx';
 import MyVisits from './pages/user/MyVisits.jsx';
 import BeachRules from './pages/user/BeachRules.jsx';
@@ -24,7 +24,6 @@ import MasterDashboard from './pages/master/Dashboard.jsx';
 import ImportResidents from './pages/master/ImportResidents.jsx';
 import ResidentRecords from './pages/master/ResidentRecords.jsx';
 import RegisteredResidents from './pages/master/RegisteredResidents.jsx';
-import Users from './pages/master/Users.jsx';
 import Admins from './pages/master/Admins.jsx';
 import ResidentEntries from './pages/master/ResidentEntries.jsx';
 import VisitorEntries from './pages/master/VisitorEntries.jsx';
@@ -32,6 +31,7 @@ import Analytics from './pages/master/Analytics.jsx';
 import MasterReports from './pages/master/Reports.jsx';
 import MasterNotifications from './pages/master/Notifications.jsx';
 import MasterFeatureSettings from './pages/master/FeatureSettings.jsx';
+import MasterTrackUser from './pages/master/TrackUser.jsx';
 
 import VisitorEntry from './pages/public/VisitorEntry.jsx';
 import EntrySuccess from './pages/public/EntrySuccess.jsx';
@@ -40,6 +40,7 @@ import PublicIssueReport from './pages/public/PublicIssueReport.jsx';
 import { EmergencyProvider } from './context/EmergencyContext.jsx';
 import { FeatureProvider } from './context/FeatureContext.jsx';
 import AdminEmergencyOverlay from './components/notifications/AdminEmergencyOverlay.jsx';
+import UserLocationTracker from './components/user/UserLocationTracker.jsx';
 
 export default function App() {
   return (
@@ -85,10 +86,10 @@ export default function App() {
                   <Route index element={<Navigate to="dashboard" replace />} />
                   <Route path="dashboard" element={<MasterDashboard />} />
                   <Route path="features" element={<MasterFeatureSettings />} />
+                  <Route path="track-user" element={<MasterTrackUser />} />
                   <Route path="import" element={<ImportResidents />} />
                   <Route path="resident-records" element={<ResidentRecords />} />
                   <Route path="registered-residents" element={<RegisteredResidents />} />
-                  <Route path="users" element={<Users />} />
                   <Route path="admins" element={<Admins />} />
                   <Route path="resident-entries" element={<ResidentEntries />} />
                   <Route path="visitor-entries" element={<VisitorEntries />} />

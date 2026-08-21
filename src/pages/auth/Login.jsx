@@ -22,7 +22,8 @@ export default function Login() {
     try {
       const user = await login(form.username, form.password);
       if (user.role === 'ADMIN') navigate('/admin/recent');
-      else navigate('/master/dashboard');
+      else if (user.role === 'MASTER_ADMIN') navigate('/master/dashboard');
+      else navigate('/user/home');
     } catch (err) {
       setError(err.response?.data?.message || t('common.error'));
     } finally {
