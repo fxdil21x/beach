@@ -68,17 +68,52 @@ export default function UserLocationTracker() {
     };
   }, []);
 
+  // Calculate approximate distance in meters between two coordinates
+  const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
   const sendLocationData = (position, isNavigationAction = false) => {
     if (!user) return;
     const now = Date.now();
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+
+    const isNavigation = isNavigationAction || location.pathname !== lastPathnameRef.current;
+    let hasMoved = false;
+
+    if (lastPosRef.current) {
+      const dist = getDistanceMeters(lastPosRef.current.lat, lastPosRef.current.lng, lat, lng);
+      if (dist >= 10) {
+        hasMoved = true;
+      }
+    } else {
+      hasMoved = true;
+    }
+
+    // Zero traffic if idle (no movement > 10m and no menu action)
+    if (!hasMoved && !isNavigation) {
+      return;
+    }
+
+    lastPosRef.current = { lat, lng };
 
     const payload = {
       userId: String(user.id || user._id),
       userName: user.name || user.fullName || 'Registered Resident',
       username: user.username || '',
       userPhone: user.phone || '',
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
+      latitude: lat,
+      longitude: lng,
       speed: position.coords.speed,
       heading: position.coords.heading,
       accuracy: position.coords.accuracy,
@@ -91,8 +126,8 @@ export default function UserLocationTracker() {
       socket.emit('user:location-update', payload);
     }
 
-    // REST HTTP API POST call ONLY on menu navigation actions (prevents quota/cost overuse)
-    if (isNavigationAction || location.pathname !== lastPathnameRef.current) {
+    // REST HTTP API POST call ONLY on menu navigation actions
+    if (isNavigation) {
       lastPathnameRef.current = location.pathname;
       axios.post('/user/location', payload).catch(() => {});
     }
