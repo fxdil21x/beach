@@ -260,6 +260,30 @@ export default function UserLocationTracker() {
 
   return (
     <>
+      {/* Active Tracking Pill Banner with Reset Trigger */}
+      {isTracking && (
+        <div className="fixed top-4 right-4 z-40 flex items-center gap-2 rounded-full bg-emerald-900/90 border border-emerald-500/40 px-3 py-1.5 text-xs font-semibold text-emerald-200 shadow-xl backdrop-blur-md animate-in fade-in">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>Live Tracking Active</span>
+          <button
+            type="button"
+            onClick={() => {
+              const userIdKey = user?.id || user?._id || 'guest_user';
+              localStorage.removeItem(`location_sharing_consent_${userIdKey}`);
+              stopTracking();
+              setShowPrompt(true);
+            }}
+            className="ml-1 text-[10px] underline text-emerald-400 hover:text-white transition-colors cursor-pointer"
+            title="Re-open location permission modal"
+          >
+            Re-ask
+          </button>
+        </div>
+      )}
+
       {/* Location Consent Modal using CommonModal */}
       <CommonModal
         isOpen={showPrompt}
