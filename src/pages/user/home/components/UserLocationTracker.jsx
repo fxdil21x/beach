@@ -77,6 +77,42 @@ export default function UserLocationTracker() {
     };
   }, []);
 
+  // Handle Page Visibility change (when web app is minimized or tab is in background)
+  useEffect(() => {
+    if (!isTracking) return;
+
+    let bgIntervalId = null;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is minimized/hidden - trigger periodic getCurrentPosition heartbeat to bypass timer throttling
+        bgIntervalId = setInterval(() => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => sendLocationData(pos, true),
+              (err) => console.warn('[Geolocation] Background position fetch error:', err.message),
+              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+          }
+        }, 8000);
+      } else {
+        // Tab is visible again - clear background interval
+        if (bgIntervalId) {
+          clearInterval(bgIntervalId);
+          bgIntervalId = null;
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (bgIntervalId) {
+        clearInterval(bgIntervalId);
+      }
+    };
+  }, [isTracking]);
+
   // Calculate approximate distance in meters between two coordinates
   const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
     const R = 6371000;
