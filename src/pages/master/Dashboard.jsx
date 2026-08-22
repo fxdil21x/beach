@@ -15,6 +15,7 @@ import MasterSidebar from '../../components/layout/MasterSidebar.jsx';
 import MasterHeader from '../../components/layout/MasterHeader.jsx';
 import PageContainer from '../../components/layout/PageContainer.jsx';
 import AdminEmergencyOverlay from '../../components/notifications/AdminEmergencyOverlay.jsx';
+import UserLocationTracker from '../../components/user/UserLocationTracker.jsx';
 import { MasterDashboardSkeleton } from '../../components/ui/Skeleton.jsx';
 import * as masterApi from '../../api/masterApi.js';
 
@@ -23,6 +24,7 @@ export function MasterLayout() {
 
   return (
     <div className="relative flex h-screen max-h-screen overflow-hidden bg-zinc-950 text-zinc-100">
+      <UserLocationTracker />
       <AdminEmergencyOverlay />
       <MasterSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

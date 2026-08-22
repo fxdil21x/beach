@@ -34,6 +34,33 @@ export function FeatureProvider({ children }) {
     fetchFeatures();
   }, [fetchFeatures]);
 
+  // Listen for real-time socket feature settings updates
+  useEffect(() => {
+    const handleFeaturesUpdated = (payload) => {
+      if (payload?.settings) {
+        setFeatureSettings((prev) => ({
+          ...prev,
+          ...payload.settings,
+        }));
+      }
+    };
+
+    // Lazy load socket from EmergencyContext if available
+    const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+      : 'https://beach-verification-backend.onrender.com';
+
+    import('socket.io-client').then(({ io }) => {
+      const s = io(SOCKET_SERVER_URL, {
+        path: '/api/socket.io',
+        withCredentials: true,
+        transports: ['websocket', 'polling'],
+      });
+      s.on('features:updated', handleFeaturesUpdated);
+      return () => s.disconnect();
+    }).catch(() => {});
+  }, []);
+
   const updateFeatures = async (newSettings) => {
     const { data } = await axios.put('/master/features', newSettings);
     if (data.data?.settings) {

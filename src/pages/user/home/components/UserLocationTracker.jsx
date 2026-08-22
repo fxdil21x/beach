@@ -23,9 +23,19 @@ export default function UserLocationTracker() {
   const lastPosRef = useRef(null);
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
-  const isRegisteredUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
-  const userKey = user?.id || user?._id;
+  const isNonAdminUser = !user || (user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
+  const userKey = user?.id || user?._id || 'guest_user';
   const lastUserIdRef = useRef(userKey);
+
+  // Listen for test-location-prompt event from admin test buttons
+  useEffect(() => {
+    const handleTestPrompt = () => {
+      setLocationError('');
+      setShowPrompt(true);
+    };
+    window.addEventListener('test-location-prompt', handleTestPrompt);
+    return () => window.removeEventListener('test-location-prompt', handleTestPrompt);
+  }, []);
 
   // Keep track of active user ID for clean logout socket disconnect
   useEffect(() => {
@@ -43,21 +53,27 @@ export default function UserLocationTracker() {
 
   // Automatically trigger location consent modal on user login or navigation when feature is enabled
   useEffect(() => {
-    if (!isEnabled || !isRegisteredUser || hasDeclined) {
+    if (!isEnabled || !isNonAdminUser || hasDeclined) {
       stopTracking();
       setShowPrompt(false);
       return;
     }
 
-    const userIdKey = user?.id || user?._id || 'current_user';
+    const userIdKey = user?.id || user?._id || 'guest_user';
     const storedConsent = localStorage.getItem(`location_sharing_consent_${userIdKey}`);
 
-    // If user has already allowed location sharing, resume tracking automatically without showing modal again
+    // If user has already allowed location sharing, resume tracking automatically
     if (storedConsent === 'allowed') {
       setShowPrompt(false);
       if (!isTracking) {
         startGeolocationWatch();
       }
+      return;
+    }
+
+    // If declined previously, don't nag
+    if (storedConsent === 'declined') {
+      setShowPrompt(false);
       return;
     }
 
@@ -72,21 +88,18 @@ export default function UserLocationTracker() {
             if (!isTracking) {
               startGeolocationWatch();
             }
+          } else {
+            // Permission is prompt or denied - show modal to explain why
+            setShowPrompt(true);
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setShowPrompt(true);
+        });
+    } else {
+      setShowPrompt(true);
     }
-
-    // Show prompt modal after 1-second delay for fresh consent if not already allowed/declined
-    if (!isTracking && storedConsent !== 'declined') {
-      setLocationError('');
-      const timer = setTimeout(() => {
-        setShowPrompt(true);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isEnabled, isRegisteredUser, userKey, location.pathname, isTracking, hasDeclined]);
+  }, [isEnabled, isNonAdminUser, userKey, location.pathname, isTracking, hasDeclined]);
 
   // Teardown watch on unmount
   useEffect(() => {
@@ -240,8 +253,8 @@ export default function UserLocationTracker() {
     stopTracking();
   };
 
-  // If tracking feature is OFF or user not logged in, render nothing
-  if (!isEnabled || !isRegisteredUser) {
+  // If tracking feature is OFF or user is Admin/MasterAdmin, render nothing
+  if (!isEnabled || !isNonAdminUser) {
     return null;
   }
 
