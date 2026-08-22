@@ -56,8 +56,6 @@ export default function MasterDashboard() {
 
   useEffect(() => {
     load();
-    const intervalId = window.setInterval(load, 5000);
-    return () => window.clearInterval(intervalId);
   }, [load]);
 
   if (!metrics) {

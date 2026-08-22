@@ -19,8 +19,6 @@ export default function RecentEntries() {
 
   useEffect(() => {
     load();
-    const intervalId = window.setInterval(load, 5000);
-    return () => window.clearInterval(intervalId);
   }, [load]);
 
   const counts = useMemo(() => {

@@ -13,8 +13,6 @@ export default function VisitorEntries() {
 
   useEffect(() => {
     load();
-    const intervalId = window.setInterval(load, 5000);
-    return () => window.clearInterval(intervalId);
   }, [load]);
 
   return (
