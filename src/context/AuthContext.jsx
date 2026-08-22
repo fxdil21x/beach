@@ -109,6 +109,14 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    try {
+      const userId = user?.id || user?._id;
+      if (userId) {
+        api.post('/user/location/stop', { userId }).catch(() => {});
+      }
+    } catch {
+      // ignore
+    }
     clearToken();
   };
 

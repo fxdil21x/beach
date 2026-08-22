@@ -96,13 +96,15 @@ export default function MasterTrackUser() {
       const { data } = await axios.get('/user/location/active');
       const activeList = data.data?.users || data.data?.locations || data.locations || [];
       if (Array.isArray(activeList)) {
-        setUsers((prev) => {
-          const next = new Map(prev);
-          activeList.forEach((u) => {
-            if (u.userId) next.set(u.userId, u);
-          });
-          return next;
+        const now = Date.now();
+        const freshMap = new Map();
+        activeList.forEach((u) => {
+          const userTime = new Date(u.timestamp).getTime();
+          if (u.userId && !isNaN(userTime) && now - userTime <= 45000) {
+            freshMap.set(u.userId, u);
+          }
         });
+        setUsers(freshMap);
       }
     } catch {
       // Ignore polling errors

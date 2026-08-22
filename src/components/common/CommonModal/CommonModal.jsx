@@ -16,7 +16,7 @@ export default function CommonModal({
 
   return (
     <div
-      className="absolute inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-300"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-300"
       onClick={onClose}
     >
       <div
