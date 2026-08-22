@@ -74,9 +74,21 @@ export default function MasterFeatureSettings() {
       icon: MapPin,
       accent: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
       description: (
-        <>
-          Controls the live user location tracking system. When <strong>ON</strong>, registered users see a location permission prompt on login and stream live GPS coordinates to the Master Admin Live Map. When <strong>OFF</strong>, no location messages appear, tracking is disabled, and the "Track User" tab is hidden.
-        </>
+        <div className="space-y-2">
+          <p>
+            Controls the live user location tracking system. When <strong>ON</strong>, visitors and residents see a location permission prompt on login/entry and stream live GPS coordinates to the Master Admin Live Map. When <strong>OFF</strong>, tracking is disabled.
+          </p>
+          <div className="pt-1 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('test-location-prompt'))}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/30 transition-all cursor-pointer"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              Preview / Test Consent Modal
+            </button>
+          </div>
+        </div>
       ),
     },
     {
