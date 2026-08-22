@@ -18,12 +18,14 @@ import { MasterDashboardSkeleton } from '../../components/ui/Skeleton.jsx';
 import * as masterApi from '../../api/masterApi.js';
 
 export function MasterLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-screen max-h-screen overflow-hidden bg-zinc-950 text-zinc-100">
-      <MasterSidebar />
+      <MasterSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <MasterHeader />
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <MasterHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <PageContainer>
             <Outlet />
           </PageContainer>
