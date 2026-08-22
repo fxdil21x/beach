@@ -177,7 +177,7 @@ export default function UserReportIssue() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
         {/* Real-time Notification Banner */}
         {notification && (
           <div className="mb-4 flex items-center gap-3 rounded-2xl bg-amber-500 p-4 text-white shadow-lg animate-bounce">

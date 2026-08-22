@@ -1,9 +1,15 @@
 import axios from 'axios';
 
-const configuredBaseUrl = import.meta.env.VITE_API_URL || 'https://beachbackend.vercel.app/api';
-const baseURL = /^https?:\/\//i.test(configuredBaseUrl)
-  ? configuredBaseUrl
-  : `https://${configuredBaseUrl}`;
+let rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+if (!/^https?:\/\//i.test(rawUrl)) {
+  rawUrl = (rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1'))
+    ? `http://${rawUrl}`
+    : `https://${rawUrl}`;
+}
+// Automatically ensure /api prefix is present
+const baseURL = rawUrl.replace(/\/+$/, '').endsWith('/api')
+  ? rawUrl.replace(/\/+$/, '')
+  : `${rawUrl.replace(/\/+$/, '')}/api`;
 
 const api = axios.create({
   baseURL,

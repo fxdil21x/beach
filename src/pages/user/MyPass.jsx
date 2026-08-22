@@ -53,7 +53,7 @@ export default function MyPass() {
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('pass.title')} showLanguage />
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
         {loading ? (
           <MyPassSkeleton />
         ) : !pass ? (

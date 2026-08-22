@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { DeviceFrameset } from 'react-device-frameset';
 import 'react-device-frameset/styles/marvel-devices.min.css';
 import UserLocationTracker from '../../pages/user/home/components/UserLocationTracker.jsx';
+import AdminEmergencyOverlay from '../notifications/AdminEmergencyOverlay.jsx';
 
 const DESKTOP_QUERY = '(min-width: 768px)';
 
@@ -35,6 +36,7 @@ export default function DeviceFrameLayout() {
     return (
       <>
         <UserLocationTracker />
+        <AdminEmergencyOverlay />
         <Outlet />
       </>
     );
@@ -47,6 +49,7 @@ export default function DeviceFrameLayout() {
           <DeviceFrameset device="iPad Mini" color="black">
             <div className="device-app-root">
               <UserLocationTracker />
+              <AdminEmergencyOverlay />
               <Outlet />
             </div>
           </DeviceFrameset>

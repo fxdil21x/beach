@@ -134,16 +134,15 @@ export default function UserLocationTracker() {
       timestamp: new Date().toISOString(),
     };
 
-    // 100% FREE WebSocket update: Send on initial acquisition, movement > 10m, navigation, OR every 10s heartbeat
-    const timeSinceLastSocket = now - lastSocketCallRef.current;
-    if (socket && socket.connected && (isNavigation || hasMoved || timeSinceLastSocket >= 10000)) {
+    // Continuous location update over socket & REST API (on movement > 10m, navigation, or every 10s heartbeat)
+    const timeSinceLastUpdate = now - lastSocketCallRef.current;
+    if (isNavigation || hasMoved || timeSinceLastUpdate >= 10000) {
       lastSocketCallRef.current = now;
-      socket.emit('user:location-update', payload);
-    }
-
-    // REST HTTP API POST call ONLY on menu navigation actions (protects API cost/quotas)
-    if (isNavigation) {
       lastPathnameRef.current = location.pathname;
+
+      if (socket && socket.connected) {
+        socket.emit('user:location-update', payload);
+      }
       axios.post('/user/location', payload).catch(() => {});
     }
   };
@@ -161,7 +160,7 @@ export default function UserLocationTracker() {
     const options = {
       enableHighAccuracy: true,
       timeout: 15000,
-      maximumAge: 5000,
+      maximumAge: 0, // Forces hardware GPS sensor query for real-time accuracy
     };
 
     if (watchIdRef.current !== null) {

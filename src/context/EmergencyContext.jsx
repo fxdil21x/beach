@@ -16,7 +16,7 @@ const EmergencyContext = createContext(null);
 
 const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL
   ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-  : 'https://beachbackend.vercel.app';
+  : 'https://beach-verification-backend.onrender.com';
 
 export function EmergencyProvider({ children }) {
   const { user } = useAuth();

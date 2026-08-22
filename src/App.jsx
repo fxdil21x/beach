@@ -47,7 +47,6 @@ export default function App() {
     <AuthProvider>
       <FeatureProvider>
         <EmergencyProvider>
-          <AdminEmergencyOverlay />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<RoleRedirect />} />

@@ -1,12 +1,40 @@
-import { useState, useEffect, useRef } from 'react';
-import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock, Layers, Globe, Moon, Map as MapIcon } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 import { useFeatureSettings } from '../../context/FeatureContext.jsx';
+import axios from '../../api/axios.js';
 
 // Default Muzhappilangad Beach Coordinates
 const DEFAULT_CENTER = [11.7915, 75.4524];
+
+const TILE_LAYERS = {
+  satellite: {
+    name: 'Realistic Satellite',
+    url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    maxZoom: 20,
+    attribution: '&copy; Google Maps Hybrid Satellite',
+  },
+  esri: {
+    name: 'Esri Aerial',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    maxZoom: 19,
+    attribution: '&copy; Esri World Imagery',
+  },
+  dark: {
+    name: 'Dark Tactical',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    maxZoom: 19,
+    attribution: '&copy; CARTO Dark Matter',
+  },
+  street: {
+    name: 'Standard Street',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors',
+  },
+};
 
 export default function MasterTrackUser() {
   const { socket } = useEmergency();
@@ -14,9 +42,11 @@ export default function MasterTrackUser() {
   const [users, setUsers] = useState(new Map());
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [mapStyle, setMapStyle] = useState('satellite'); // Default to Realistic Satellite View
 
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
   const markersRef = useRef(new Map());
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
@@ -31,11 +61,6 @@ export default function MasterTrackUser() {
       zoomControl: true,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
-
     mapInstanceRef.current = map;
 
     return () => {
@@ -45,6 +70,51 @@ export default function MasterTrackUser() {
       }
     };
   }, []);
+
+  // Handle Tile Layer switching (Satellite, Esri, Dark, Street)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+
+    const config = TILE_LAYERS[mapStyle] || TILE_LAYERS.satellite;
+    const newTileLayer = L.tileLayer(config.url, {
+      maxZoom: config.maxZoom,
+      attribution: config.attribution,
+    }).addTo(map);
+
+    tileLayerRef.current = newTileLayer;
+  }, [mapStyle]);
+
+  // REST API Polling Fallback (ensures Vercel & serverless deployments get live user locations)
+  const pollActiveLocations = useCallback(async () => {
+    if (!isEnabled) return;
+    try {
+      const { data } = await axios.get('/user/location/active');
+      const activeList = data.data?.users || data.data?.locations || data.locations || [];
+      if (Array.isArray(activeList)) {
+        setUsers((prev) => {
+          const next = new Map(prev);
+          activeList.forEach((u) => {
+            if (u.userId) next.set(u.userId, u);
+          });
+          return next;
+        });
+      }
+    } catch {
+      // Ignore polling errors
+    }
+  }, [isEnabled]);
+
+  useEffect(() => {
+    if (!isEnabled) return;
+    pollActiveLocations();
+    const interval = setInterval(pollActiveLocations, 5000);
+    return () => clearInterval(interval);
+  }, [isEnabled, pollActiveLocations]);
 
   // Join tracking room & listen to location events
   useEffect(() => {
@@ -103,10 +173,11 @@ export default function MasterTrackUser() {
     const currentMarkers = markersRef.current;
     const activeUserIds = new Set(users.keys());
 
-    // Remove obsolete markers
-    currentMarkers.forEach((marker, userId) => {
+    // Remove obsolete markers & circles
+    currentMarkers.forEach((item, userId) => {
       if (!activeUserIds.has(userId)) {
-        map.removeLayer(marker);
+        if (item.marker) map.removeLayer(item.marker);
+        if (item.circle) map.removeLayer(item.circle);
         currentMarkers.delete(userId);
       }
     });
@@ -121,12 +192,12 @@ export default function MasterTrackUser() {
         className: 'custom-live-marker',
         html: `
           <div class="relative flex items-center justify-center">
-            <span class="absolute inline-flex h-6 w-6 animate-ping rounded-full bg-red-400 opacity-75"></span>
-            <span class="relative inline-flex h-4 w-4 rounded-full bg-red-600 border-2 border-white shadow-lg"></span>
+            <span class="absolute inline-flex h-7 w-7 animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex h-4 w-4 rounded-full bg-emerald-500 border-2 border-white shadow-lg shadow-emerald-500/50"></span>
           </div>
         `,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
       });
 
       const popupContent = `
@@ -137,23 +208,44 @@ export default function MasterTrackUser() {
           <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
             ${user.username ? `@${user.username}` : ''} ${user.userPhone ? `• ${user.userPhone}` : ''}
           </div>
-          <div style="font-size: 11px; background-color: #f1f5f9; padding: 6px; rounded: 6px; color: #334155;">
+          <div style="font-size: 11px; background-color: #f1f5f9; padding: 6px; border-radius: 6px; color: #334155;">
             <div><strong>Lat/Lng:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
+            ${user.accuracy != null ? `<div><strong>GPS Accuracy:</strong> ~${Math.round(user.accuracy)}m</div>` : ''}
             ${user.speed != null ? `<div><strong>Speed:</strong> ${(user.speed * 3.6).toFixed(1)} km/h</div>` : ''}
             <div><strong>Last Seen:</strong> ${new Date(user.timestamp).toLocaleTimeString()}</div>
           </div>
         </div>
       `;
 
+      const radius = Math.min(Math.max(user.accuracy || 25, 10), 150);
+
       if (currentMarkers.has(userId)) {
-        const marker = currentMarkers.get(userId);
-        marker.setLatLng([lat, lng]);
-        marker.setPopupContent(popupContent);
+        const item = currentMarkers.get(userId);
+        item.marker.setLatLng([lat, lng]);
+        item.marker.setPopupContent(popupContent);
+        if (item.circle) {
+          item.circle.setLatLng([lat, lng]);
+          item.circle.setRadius(radius);
+        }
       } else {
+        const circle = L.circle([lat, lng], {
+          radius,
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.15,
+          weight: 1.5,
+        }).addTo(map);
+
         const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
         marker.bindPopup(popupContent);
+        marker.bindTooltip(`<b>${user.userName || 'User'}</b>`, {
+          permanent: true,
+          direction: 'top',
+          className: 'live-user-tooltip',
+          offset: [0, -12],
+        });
         marker.on('click', () => setSelectedUser(user));
-        currentMarkers.set(userId, marker);
+        currentMarkers.set(userId, { marker, circle });
       }
     });
   }, [users]);
@@ -165,8 +257,8 @@ export default function MasterTrackUser() {
       map.flyTo([Number(user.latitude), Number(user.longitude)], 16, {
         duration: 1.2,
       });
-      const marker = markersRef.current.get(user.userId);
-      if (marker) marker.openPopup();
+      const item = markersRef.current.get(user.userId);
+      if (item && item.marker) item.marker.openPopup();
     }
   };
 
@@ -242,6 +334,66 @@ export default function MasterTrackUser() {
         {/* Map Container */}
         <div className="lg:col-span-3 rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden shadow-2xl relative min-h-[350px]">
           <div ref={mapRef} className="w-full h-full z-0" />
+
+          {/* Map Layer Switcher Control */}
+          <div className="absolute top-4 right-4 z-[1000] flex items-center gap-1 rounded-xl bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-1 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setMapStyle('satellite')}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                mapStyle === 'satellite'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              }`}
+              title="Realistic Google Satellite & Hybrid View"
+            >
+              <Globe className="h-3.5 w-3.5 text-emerald-300" />
+              <span>Satellite</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMapStyle('esri')}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                mapStyle === 'esri'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              }`}
+              title="Esri World Aerial Imagery"
+            >
+              <Layers className="h-3.5 w-3.5 text-cyan-300" />
+              <span>Aerial</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMapStyle('dark')}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                mapStyle === 'dark'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              }`}
+              title="Dark Tactical Mode"
+            >
+              <Moon className="h-3.5 w-3.5 text-purple-300" />
+              <span>Dark</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMapStyle('street')}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                mapStyle === 'street'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              }`}
+              title="Standard OpenStreetMap Vector"
+            >
+              <MapIcon className="h-3.5 w-3.5 text-amber-300" />
+              <span>Street</span>
+            </button>
+          </div>
+
           {users.size === 0 && (
             <div className="absolute bottom-4 left-4 z-[1000] bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 shadow-xl flex items-center gap-2">
               <Navigation className="h-4 w-4 text-orange-400 animate-pulse" />
