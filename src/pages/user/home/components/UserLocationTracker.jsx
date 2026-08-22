@@ -23,8 +23,8 @@ export default function UserLocationTracker() {
   const lastPosRef = useRef(null);
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
-  const isNonAdminUser = !user || (user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
-  const userKey = user?.id || user?._id || 'guest_user';
+  const isOnlyLoggedInUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
+  const userKey = user?.id || user?._id;
   const lastUserIdRef = useRef(userKey);
 
   // Listen for test-location-prompt event from admin test buttons
@@ -53,7 +53,7 @@ export default function UserLocationTracker() {
 
   // Automatically trigger location consent modal 1 second after user login when feature is enabled
   useEffect(() => {
-    if (!isEnabled || !isNonAdminUser || hasDeclined) {
+    if (!isEnabled || !isOnlyLoggedInUser || hasDeclined) {
       stopTracking();
       setShowPrompt(false);
       return;
@@ -68,7 +68,7 @@ export default function UserLocationTracker() {
 
       return () => clearTimeout(timer);
     }
-  }, [isEnabled, isNonAdminUser, userKey, hasDeclined, isTracking]);
+  }, [isEnabled, isOnlyLoggedInUser, userKey, hasDeclined, isTracking]);
 
   // Teardown watch on unmount
   useEffect(() => {
@@ -217,8 +217,8 @@ export default function UserLocationTracker() {
     stopTracking();
   };
 
-  // If tracking feature is OFF or user is Admin/MasterAdmin, render nothing
-  if (!isEnabled || !isNonAdminUser) {
+  // If tracking feature is OFF or user is not logged in as a registered user, render nothing
+  if (!isEnabled || !isOnlyLoggedInUser) {
     return null;
   }
 
