@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as adminApi from '../../api/adminApi.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const TOKEN_KEY = 'beach_app_token';
 
 export default function AdminPendingVisitorAlert() {
+  const { user } = useAuth();
   const [pendingEntries, setPendingEntries] = useState([]);
   const [submittingId, setSubmittingId] = useState(null);
 
@@ -12,6 +14,7 @@ export default function AdminPendingVisitorAlert() {
   }, []);
 
   useEffect(() => {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN')) return undefined;
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return undefined;
 
@@ -33,6 +36,7 @@ export default function AdminPendingVisitorAlert() {
 
       if (payload.type === 'entry-reviewed') {
         removeReviewedEntry(payload.entry._id);
+        window.dispatchEvent(new CustomEvent('visitor-entry-updated', { detail: payload }));
       }
     };
 
@@ -46,6 +50,7 @@ export default function AdminPendingVisitorAlert() {
     removeReviewedEntry(id);
     try {
       await adminApi.reviewVisitorEntry(id, status);
+      window.dispatchEvent(new CustomEvent('visitor-entry-updated', { detail: { type: 'entry-reviewed', entry: { _id: id, status } } }));
     } catch (err) {
       console.error('Failed to review entry:', err);
     } finally {
@@ -53,14 +58,14 @@ export default function AdminPendingVisitorAlert() {
     }
   };
 
-  if (pendingEntries.length === 0) return null;
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN') || pendingEntries.length === 0) return null;
 
   const entry = pendingEntries[0];
   const moreCount = pendingEntries.length - 1;
   const isSubmitting = submittingId === entry._id;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-lg rounded-2xl border border-amber-400/80 bg-white/95 backdrop-blur-md p-4 shadow-2xl transition-all duration-300">
+    <div className="absolute bottom-full mb-3 left-4 right-4 z-50 mx-auto max-w-lg rounded-2xl border border-amber-400/80 bg-white/95 backdrop-blur-md p-4 shadow-2xl transition-all duration-300">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

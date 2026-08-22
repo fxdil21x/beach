@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock, Layers, Globe, Moon, Map as MapIcon } from 'lucide-react';
+import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock, Layers, Globe, Moon, Map as MapIcon, Eye, Compass, ExternalLink, X, Maximize2 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
@@ -43,6 +43,7 @@ export default function MasterTrackUser() {
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [mapStyle, setMapStyle] = useState('satellite'); // Default to Realistic Satellite View
+  const [streetViewTarget, setStreetViewTarget] = useState(null); // 3D Street View Modal Target
 
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -50,6 +51,20 @@ export default function MasterTrackUser() {
   const markersRef = useRef(new Map());
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
+
+  // Bind global window handler for marker popup 3D Street View button click
+  useEffect(() => {
+    window.open3DStreetView = (lat, lng, name) => {
+      setStreetViewTarget({
+        lat: Number(lat),
+        lng: Number(lng),
+        userName: name || 'Tracked User',
+      });
+    };
+    return () => {
+      delete window.open3DStreetView;
+    };
+  }, []);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -203,19 +218,25 @@ export default function MasterTrackUser() {
       });
 
       const popupContent = `
-        <div style="font-family: sans-serif; padding: 4px;">
+        <div style="font-family: sans-serif; padding: 4px; min-width: 180px;">
           <div style="font-weight: bold; font-size: 14px; color: #0f172a; margin-bottom: 2px;">
             ${user.userName || 'Registered User'}
           </div>
           <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
             ${user.username ? `@${user.username}` : ''} ${user.userPhone ? `• ${user.userPhone}` : ''}
           </div>
-          <div style="font-size: 11px; background-color: #f1f5f9; padding: 6px; border-radius: 6px; color: #334155;">
+          <div style="font-size: 11px; background-color: #f1f5f9; padding: 6px; border-radius: 6px; color: #334155; margin-bottom: 8px;">
             <div><strong>Lat/Lng:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
             ${user.accuracy != null ? `<div><strong>GPS Accuracy:</strong> ~${Math.round(user.accuracy)}m</div>` : ''}
             ${user.speed != null ? `<div><strong>Speed:</strong> ${(user.speed * 3.6).toFixed(1)} km/h</div>` : ''}
             <div><strong>Last Seen:</strong> ${new Date(user.timestamp).toLocaleTimeString()}</div>
           </div>
+          <button 
+            onclick="window.open3DStreetView(${lat}, ${lng}, '${(user.userName || 'Registered User').replace(/'/g, "\\'")}')" 
+            style="width: 100%; padding: 7px 12px; background: linear-gradient(135deg, #059669, #0d9488); color: white; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(16,185,129,0.3); transition: all 0.2s ease;"
+          >
+            <span style="font-size: 13px;">🌐</span> View 3D Street View
+          </button>
         </div>
       `;
 
@@ -464,14 +485,26 @@ export default function MasterTrackUser() {
                       </div>
                     </div>
 
-                    <div className="mt-2.5 flex items-center justify-between text-[10px] text-zinc-400 border-t border-zinc-800/60 pt-2">
+                    <div className="mt-2.5 flex items-center justify-between text-[10px] text-zinc-400 border-t border-zinc-800/60 pt-2 gap-2">
                       <span className="font-mono text-emerald-400">
                         {Number(u.latitude).toFixed(4)}, {Number(u.longitude).toFixed(4)}
                       </span>
-                      <span className="flex items-center gap-1 text-zinc-500">
-                        <Clock className="h-3 w-3" />
-                        {new Date(u.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStreetViewTarget({
+                            lat: Number(u.latitude),
+                            lng: Number(u.longitude),
+                            userName: u.userName || 'Tracked User',
+                          });
+                        }}
+                        className="flex items-center gap-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white px-2 py-1 text-[10px] font-bold border border-emerald-500/30 transition-all cursor-pointer shadow-sm"
+                        title="Open 3D Street View / 360 Panorama"
+                      >
+                        <Globe className="h-3 w-3" />
+                        3D View
+                      </button>
                     </div>
                   </div>
                 );
@@ -480,6 +513,94 @@ export default function MasterTrackUser() {
           </div>
         </div>
       </div>
+
+      {/* 3D Street View & 360° Panorama Modal */}
+      {streetViewTarget && (
+        <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col overflow-hidden shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/80 bg-zinc-900/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <Globe className="h-5 w-5 animate-spin-slow" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    3D Interactive Street View & Panorama
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-extrabold text-emerald-400 border border-emerald-500/30">
+                      360° VIEW
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
+                    <span>Target: <strong className="text-zinc-200">{streetViewTarget.userName}</strong></span>
+                    <span>•</span>
+                    <span className="font-mono text-emerald-400">
+                      {streetViewTarget.lat.toFixed(5)}, {streetViewTarget.lng.toFixed(5)}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setStreetViewTarget(null)}
+                className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                title="Close 3D View"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Viewport (360° Google Street View Iframe) */}
+            <div className="flex-1 bg-black relative">
+              <iframe
+                title="3D Street View Panorama"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                src={`https://maps.google.com/maps?q=&layer=c&cbll=${streetViewTarget.lat},${streetViewTarget.lng}&cbp=11,0,0,0,0&output=svembed`}
+                className="w-full h-full"
+              />
+
+              {/* Floating Instructions Overlay */}
+              <div className="absolute top-4 left-4 z-10 bg-zinc-950/80 backdrop-blur-md border border-zinc-800 rounded-xl px-3 py-2 text-[11px] text-zinc-300 shadow-xl flex items-center gap-2 pointer-events-none">
+                <Compass className="h-4 w-4 text-emerald-400" />
+                <span>Drag inside window to pan 360° • Scroll to zoom in/out</span>
+              </div>
+            </div>
+
+            {/* Modal Footer Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3 border-t border-zinc-800/80 bg-zinc-900/50">
+              <div className="text-xs text-zinc-400 flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span>If 360° street coverage is limited in off-road beach areas, open direct Google Earth 3D view.</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${streetViewTarget.lat},${streetViewTarget.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 transition-all shadow-lg shadow-emerald-600/30"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open in Google Maps 3D
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setStreetViewTarget(null)}
+                  className="rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold px-4 py-2 transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

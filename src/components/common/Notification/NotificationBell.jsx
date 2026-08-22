@@ -2,13 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { Bell } from 'lucide-react';
 import NotificationModal from './NotificationModal.jsx';
 import { getPublicAnnouncements } from '../../../api/announcementApi.js';
+import { useAuth } from '../../../context/AuthContext.jsx';
 
 export default function NotificationBell({ targetRole = 'user' }) {
+  const { user } = useAuth();
   const [announcements, setAnnouncements] = useState([]);
   const [hasUnread, setHasUnread] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const fetchAnnouncements = useCallback(async () => {
+    if (!user) {
+      setAnnouncements([]);
+      setHasUnread(false);
+      return;
+    }
     try {
       const { data } = await getPublicAnnouncements(targetRole);
       const list = data.data.announcements || [];
@@ -30,11 +37,17 @@ export default function NotificationBell({ targetRole = 'user' }) {
       setAnnouncements([]);
       setHasUnread(false);
     }
-  }, [targetRole]);
+  }, [user, targetRole]);
 
   useEffect(() => {
-    fetchAnnouncements();
-  }, [fetchAnnouncements]);
+    if (user) {
+      fetchAnnouncements();
+    }
+  }, [user, fetchAnnouncements]);
+
+  if (!user) {
+    return null;
+  }
 
   const handleOpen = () => {
     setIsOpen(true);

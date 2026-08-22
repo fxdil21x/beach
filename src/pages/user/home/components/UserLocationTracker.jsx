@@ -268,6 +268,9 @@ export default function UserLocationTracker() {
         iconBg="bg-emerald-50 text-emerald-600 border border-emerald-100"
         title="Enable Live Location Sharing"
         subtitle="Beach Safety System has enabled live safety monitoring for registered visitors and residents at Muzhappilangad Beach."
+        actionLabel={locationError ? '📍 Retry Location Access' : '📍 Allow Location'}
+        onAction={handleAllow}
+        actionBtnClass="bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
         actions={
           <div className="flex items-center gap-3">
             <button

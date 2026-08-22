@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { DeviceFrameset } from 'react-device-frameset';
 import 'react-device-frameset/styles/marvel-devices.min.css';
 import UserLocationTracker from '../../pages/user/home/components/UserLocationTracker.jsx';
@@ -25,12 +25,37 @@ function useDesktopFrame() {
 
 export default function DeviceFrameLayout() {
   const isDesktop = useDesktopFrame();
+  const location = useLocation();
+  const modalLayerRef = useRef(null);
+
+  // Reset window scroll position on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
-    if (!isDesktop) return undefined;
+    if (!isDesktop) {
+      // Remove device frame active class and clear modal portal target
+      document.documentElement.classList.remove('device-frame-active');
+      window.__deviceModalLayer = null;
+      return undefined;
+    }
     document.documentElement.classList.add('device-frame-active');
-    return () => document.documentElement.classList.remove('device-frame-active');
+    return () => {
+      document.documentElement.classList.remove('device-frame-active');
+      window.__deviceModalLayer = null;
+    };
   }, [isDesktop]);
+
+  // Register modal layer ref on window so CommonModal can portal into it
+  useEffect(() => {
+    if (isDesktop && modalLayerRef.current) {
+      window.__deviceModalLayer = modalLayerRef.current;
+    }
+    return () => {
+      window.__deviceModalLayer = null;
+    };
+  }, [isDesktop, modalLayerRef.current]);
 
   if (!isDesktop) {
     return (
@@ -48,6 +73,8 @@ export default function DeviceFrameLayout() {
         <div className="device-frame-scale-inner">
           <DeviceFrameset device="iPad Mini" color="black">
             <div className="device-app-root">
+              {/* Portal layer: modals render here to stay inside device screen */}
+              <div ref={modalLayerRef} className="device-modal-layer" />
               <UserLocationTracker />
               <AdminEmergencyOverlay />
               <Outlet />

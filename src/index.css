@@ -27,10 +27,21 @@ span {
   word-break: break-word;
 }
 
+html {
+  touch-action: manipulation;
+}
+
 html.device-frame-active,
 html.device-frame-active body {
   height: 100%;
   overflow: hidden;
+}
+
+/* Prevent mobile browser auto-zoom when focusing inputs */
+@media screen and (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 .device-frame-stage {
@@ -71,6 +82,19 @@ html.device-frame-active body {
   flex-direction: column;
   position: relative;
   background: #f3f4f6;
+}
+
+/* Modal portal layer — sits above app content, but inside device screen */
+.device-modal-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.device-modal-layer > * {
+  pointer-events: auto;
 }
 
 .device-app-root .min-h-screen {
