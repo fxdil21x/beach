@@ -13,6 +13,11 @@ export default function VisitorEntries() {
 
   useEffect(() => {
     load();
+    const handleUpdate = () => {
+      load();
+    };
+    window.addEventListener('visitor-entry-updated', handleUpdate);
+    return () => window.removeEventListener('visitor-entry-updated', handleUpdate);
   }, [load]);
 
   return (

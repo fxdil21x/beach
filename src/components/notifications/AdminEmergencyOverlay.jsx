@@ -1,126 +1,120 @@
-  import { useEffect } from 'react';
-import { Siren, ShieldAlert, Volume2, MapPin, Clock, Radio, PhoneCall } from 'lucide-react';
+import { useEffect } from 'react';
+import { Siren, ShieldAlert, Volume2, MapPin, Clock, Radio, PhoneCall, Shield } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
+import CommonModal from '../common/CommonModal/index.js';
 
 export default function AdminEmergencyOverlay() {
   const { activeEmergencies, claimEmergency, startCall, autoplayBlocked, retryAudioUnlock } = useEmergency();
 
   const emergencyList = Object.values(activeEmergencies);
+  const isOpen = emergencyList.length > 0;
 
-  // Automatically trigger audio unlock as soon as popup modal appears or refreshes
+  // Automatically trigger audio unlock as soon as emergency modal appears
   useEffect(() => {
-    if (emergencyList.length > 0) {
+    if (isOpen) {
       retryAudioUnlock();
     }
-  }, [emergencyList.length, retryAudioUnlock]);
+  }, [isOpen, retryAudioUnlock]);
 
-  if (emergencyList.length === 0) return null;
+  if (!isOpen) return null;
 
   return (
     <div
       onMouseEnter={retryAudioUnlock}
       onPointerDown={retryAudioUnlock}
       onClick={retryAudioUnlock}
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4 animate-in fade-in zoom-in-95 duration-300"
     >
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900 border border-rose-500/40 shadow-[0_0_50px_rgba(244,63,94,0.25)] text-white">
-        
-        {/* Futuristic Top Header */}
-        <div className="relative flex items-center justify-between border-b border-rose-500/20 bg-gradient-to-r from-rose-950 via-rose-900 to-slate-900 px-6 py-4">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-lg shadow-rose-500/40 border border-rose-400/40">
-              <Siren className="h-5 w-5 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-ping" />
-                <h2 className="text-sm font-black tracking-wider uppercase text-white drop-shadow-sm">
-                  EMERGENCY ALARM ACTIVE!
-                </h2>
-              </div>
-              <p className="text-[11px] font-semibold text-rose-200/80">
-                {emergencyList.length} Pending Emergency Alert{emergencyList.length > 1 ? 's' : ''}
-              </p>
-            </div>
+      <CommonModal
+        isOpen={isOpen}
+        onClose={() => {}}
+        showCloseButton={false}
+        icon={Siren}
+        iconBg="bg-rose-50 text-rose-600 border border-rose-200"
+        title="EMERGENCY ALARM ACTIVE!"
+        subtitle={`${emergencyList.length} Pending Emergency Alert${emergencyList.length > 1 ? 's' : ''} • Live SOS`}
+        maxWidth="max-w-md"
+        actions={
+          <div className="text-center space-y-1">
+            <p className="text-[11px] font-medium text-slate-500">
+              Tapping <strong className="text-emerald-600">Connect &amp; Talk</strong> opens a live voice call with the user and stops the siren alarm.
+            </p>
           </div>
-
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
-            <ShieldAlert className="h-5 w-5" />
-          </div>
-        </div>
-
+        }
+      >
         {/* Autoplay blocked banner after browser refresh */}
         {autoplayBlocked && (
           <div
             onClick={retryAudioUnlock}
-            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-3 text-slate-950 flex items-center justify-between gap-2 shadow-inner cursor-pointer transition-all"
+            className="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 p-3 text-slate-950 flex items-center justify-between gap-2 shadow-xs cursor-pointer transition-all hover:opacity-95"
           >
-            <div className="flex items-center gap-2 text-xs font-extrabold">
+            <div className="flex items-center gap-2 text-xs font-bold">
               <Volume2 className="h-4 w-4 shrink-0 animate-bounce" />
-              <span>Audio siren requires interaction. Tap to enable sound!</span>
+              <span>Audio siren blocked. Tap to enable siren!</span>
             </div>
             <button
               type="button"
               onClick={retryAudioUnlock}
-              className="rounded-xl bg-slate-950 px-3.5 py-1.5 text-xs font-black text-white hover:bg-slate-800 transition-colors shrink-0 shadow-md"
+              className="rounded-xl bg-slate-950 px-3 py-1 text-xs font-black text-white hover:bg-slate-800 transition-colors shrink-0 shadow-xs"
             >
-              Enable Siren 🔊
+              Enable 🔊
             </button>
           </div>
         )}
 
         {/* Emergency Cards List */}
-        <div className="max-h-[60vh] overflow-y-auto p-5 space-y-4">
+        <div className="space-y-3.5">
           {emergencyList.map((item) => {
             const hasPhone = Boolean(item.userPhone);
-            const telUri = hasPhone ? `tel:${item.userPhone}` : null;
-            const displayId = String(item.emergencyId || '').replace(/^emg_/i, '').slice(-12).toUpperCase();
+            const displayId = String(item.emergencyId || '').replace(/^emg_/i, '').slice(-10).toUpperCase();
 
             return (
               <div
                 key={item.emergencyId}
-                className="relative overflow-hidden rounded-2xl border border-rose-500/30 bg-slate-950/70 p-4 shadow-xl transition-all space-y-3.5 hover:border-rose-500/50"
+                className="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-rose-50/40 p-4 shadow-xs space-y-3.5"
               >
-                {/* Top Badge & User Details */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2.5 py-0.5 rounded-full">
-                        ID: {displayId}
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                        <Radio className="h-3 w-3 animate-pulse text-emerald-400" />
-                        LIVE SOS
+                {/* Header badges */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100/80 border border-rose-200 px-2 py-0.5 rounded-md">
+                    ID: {displayId}
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                    <Radio className="h-3 w-3 animate-pulse text-emerald-600" />
+                    LIVE SOS
+                  </span>
+                </div>
+
+                {/* User Information */}
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                    {item.userName || 'Beach Visitor'}
+                  </h3>
+
+                  <div className="mt-2 space-y-1.5 text-xs text-slate-600">
+                    {hasPhone && (
+                      <div className="flex items-center gap-2 text-emerald-700 font-bold">
+                        <PhoneCall className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                        <span>Phone: {item.userPhone}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-rose-500" />
+                      <span className="truncate">
+                        Location: <strong className="text-slate-900 font-semibold">{item.location}</strong>
                       </span>
                     </div>
 
-                    <h3 className="text-base font-extrabold text-white tracking-tight truncate">
-                      {item.userName || 'Beach Visitor'}
-                    </h3>
-
-                    <div className="space-y-1 text-xs text-slate-300">
-                      {hasPhone && (
-                        <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                          <PhoneCall className="h-3.5 w-3.5 shrink-0" />
-                          <span>Phone: {item.userPhone}</span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2 text-slate-300 text-xs">
-                        <MapPin className="h-3.5 w-3.5 shrink-0 text-rose-400" />
-                        <span className="truncate">Location: <strong className="text-white font-semibold">{item.location}</strong></span>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-slate-400 text-[11px]">
-                        <Clock className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                        <span>Time: {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-slate-500 text-[11px]">
+                      <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <span>
+                        Time: {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="pt-2 border-t border-slate-800/80">
+                {/* Action button */}
+                <div className="pt-2 border-t border-rose-200/60">
                   <button
                     type="button"
                     onClick={() => {
@@ -131,7 +125,7 @@ export default function AdminEmergencyOverlay() {
                         item.userName || 'Beach Visitor',
                       );
                     }}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] text-white font-extrabold text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-extrabold text-xs px-4 py-3 rounded-xl shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <PhoneCall className="h-4 w-4 shrink-0 animate-pulse" />
                     <span>🎙 CONNECT &amp; TALK TO USER</span>
@@ -141,14 +135,7 @@ export default function AdminEmergencyOverlay() {
             );
           })}
         </div>
-
-        {/* Footer info */}
-        <div className="border-t border-slate-800/80 bg-slate-950/90 px-5 py-3 text-center">
-          <p className="text-[11px] font-medium text-slate-400">
-            Tapping <strong className="text-emerald-400">CONNECT &amp; TALK</strong> opens a live voice call with the user and stops the alarm for all admins.
-          </p>
-        </div>
-      </div>
+      </CommonModal>
     </div>
   );
 }

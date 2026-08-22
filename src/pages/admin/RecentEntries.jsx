@@ -19,6 +19,11 @@ export default function RecentEntries() {
 
   useEffect(() => {
     load();
+    const handleUpdate = () => {
+      load();
+    };
+    window.addEventListener('visitor-entry-updated', handleUpdate);
+    return () => window.removeEventListener('visitor-entry-updated', handleUpdate);
   }, [load]);
 
   const counts = useMemo(() => {

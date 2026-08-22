@@ -1,21 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Mic, MicOff, PhoneOff, Volume2, Radio, AlertTriangle } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 
 /* Animated sound-wave bars */
 function SoundWave({ active }) {
   const bars = [0.4, 0.7, 1, 0.7, 0.9, 0.6, 1, 0.5, 0.8, 0.4];
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 3, height: 36 }}>
+    <div className="flex items-center gap-1 h-9">
       {bars.map((h, i) => (
         <div
           key={i}
+          className={`w-1 rounded-full transition-colors duration-300 ${
+            active ? 'bg-emerald-400' : 'bg-slate-600'
+          }`}
           style={{
-            width: 3,
-            borderRadius: 99,
-            background: active ? '#4ade80' : '#6b7280',
             height: `${h * 100}%`,
             animation: active ? `wave 0.9s ease-in-out ${i * 0.09}s infinite alternate` : 'none',
-            transition: 'background 0.3s',
           }}
         />
       ))}
@@ -30,10 +31,9 @@ function PulsingRing({ color }) {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
+          className="absolute rounded-full pointer-events-none"
           style={{
-            position: 'absolute',
             inset: -(i + 1) * 14,
-            borderRadius: '50%',
             border: `1.5px solid ${color}`,
             opacity: 0.25 - i * 0.07,
             animation: `ringPulse 2s ease-out ${i * 0.4}s infinite`,
@@ -45,27 +45,49 @@ function PulsingRing({ color }) {
 }
 
 export default function VoiceCallOverlay() {
-  const { callState, endCall, toggleMute, isMuted } = useEmergency();
+  const { callState, endCall, toggleMute } = useEmergency();
   const [muted, setMuted] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [portalTarget, setPortalTarget] = useState(null);
+  const resolvedRef = useRef(false);
+
+  const isOpen = Boolean(callState && callState.status !== 'ended');
+
+  // Resolve portal target (inside device mockup if present, else document.body)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
+
+    const deviceLayer = window.__deviceModalLayer;
+    setPortalTarget(deviceLayer || document.body);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      resolvedRef.current = false;
+      setPortalTarget(null);
+    }
+  }, [isOpen]);
 
   // Timer
   useEffect(() => {
-    if (callState?.status !== 'connected') { setElapsed(0); return; }
+    if (callState?.status !== 'connected') {
+      setElapsed(0);
+      return;
+    }
     const id = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, [callState?.status]);
 
-  if (!callState || callState.status === 'ended') return null;
+  if (!isOpen || !portalTarget) return null;
 
   const isConnected = callState.status === 'connected';
-  const isCalling   = callState.status === 'calling';
-  const isIncoming  = callState.status === 'incoming';
+  const isCalling = callState.status === 'calling';
 
   const accent = isConnected ? '#22c55e' : '#f59e0b';
-  const bg     = 'linear-gradient(160deg,#020617 0%,#0f172a 60%,#0d1b2a 100%)';
-
-  const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  const formatTime = (s) =>
+    `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const handleMute = () => {
     toggleMute();
@@ -80,9 +102,8 @@ export default function VoiceCallOverlay() {
     ? 'Calling…'
     : 'Connecting…';
 
-  return (
+  const content = (
     <>
-      {/* keyframe injector */}
       <style>{`
         @keyframes wave {
           from { transform: scaleY(0.4); }
@@ -93,151 +114,124 @@ export default function VoiceCallOverlay() {
           100% { transform: scale(1.6); opacity: 0; }
         }
         @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(30px); }
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
 
       <div
+        className="absolute inset-0 z-[100000] flex flex-col items-center justify-center p-6 text-white overflow-hidden animate-in fade-in duration-300"
         style={{
-          position: 'fixed', inset: 0, zIndex: 100000,
-          background: bg,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          fontFamily: "'Inter', sans-serif",
+          background: 'linear-gradient(160deg, #020617 0%, #0f172a 60%, #0d1b2a 100%)',
           animation: 'fadeSlideUp 0.35s ease',
         }}
       >
         {/* Ambient glow */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: `radial-gradient(circle at 50% 35%, ${accent}22 0%, transparent 65%)`,
-        }} />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at 50% 35%, ${accent}22 0%, transparent 65%)`,
+          }}
+        />
 
         {/* SOS badge */}
-        <div style={{
-          marginBottom: 32,
-          padding: '5px 14px', borderRadius: 999,
-          background: 'rgba(239,68,68,0.15)',
-          border: '1px solid rgba(239,68,68,0.4)',
-          fontSize: 11, fontWeight: 700, letterSpacing: '1.2px',
-          color: '#f87171', textTransform: 'uppercase',
-        }}>
-          🆘 Emergency Call
+        <div className="relative mb-8 flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/40 px-3.5 py-1 text-[11px] font-bold tracking-wider text-rose-400 uppercase shadow-xs">
+          <Radio className="h-3.5 w-3.5 animate-pulse text-rose-400" />
+          <span>Emergency Call</span>
         </div>
 
         {/* Avatar ring */}
-        <div style={{ position: 'relative', marginBottom: 28 }}>
+        <div className="relative mb-7">
           <PulsingRing color={accent} />
-          <div style={{
-            width: 96, height: 96, borderRadius: '50%',
-            background: `linear-gradient(135deg, ${accent}55, ${accent}22)`,
-            border: `2px solid ${accent}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 36,
-          }}>
-            🎙
+          <div
+            className="flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold shadow-2xl transition-all"
+            style={{
+              background: `linear-gradient(135deg, ${accent}44, ${accent}15)`,
+              border: `2px solid ${accent}`,
+            }}
+          >
+            🎙️
           </div>
         </div>
 
         {/* Peer name */}
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>
+        <h2 className="text-xl sm:text-2xl font-black text-white text-center tracking-tight px-4 truncate max-w-xs">
           {callState.peerName || 'Unknown'}
         </h2>
 
         {/* Status / timer */}
-        <p style={{
-          marginTop: 6, marginBottom: 24,
-          fontSize: isConnected ? 28 : 14,
-          fontWeight: isConnected ? 700 : 500,
-          color: isConnected ? accent : '#94a3b8',
-          letterSpacing: isConnected ? '2px' : 0,
-          fontVariantNumeric: 'tabular-nums',
-        }}>
+        <p
+          className={`mt-1.5 mb-6 text-center tabular-nums transition-colors ${
+            isConnected
+              ? 'text-2xl font-black tracking-widest text-emerald-400'
+              : 'text-sm font-semibold text-slate-400'
+          }`}
+        >
           {statusLabel}
         </p>
 
         {/* Sound wave */}
-        <div style={{ marginBottom: 36 }}>
+        <div className="mb-8">
           <SoundWave active={isConnected} />
         </div>
 
         {/* Error hint */}
         {callState.error && (
-          <p style={{
-            marginBottom: 20, padding: '8px 16px', borderRadius: 12,
-            background: 'rgba(239,68,68,0.12)', color: '#fca5a5',
-            fontSize: 13, textAlign: 'center', maxWidth: 300,
-            border: '1px solid rgba(239,68,68,0.25)',
-          }}>
-            ⚠ {callState.error === 'Permission denied'
-              ? 'Microphone access denied. Please allow mic and try again.'
-              : callState.error}
-          </p>
+          <div className="mb-5 flex items-center gap-2 rounded-xl bg-rose-500/15 border border-rose-500/30 px-4 py-2 text-xs text-rose-300 max-w-xs text-center">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400" />
+            <span>
+              {callState.error === 'Permission denied'
+                ? 'Microphone access denied. Please allow mic in browser.'
+                : callState.error}
+            </span>
+          </div>
         )}
 
-        {/* Controls */}
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          {/* Mute */}
+        {/* Call Controls */}
+        <div className="flex items-center gap-5 relative z-10">
+          {/* Mute Button */}
           <button
+            type="button"
             onClick={handleMute}
-            title={muted ? 'Unmute' : 'Mute'}
-            style={{
-              width: 58, height: 58, borderRadius: '50%',
-              background: muted ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.08)',
-              border: muted ? '1.5px solid #ef4444' : '1.5px solid rgba(255,255,255,0.15)',
-              color: muted ? '#f87171' : '#cbd5e1',
-              fontSize: 22, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s',
-              backdropFilter: 'blur(8px)',
-            }}
+            title={muted ? 'Unmute microphone' : 'Mute microphone'}
+            className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all active:scale-95 cursor-pointer backdrop-blur-md ${
+              muted
+                ? 'bg-rose-500/20 border-rose-500 text-rose-400 shadow-lg shadow-rose-500/20'
+                : 'bg-white/10 border-white/20 text-slate-200 hover:bg-white/15'
+            }`}
           >
-            {muted ? '🔇' : '🎤'}
+            {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
           </button>
 
-          {/* End Call */}
+          {/* End Call Button */}
           <button
+            type="button"
             onClick={handleEnd}
-            title="End call"
-            style={{
-              width: 70, height: 70, borderRadius: '50%',
-              background: 'linear-gradient(135deg,#ef4444,#b91c1c)',
-              border: 'none',
-              boxShadow: '0 8px 24px rgba(239,68,68,0.5)',
-              color: '#fff', fontSize: 26, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transform: 'rotate(135deg)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 32px rgba(239,68,68,0.7)'; }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(239,68,68,0.5)'; }}
+            title="End Call"
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-rose-600 to-red-500 text-white shadow-xl shadow-rose-600/50 hover:shadow-rose-600/70 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
-            📞
+            <PhoneOff className="h-7 w-7" />
           </button>
 
-          {/* Speaker placeholder — shows call is live */}
-          <div style={{
-            width: 58, height: 58, borderRadius: '50%',
-            background: isConnected ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)',
-            border: isConnected ? '1.5px solid #22c55e' : '1.5px solid rgba(255,255,255,0.1)',
-            color: isConnected ? '#4ade80' : '#475569',
-            fontSize: 22,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.4s',
-          }}>
-            🔊
+          {/* Speaker Indicator */}
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all ${
+              isConnected
+                ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-400'
+                : 'bg-white/5 border-white/10 text-slate-500'
+            }`}
+          >
+            <Volume2 className="h-6 w-6" />
           </div>
         </div>
 
         {/* Bottom hint */}
-        <p style={{
-          marginTop: 36, fontSize: 11, color: '#475569',
-          letterSpacing: '0.3px', textAlign: 'center',
-        }}>
+        <p className="mt-8 text-center text-xs text-slate-400 font-medium tracking-wide">
           {isConnected ? 'Voice call active — speak normally' : 'Waiting for user to connect…'}
         </p>
       </div>
     </>
   );
+
+  return createPortal(content, portalTarget);
 }

@@ -27,9 +27,8 @@ function createPeerConnection(onIceCandidate, onRemoteStream) {
 
 const EmergencyContext = createContext(null);
 
-const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-  : 'https://beach-verification-backend.onrender.com';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'https://beach-verification-backend.onrender.com';
+const SOCKET_SERVER_URL = rawApiUrl.replace(/\/api\/?$/i, '').replace(/\/+$/, '');
 
 export function EmergencyProvider({ children }) {
   const { user } = useAuth();
@@ -57,8 +56,8 @@ export function EmergencyProvider({ children }) {
       path: '/api/socket.io',
       withCredentials: true,
       autoConnect: true,
-      reconnectionAttempts: 3,
-      timeout: 5000,
+      reconnectionAttempts: 5,
+      timeout: 10000,
       transports: ['websocket', 'polling'],
     });
 
@@ -69,20 +68,38 @@ export function EmergencyProvider({ children }) {
       if (isAdmin) {
         s.emit('join:admin');
       }
-      if (user?.id || user?._id) {
-        s.emit('join:user', user.id || user._id);
+      const uid = user?.id || user?._id;
+      if (uid) {
+        s.emit('join:user', uid);
+      }
+      if (userEmergencyState?.emergencyId) {
+        s.emit('join:emergency', userEmergencyState.emergencyId);
       }
     });
 
     s.on('connect_error', (err) => {
-      console.warn('[EmergencyContext] Socket connection unavailable (serverless / 404), stopping socket retries:', err.message);
-      s.disconnect();
+      console.warn('[EmergencyContext] Socket connection issue:', err.message);
     });
 
     return () => {
       s.disconnect();
     };
   }, [user, isAdmin]);
+
+  // Ensure rooms are joined whenever user or emergency state changes
+  useEffect(() => {
+    if (!socket || !socket.connected) return;
+    if (isAdmin) {
+      socket.emit('join:admin');
+    }
+    const uid = user?.id || user?._id;
+    if (uid) {
+      socket.emit('join:user', uid);
+    }
+    if (userEmergencyState?.emergencyId) {
+      socket.emit('join:emergency', userEmergencyState.emergencyId);
+    }
+  }, [socket, user, isAdmin, userEmergencyState?.emergencyId]);
 
   // Handle emergency audio for a specific emergencyId
   const startAlarmSound = useCallback((emergencyId) => {
@@ -174,15 +191,21 @@ export function EmergencyProvider({ children }) {
   useEffect(() => {
     if (!socket || !isAdmin) return;
 
-    // Receive active list on connect
+    // Receive active emergencies list on join
     const handleActiveList = (list) => {
+      console.log('[EmergencyContext] emergency:active-list received:', list);
       const emgMap = {};
+      const seenUsers = new Set();
       list.forEach((item) => {
-        emgMap[item.emergencyId] = item;
-        startAlarmSound(item.emergencyId);
+        const userKey = item.userId && item.userId !== 'ANONYMOUS' ? `user_${item.userId}` : `emg_${item.emergencyId}`;
+        if (!seenUsers.has(userKey)) {
+          seenUsers.add(userKey);
+          emgMap[item.emergencyId] = item;
+          startAlarmSound(item.emergencyId);
+        }
       });
       setActiveEmergencies(emgMap);
-      if (list.length > 0) {
+      if (Object.keys(emgMap).length > 0) {
         startEmergencyVibrationLoop();
       }
     };
@@ -190,12 +213,22 @@ export function EmergencyProvider({ children }) {
     // Receive emergency:new
     const handleEmergencyNew = (emergencyData) => {
       console.log('[EmergencyContext] emergency:new received:', emergencyData);
-      const { emergencyId } = emergencyData;
+      const { emergencyId, userId } = emergencyData;
 
-      setActiveEmergencies((prev) => ({
-        ...prev,
-        [emergencyId]: emergencyData,
-      }));
+      setActiveEmergencies((prev) => {
+        const next = { ...prev };
+        // Remove any previous emergency from the same user so only 1 appears
+        if (userId && userId !== 'ANONYMOUS') {
+          for (const [id, emg] of Object.entries(next)) {
+            if (emg.userId === userId && id !== emergencyId) {
+              delete next[id];
+              stopAlarmSound(id);
+            }
+          }
+        }
+        next[emergencyId] = emergencyData;
+        return next;
+      });
 
       // Start sound & vibration immediately
       startAlarmSound(emergencyId);
@@ -222,14 +255,41 @@ export function EmergencyProvider({ children }) {
       });
     };
 
+    // Receive emergency:status-update (e.g. claimed by officer)
+    const handleStatusUpdate = ({ emergencyId, status, claimedBy }) => {
+      console.log('[EmergencyContext] emergency:status-update:', status, 'by', claimedBy);
+      setUserEmergencyState((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          status,
+          claimedBy: claimedBy || 'Gate Officer',
+          message: status === 'CLAIMED' ? `Officer Connected (${claimedBy || 'Admin'})` : prev.message,
+        };
+      });
+    };
+
+    // Receive emergency:cancelled
+    const handleEmergencyCancelled = ({ emergencyId }) => {
+      console.log('[EmergencyContext] emergency:cancelled:', emergencyId);
+      setUserEmergencyState((prev) => {
+        if (prev?.emergencyId === emergencyId) return null;
+        return prev;
+      });
+    };
+
     socket.on('emergency:active-list', handleActiveList);
     socket.on('emergency:new', handleEmergencyNew);
     socket.on('emergency:claimed', handleEmergencyClaimed);
+    socket.on('emergency:status-update', handleStatusUpdate);
+    socket.on('emergency:cancelled', handleEmergencyCancelled);
 
     return () => {
       socket.off('emergency:active-list', handleActiveList);
       socket.off('emergency:new', handleEmergencyNew);
       socket.off('emergency:claimed', handleEmergencyClaimed);
+      socket.off('emergency:status-update', handleStatusUpdate);
+      socket.off('emergency:cancelled', handleEmergencyCancelled);
     };
   }, [socket, isAdmin, startAlarmSound, stopAlarmSound]);
 
@@ -280,9 +340,10 @@ export function EmergencyProvider({ children }) {
 
       const pc = createPeerConnection(
         (candidate) => {
-          if (remoteSocketIdRef.current && socket.connected) {
+          if (socket.connected) {
             socket.emit('call:ice-candidate', {
               targetSocketId: remoteSocketIdRef.current,
+              emergencyId,
               candidate,
             });
           }
@@ -303,7 +364,7 @@ export function EmergencyProvider({ children }) {
         userId,
         sdp: pc.localDescription,
         adminId: user?.id || user?._id,
-        adminName: user?.name || 'Admin',
+        adminName: user?.name || 'Gate Admin',
       });
     } catch (err) {
       console.error('[Voice] startCall error:', err);
@@ -314,7 +375,7 @@ export function EmergencyProvider({ children }) {
 
   /** End call from either side */
   const endCall = useCallback((emergencyId) => {
-    if (remoteSocketIdRef.current && socket?.connected) {
+    if (socket?.connected) {
       socket.emit('call:end', {
         targetSocketId: remoteSocketIdRef.current,
         emergencyId,
@@ -343,13 +404,16 @@ export function EmergencyProvider({ children }) {
     if (!socket) return;
 
     // Admin receives answer from user
-    const handleCallAnswered = async ({ emergencyId, sdp }) => {
-      console.log('[Voice] call:answered received');
+    const handleCallAnswered = async ({ emergencyId, sdp, userSocketId }) => {
+      console.log('[Voice] call:answered received from user socket:', userSocketId);
+      if (userSocketId) {
+        remoteSocketIdRef.current = userSocketId;
+      }
       const pc = peerRef.current;
       if (!pc) return;
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-        setCallState((prev) => prev ? { ...prev, status: 'connected' } : prev);
+        setCallState((prev) => prev ? { ...prev, status: 'connected', remoteSocketId: userSocketId } : prev);
       } catch (err) {
         console.error('[Voice] setRemoteDescription (answer) error:', err);
       }
@@ -357,21 +421,27 @@ export function EmergencyProvider({ children }) {
 
     // User receives call offer from admin — auto-answer
     const handleCallIncoming = async ({ emergencyId, adminId, adminName, sdp, adminSocketId }) => {
-      console.log('[Voice] call:incoming from admin', adminName);
+      console.log('[Voice] call:incoming from admin', adminName, 'socket:', adminSocketId);
       if (peerRef.current) return; // already in a call
 
       remoteSocketIdRef.current = adminSocketId;
-      setCallState({ status: 'incoming', emergencyId, peerName: adminName, remoteSocketId: adminSocketId });
+      setCallState({ status: 'incoming', emergencyId, peerName: adminName || 'Gate Officer', remoteSocketId: adminSocketId });
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        localStreamRef.current = stream;
+        let stream = null;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          localStreamRef.current = stream;
+        } catch (mediaErr) {
+          console.warn('[Voice] Mic access pending or denied, continuing connection:', mediaErr);
+        }
 
         const pc = createPeerConnection(
           (candidate) => {
-            if (adminSocketId && socket.connected) {
+            if (socket.connected) {
               socket.emit('call:ice-candidate', {
                 targetSocketId: adminSocketId,
+                emergencyId,
                 candidate,
               });
             }
@@ -379,7 +449,10 @@ export function EmergencyProvider({ children }) {
           attachRemoteStream,
         );
         peerRef.current = pc;
-        stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+
+        if (stream) {
+          stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+        }
 
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
         const answer = await pc.createAnswer();
@@ -391,11 +464,16 @@ export function EmergencyProvider({ children }) {
           adminSocketId,
         });
 
-        setCallState({ status: 'connected', emergencyId, peerName: adminName, remoteSocketId: adminSocketId });
+        setCallState({
+          status: 'connected',
+          emergencyId,
+          peerName: adminName || 'Gate Officer',
+          remoteSocketId: adminSocketId,
+        });
       } catch (err) {
         console.error('[Voice] auto-answer error:', err);
         closePeer();
-        setCallState(null);
+        setCallState({ status: 'ended', emergencyId, peerName: adminName, error: err.message });
       }
     };
 
@@ -403,8 +481,7 @@ export function EmergencyProvider({ children }) {
     const handleIceCandidate = async ({ candidate, fromSocketId }) => {
       const pc = peerRef.current;
       if (!pc || !candidate) return;
-      // Store who we're talking to
-      if (!remoteSocketIdRef.current) remoteSocketIdRef.current = fromSocketId;
+      if (!remoteSocketIdRef.current && fromSocketId) remoteSocketIdRef.current = fromSocketId;
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
@@ -460,24 +537,16 @@ export function EmergencyProvider({ children }) {
       emergencyId,
     });
 
-    // 4. Emit socket event if connected
+    // 4. Emit socket event if connected, otherwise fallback to REST
     if (socket && socket.connected) {
+      socket.emit('join:emergency', emergencyId);
       socket.emit('emergency:trigger', payload);
-    }
-
-    // Fallback REST call
-    try {
-      const token = localStorage.getItem('beach_app_token');
-      await fetch(`${SOCKET_SERVER_URL}/api/emergency/trigger`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      // socket handled it
+    } else {
+      try {
+        await axios.post('/emergency/trigger', payload);
+      } catch {
+        // ignore
+      }
     }
 
     return 'Emergency alert sent. Waiting for an admin.';
@@ -513,14 +582,7 @@ export function EmergencyProvider({ children }) {
     }
 
     try {
-      const token = localStorage.getItem('beach_app_token');
-      await fetch(`${SOCKET_SERVER_URL}/api/emergency/claim/${emergencyId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      await axios.post(`/emergency/claim/${emergencyId}`);
     } catch {
       // socket handled it
     }
@@ -542,14 +604,7 @@ export function EmergencyProvider({ children }) {
 
     // Fallback REST cancel request
     try {
-      const token = localStorage.getItem('beach_app_token');
-      await fetch(`${SOCKET_SERVER_URL}/api/emergency/cancel/${targetId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      await axios.post(`/emergency/cancel/${targetId}`);
     } catch {
       // socket handled it
     }

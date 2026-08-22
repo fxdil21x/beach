@@ -1,6 +1,15 @@
 // Browser Vibration API utilities
 
 let vibrationIntervalId = null;
+let userHasInteracted = false;
+
+// Track first user gesture globally so we never call vibrate(0) before interaction
+if (typeof window !== 'undefined') {
+  const markInteracted = () => { userHasInteracted = true; };
+  ['pointerdown', 'touchstart', 'click', 'keydown'].forEach((evt) => {
+    window.addEventListener(evt, markInteracted, { once: false, passive: true, capture: true });
+  });
+}
 
 /**
  * Checks if Vibration API is supported by the browser.
@@ -58,14 +67,12 @@ export function stopEmergencyVibration() {
     clearInterval(vibrationIntervalId);
     vibrationIntervalId = null;
   }
-  if (isVibrationSupported()) {
+  // Only call vibrate(0) if the user has already interacted — Chrome blocks it otherwise
+  if (isVibrationSupported() && userHasInteracted) {
     try {
-      const res = navigator.vibrate(0);
-      if (res === false) {
-        // Suppress Chrome intervention warning
-      }
+      navigator.vibrate(0);
     } catch {
-      // Ignore intervention errors
+      // Ignore intervention errors silently
     }
   }
 }
