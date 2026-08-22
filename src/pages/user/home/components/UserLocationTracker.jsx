@@ -20,6 +20,7 @@ export default function UserLocationTracker() {
   const watchIdRef = useRef(null);
   const lastSocketCallRef = useRef(0);
   const lastPathnameRef = useRef(location.pathname);
+  const lastPosRef = useRef(null);
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
   const isRegisteredUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
@@ -27,10 +28,12 @@ export default function UserLocationTracker() {
 
   // Reset decline state on fresh user login
   useEffect(() => {
-    setHasDeclined(false);
+    if (userKey) {
+      setHasDeclined(false);
+    }
   }, [userKey]);
 
-  // Automatically trigger location consent modal on user login, navigation, or when feature is enabled (with 1s delay)
+  // Automatically trigger location consent modal on user login or navigation when feature is enabled
   useEffect(() => {
     if (!isEnabled || !isRegisteredUser || hasDeclined) {
       stopTracking();
@@ -39,9 +42,9 @@ export default function UserLocationTracker() {
     }
 
     const userIdKey = user?.id || user?._id || 'current_user';
-    const storedConsent = sessionStorage.getItem(`location_sharing_consent_${userIdKey}`);
+    const storedConsent = localStorage.getItem(`location_sharing_consent_${userIdKey}`);
 
-    // If user has already allowed location sharing in this session, resume tracking automatically without showing modal again
+    // If user has already allowed location sharing, resume tracking automatically without showing modal again
     if (storedConsent === 'allowed') {
       setShowPrompt(false);
       if (!isTracking) {
@@ -50,8 +53,24 @@ export default function UserLocationTracker() {
       return;
     }
 
-    // Show prompt modal after 1-second delay for fresh consent
-    if (!isTracking) {
+    // If browser permission is already granted, start watch directly
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((status) => {
+          if (status.state === 'granted') {
+            localStorage.setItem(`location_sharing_consent_${userIdKey}`, 'allowed');
+            setShowPrompt(false);
+            if (!isTracking) {
+              startGeolocationWatch();
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
+    // Show prompt modal after 1-second delay for fresh consent if not already allowed/declined
+    if (!isTracking && storedConsent !== 'declined') {
       setLocationError('');
       const timer = setTimeout(() => {
         setShowPrompt(true);
@@ -59,7 +78,7 @@ export default function UserLocationTracker() {
 
       return () => clearTimeout(timer);
     }
-  }, [isEnabled, isRegisteredUser, user, location.pathname, isTracking, hasDeclined]);
+  }, [isEnabled, isRegisteredUser, userKey, location.pathname, isTracking, hasDeclined]);
 
   // Teardown watch on unmount
   useEffect(() => {
@@ -137,7 +156,7 @@ export default function UserLocationTracker() {
 
     setLocationError('');
     const userIdKey = user?.id || user?._id || 'current_user';
-    sessionStorage.setItem(`location_sharing_consent_${userIdKey}`, 'allowed');
+    localStorage.setItem(`location_sharing_consent_${userIdKey}`, 'allowed');
 
     const options = {
       enableHighAccuracy: true,
@@ -197,6 +216,7 @@ export default function UserLocationTracker() {
   };
 
   const handleAllow = () => {
+    setShowPrompt(false);
     setLocationError('');
     startGeolocationWatch();
   };
@@ -205,7 +225,7 @@ export default function UserLocationTracker() {
     setShowPrompt(false);
     setHasDeclined(true);
     const userIdKey = user?.id || user?._id || 'current_user';
-    sessionStorage.setItem(`location_sharing_consent_${userIdKey}`, 'declined');
+    localStorage.setItem(`location_sharing_consent_${userIdKey}`, 'declined');
     stopTracking();
   };
 

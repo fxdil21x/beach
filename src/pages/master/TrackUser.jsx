@@ -50,7 +50,11 @@ export default function MasterTrackUser() {
   useEffect(() => {
     if (!socket || !isEnabled) return;
 
-    socket.emit('join:track-users');
+    const requestInitialUsers = () => {
+      socket.emit('join:track-users');
+    };
+
+    requestInitialUsers();
 
     const handleInitialUsers = (userList) => {
       const newMap = new Map();
@@ -78,11 +82,13 @@ export default function MasterTrackUser() {
       });
     };
 
+    socket.on('connect', requestInitialUsers);
     socket.on('location:initial-users', handleInitialUsers);
     socket.on('location:user-update', handleUserUpdate);
     socket.on('location:user-stopped', handleUserStopped);
 
     return () => {
+      socket.off('connect', requestInitialUsers);
       socket.off('location:initial-users', handleInitialUsers);
       socket.off('location:user-update', handleUserUpdate);
       socket.off('location:user-stopped', handleUserStopped);

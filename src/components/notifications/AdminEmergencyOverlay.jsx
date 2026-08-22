@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+  import { useEffect } from 'react';
 import { Siren, ShieldAlert, PhoneCall, CheckCircle2, Volume2, MapPin, Clock, Radio } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 

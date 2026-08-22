@@ -9,6 +9,8 @@ export function FeatureProvider({ children }) {
     publicReportEnabled: true,
     userReportEnabled: true,
     trackUserEnabled: false,
+    orderFoodEnabled: true,
+    resortBookingEnabled: true,
   });
   const [loading, setLoading] = useState(true);
 

@@ -12,6 +12,8 @@ import {
   Info,
   Gift,
   Star,
+  Utensils,
+  Hotel,
 } from 'lucide-react';
 
 import CommonModal from '../CommonModal/index.js';
@@ -20,6 +22,8 @@ import { NotificationsSkeleton } from '../../ui/Skeleton.jsx';
 const ICON_MAP = {
   Sparkles,
   Radio,
+  Utensils,
+  Hotel,
   MapPin,
   Compass,
   Zap,

@@ -48,7 +48,6 @@ export default function ResidentRecords() {
     load();
   }, []);
 
-
   const resetForm = () => {
     setFormData({
       name: '',
@@ -122,87 +121,162 @@ export default function ResidentRecords() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6">
-      <div className="flex shrink-0 items-center justify-between gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-4 sm:gap-6 pb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">{t('nav.residentRecords')}</h1>
-          <p className="mt-1 text-sm text-zinc-500">Imported resident master data</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">{t('nav.residentRecords')}</h1>
+          <p className="mt-0.5 text-xs sm:text-sm text-zinc-500">Imported resident master data</p>
         </div>
-        <Button onClick={handleOpenAddModal} className="flex items-center gap-1.5">
+        <Button onClick={handleOpenAddModal} className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg">
           <Plus className="h-4 w-4" />
           {t('master.addResident')}
         </Button>
       </div>
 
-      <div className="shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+      {/* Search Input Container */}
+      <div className="shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-3 sm:p-4 shadow-sm">
         <SearchInput value={query} onChange={setQuery} onSearch={() => load(1)} />
       </div>
 
       {loading ? (
         <TableSkeleton rows={6} cols={8} dark />
+      ) : records.length === 0 ? (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 text-center text-zinc-400 text-sm">
+          No resident records found.
+        </div>
       ) : (
-        <TableScroll className="shadow-sm shadow-black/20">
-
-        <table className="min-w-full text-left text-sm">
-          <thead className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950 text-zinc-400">
-            <tr>
-              <th className="p-3 font-medium">Name</th>
-              <th className="p-3 font-medium">Guardian</th>
-              <th className="p-3 font-medium">House</th>
-              <th className="p-3 font-medium">Ward</th>
-              <th className="p-3 font-medium">Age</th>
-              <th className="p-3 font-medium">Phone</th>
-              <th className="p-3 font-medium">Sec ID</th>
-              <th className="p-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Mobile Card List View (< sm) */}
+          <div className="space-y-3 sm:hidden overflow-y-auto pr-1">
             {records.map((r) => (
-              <tr key={r._id} className="border-b border-zinc-800/80 text-zinc-200 hover:bg-zinc-800/40">
-                <td className="p-3 font-medium text-white">{r.name}</td>
-                <td className="p-3">{r.guardianName || '—'}</td>
-                <td className="p-3">{r.houseName || '—'}</td>
-                <td className="p-3">{r.ward || '—'}</td>
-                <td className="p-3">{r.age != null ? r.age : '—'}</td>
-                <td className="p-3 font-mono text-xs">{r.phone || '—'}</td>
-                <td className="p-3 font-mono text-xs text-zinc-400">{r.newSecIdNo || '—'}</td>
-                <td className="p-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
+              <div key={r._id} className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 space-y-3 shadow-lg">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-bold text-white truncate">{r.name}</h3>
+                    {r.guardianName && (
+                      <p className="text-xs text-zinc-400 truncate">Guardian: {r.guardianName}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => handleOpenEditModal(r)}
-                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-orange-400 transition-colors"
+                      className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-orange-400 transition-colors"
                       title="Edit Resident"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteResident(r._id)}
-                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-red-400 transition-colors"
+                      className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-red-400 transition-colors"
                       title="Delete Resident"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                </td>
-              </tr>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800/60 text-xs">
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-bold">House</span>
+                    <span className="text-zinc-200 font-medium truncate block">{r.houseName || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-bold">Ward</span>
+                    <span className="text-zinc-200 font-medium truncate block">{r.ward || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-bold">Age</span>
+                    <span className="text-zinc-200 font-medium">{r.age != null ? r.age : '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-bold">Phone</span>
+                    <span className="text-zinc-200 font-mono">{r.phone || '—'}</span>
+                  </div>
+                </div>
+
+                {r.newSecIdNo && (
+                  <div className="pt-2 border-t border-zinc-800/40 flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 text-[10px] uppercase font-bold">Sec ID</span>
+                    <span className="font-mono text-orange-400/90 text-xs">{r.newSecIdNo}</span>
+                  </div>
+                )}
+              </div>
             ))}
-          </tbody>
-        </table>
-      </TableScroll>
+          </div>
+
+          {/* Desktop & Tablet Table View (>= sm) */}
+          <div className="hidden sm:block min-h-0 flex-1">
+            <TableScroll className="shadow-sm shadow-black/20">
+              <table className="w-full min-w-[750px] text-left text-sm">
+                <thead className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950 text-zinc-400">
+                  <tr>
+                    <th className="p-3.5 font-semibold whitespace-nowrap">Name</th>
+                    <th className="p-3.5 font-semibold whitespace-nowrap">Guardian</th>
+                    <th className="p-3.5 font-semibold whitespace-nowrap">House</th>
+                    <th className="p-3.5 font-semibold whitespace-nowrap">Ward</th>
+                    <th className="p-3.5 font-semibold whitespace-nowrap">Age</th>
+                    <th className="p-3.5 font-semibold whitespace-nowrap">Phone</th>
+                    <th className="p-3.5 font-semibold whitespace-nowrap">Sec ID</th>
+                    <th className="p-3.5 font-semibold text-right whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map((r) => (
+                    <tr key={r._id} className="border-b border-zinc-800/80 text-zinc-200 hover:bg-zinc-800/40 transition-colors">
+                      <td className="p-3.5 font-medium text-white whitespace-nowrap">{r.name}</td>
+                      <td className="p-3.5 whitespace-nowrap">{r.guardianName || '—'}</td>
+                      <td className="p-3.5 whitespace-nowrap">{r.houseName || '—'}</td>
+                      <td className="p-3.5 whitespace-nowrap">{r.ward || '—'}</td>
+                      <td className="p-3.5 whitespace-nowrap">{r.age != null ? r.age : '—'}</td>
+                      <td className="p-3.5 font-mono text-xs whitespace-nowrap">{r.phone || '—'}</td>
+                      <td className="p-3.5 font-mono text-xs text-zinc-400 whitespace-nowrap">{r.newSecIdNo || '—'}</td>
+                      <td className="p-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleOpenEditModal(r)}
+                            className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-orange-400 transition-colors"
+                            title="Edit Resident"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteResident(r._id)}
+                            className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-red-400 transition-colors"
+                            title="Delete Resident"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableScroll>
+          </div>
+        </>
       )}
 
+      {/* Pagination Controls */}
       {pagination && (
-        <div className="flex shrink-0 items-center gap-2">
-          <Button variant="secondary" disabled={page <= 1} onClick={() => load(page - 1)}>
+        <div className="flex shrink-0 items-center justify-between sm:justify-start gap-3 pt-2">
+          <Button
+            variant="secondary"
+            disabled={page <= 1}
+            onClick={() => load(page - 1)}
+            className="text-xs px-4 py-2"
+          >
             Prev
           </Button>
-          <span className="px-2 text-sm text-zinc-400">
-            Page {page} / {pagination.pages}
+          <span className="text-xs text-zinc-400 font-medium">
+            Page {page} of {pagination.pages}
           </span>
           <Button
             variant="secondary"
             disabled={page >= pagination.pages}
             onClick={() => load(page + 1)}
+            className="text-xs px-4 py-2"
           >
             Next
           </Button>
@@ -212,9 +286,9 @@ export default function ResidentRecords() {
       {/* Add / Edit Resident Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100 shadow-2xl">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-6 text-zinc-100 shadow-2xl">
             <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-lg sm:text-xl font-bold text-white">
                 {editingRecord ? 'Edit Resident Record' : t('master.addResidentTitle')}
               </h2>
               <button
@@ -344,4 +418,3 @@ export default function ResidentRecords() {
     </div>
   );
 }
-
