@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-let rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+let rawUrl = import.meta.env.VITE_API_URL || 'https://beach-verification-backend.onrender.com/api';
+
+// Strip accidental environment variable name prefixes (e.g., PUBLIC_API_URL=https://...)
+if (typeof rawUrl === 'string' && rawUrl.includes('=')) {
+  rawUrl = rawUrl.split('=').pop().trim();
+}
+
 if (!/^https?:\/\//i.test(rawUrl)) {
   rawUrl = (rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1'))
     ? `http://${rawUrl}`
