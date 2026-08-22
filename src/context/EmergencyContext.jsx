@@ -147,8 +147,6 @@ export function EmergencyProvider({ children }) {
   useEffect(() => {
     if (!isAdmin) return;
     pollActiveEmergencies();
-    const interval = setInterval(pollActiveEmergencies, 8000);
-    return () => clearInterval(interval);
   }, [isAdmin, pollActiveEmergencies]);
 
   // Listen to emergency socket events for Admin
