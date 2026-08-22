@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Trash2 } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import TableScroll from '../../components/ui/TableScroll.jsx';
@@ -33,6 +34,16 @@ export default function Admins() {
       setError(err.response?.data?.message || 'Failed to create admin');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id, username) => {
+    if (!window.confirm(`Are you sure you want to delete admin account "@${username}"?`)) return;
+    try {
+      await masterApi.deleteUser(id);
+      load();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -87,21 +98,42 @@ export default function Admins() {
             <tr>
               <th className="p-3 font-medium">Name</th>
               <th className="p-3 font-medium">Username</th>
+              <th className="p-3 font-medium">Role</th>
               <th className="p-3 font-medium">Scans</th>
               <th className="p-3 font-medium">Last Login</th>
               <th className="p-3 font-medium">Status</th>
+              <th className="p-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {admins.map((a) => (
               <tr key={a.id} className="border-b border-zinc-800/80 text-zinc-200 hover:bg-zinc-800/40">
                 <td className="p-3 font-medium text-white">{a.name}</td>
-                <td className="p-3">{a.username}</td>
+                <td className="p-3 font-mono text-xs text-orange-400">{a.username}</td>
+                <td className="p-3">
+                  <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
+                    a.role === 'MASTER_ADMIN'
+                      ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                      : 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
+                  }`}>
+                    {a.role}
+                  </span>
+                </td>
                 <td className="p-3">{a.scanCount}</td>
                 <td className="p-3 text-zinc-400">
                   {a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : '—'}
                 </td>
                 <td className="p-3">{a.isActive ? 'Active' : 'Disabled'}</td>
+                <td className="p-3 text-right">
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(a.id, a.username)}
+                    className="inline-flex items-center justify-center p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    title="Delete Admin Account"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

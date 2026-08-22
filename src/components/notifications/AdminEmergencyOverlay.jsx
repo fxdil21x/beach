@@ -21,7 +21,7 @@ export default function AdminEmergencyOverlay() {
       onMouseEnter={retryAudioUnlock}
       onPointerDown={retryAudioUnlock}
       onClick={retryAudioUnlock}
-      className="absolute inset-0 z-[99999] flex items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4 animate-in fade-in zoom-in-95 duration-300"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4 animate-in fade-in zoom-in-95 duration-300"
     >
       <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900 border border-rose-500/40 shadow-[0_0_50px_rgba(244,63,94,0.25)] text-white">
         

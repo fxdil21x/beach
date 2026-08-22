@@ -25,6 +25,14 @@ export default function UserLocationTracker() {
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
   const isRegisteredUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
   const userKey = user?.id || user?._id;
+  const lastUserIdRef = useRef(userKey);
+
+  // Keep track of active user ID for clean logout socket disconnect
+  useEffect(() => {
+    if (userKey) {
+      lastUserIdRef.current = userKey;
+    }
+  }, [userKey]);
 
   // Reset decline state on fresh user login
   useEffect(() => {
@@ -208,8 +216,12 @@ export default function UserLocationTracker() {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
-    if (socket && socket.connected && user) {
-      socket.emit('user:stop-tracking', { userId: String(user.id || user._id) });
+    const targetUserId = user?.id || user?._id || lastUserIdRef.current;
+    if (targetUserId) {
+      if (socket && socket.connected) {
+        socket.emit('user:stop-tracking', { userId: String(targetUserId) });
+      }
+      axios.post('/user/location/stop', { userId: String(targetUserId) }).catch(() => {});
     }
     setIsTracking(false);
   };

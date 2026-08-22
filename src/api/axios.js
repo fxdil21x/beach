@@ -49,5 +49,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear token if token is expired or unauthorized (except on login attempt itself)
+      if (!error.config.url.includes('/auth/login')) {
+        localStorage.removeItem('beach_app_token');
+        localStorage.removeItem('beach_app_token_time');
+        delete api.defaults.headers.common.Authorization;
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

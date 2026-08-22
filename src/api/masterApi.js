@@ -17,6 +17,7 @@ export const getEntryLogs = (params) => api.get('/master/entry-logs', { params }
 export const getUsers = (params) => api.get('/master/users', { params });
 export const createUser = (data) => api.post('/master/users', data);
 export const updateUser = (id, data) => api.patch(`/master/users/${id}`, data);
+export const deleteUser = (id) => api.delete(`/master/users/${id}`);
 export const getAdmins = () => api.get('/master/admins');
 export const getAuditLogs = (params) => api.get('/master/audit-logs', { params });
 export const getReports = (params) => api.get('/master/beach-reports', { params });

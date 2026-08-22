@@ -9,6 +9,7 @@ import Register from './pages/auth/Register.jsx';
 import UserDashboard from './pages/user/home/index.js';
 import MyPass from './pages/user/MyPass.jsx';
 import MyVisits from './pages/user/MyVisits.jsx';
+import UserServices from './pages/user/Services.jsx';
 import BeachRules from './pages/user/BeachRules.jsx';
 import UserReportIssue from './pages/user/ReportIssue.jsx';
 import UserProfile from './pages/user/Profile.jsx';
@@ -67,6 +68,7 @@ export default function App() {
                   <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
                   <Route path="/user/my-pass" element={<MyPass />} />
                   <Route path="/user/my-visits" element={<MyVisits />} />
+                  <Route path="/user/services" element={<UserServices />} />
                   <Route path="/user/profile" element={<UserProfile />} />
                 </Route>
 

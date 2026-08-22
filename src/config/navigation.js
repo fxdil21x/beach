@@ -2,6 +2,7 @@ import {
   Home,
   Ticket,
   ClipboardList,
+  LayoutGrid,
   TriangleAlert,
   UserRound,
   ScanLine,
@@ -13,6 +14,7 @@ export const userNav = [
   { to: '/user/home', labelKey: 'nav.home', icon: Home },
   { to: '/user/my-pass', labelKey: 'nav.myPass', icon: Ticket },
   { to: '/user/my-visits', labelKey: 'nav.myVisits', icon: ClipboardList },
+  { to: '/user/services', labelKey: 'nav.services', icon: LayoutGrid },
   { to: '/user/report', labelKey: 'nav.myReports', icon: TriangleAlert },
   { to: '/user/profile', labelKey: 'nav.profile', icon: UserRound },
 ];
