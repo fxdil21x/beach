@@ -193,7 +193,7 @@ export default function AdminReports() {
       </div>
 
       {/* Main Content Area - Scrollable */}
-      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-4 pb-20">
+      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-4 pb-20">
         {loading ? (
           <ReportsSkeleton count={3} />
         ) : paginatedList.length === 0 ? (

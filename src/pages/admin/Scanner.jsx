@@ -41,7 +41,7 @@ export default function Scanner() {
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-900 text-white">
       <MobileHeader title={t('admin.scanTitle')} targetRole="admin" />
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
         {scanning && !searching && <QRScanner onScan={handleScan} active={scanning} />}
         {searching && <ScannerSkeleton />}
       </main>

@@ -37,9 +37,9 @@ export default function ResidentSearch() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('resident.searchTitle')} showLanguage />
-      <main className="space-y-4 px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
         <p className="text-sm text-gray-600">{t('resident.searchHint')}</p>
         <SearchInput value={query} onChange={setQuery} onSearch={handleSearch} placeholder={t('resident.searchPlaceholder')} />
         {loading && <ResidentSearchSkeleton count={3} />}

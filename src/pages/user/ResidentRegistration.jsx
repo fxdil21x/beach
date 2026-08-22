@@ -43,9 +43,9 @@ export default function ResidentRegistration() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('resident.registrationTitle')} showLanguage />
-      <main className="space-y-4 px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
         <div className="rounded-2xl bg-white p-4 shadow-sm">
           <h2 className="text-xl font-bold">{resident.name}</h2>
           <p className="text-gray-600">{resident.houseName} · {resident.ward}</p>

@@ -71,8 +71,6 @@ html.device-frame-active body {
   flex-direction: column;
   position: relative;
   background: #f3f4f6;
-  -webkit-overflow-scrolling: touch;
-  transform: translateZ(0);
 }
 
 .device-app-root .min-h-screen {
@@ -82,6 +80,7 @@ html.device-frame-active body {
 .device-app-root .h-screen,
 .device-app-root .h-\[100dvh\] {
   height: 100% !important;
+  max-height: 100% !important;
 }
 
 @layer base {
@@ -180,4 +179,26 @@ html.device-frame-active body {
   );
   animation: shimmer 1.6s infinite ease-in-out;
   content: '';
+}
+
+/* Leaflet Custom Live Marker Overrides */
+.custom-live-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.live-user-tooltip {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.live-user-tooltip::before {
+  border-top-color: rgba(15, 23, 42, 0.9) !important;
 }

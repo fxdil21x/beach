@@ -1,11 +1,31 @@
-import { Howl, Howler } from 'howler';
-import alarmSoundUrl from '../assets/sound/alarm.wav';
+/**
+ * Pure Web Audio API Sound Synthesizer.
+ * Synthesizes high-frequency emergency alarm sirens programmatically with 0ms delay,
+ * without relying on external file assets or network downloads.
+ */
 
-// Auto-unlock Howler audio context on first user gesture
+let globalAudioCtx = null;
+
+function getAudioContext() {
+  if (typeof window === 'undefined') return null;
+  if (!globalAudioCtx) {
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtxClass) {
+      globalAudioCtx = new AudioCtxClass();
+    }
+  }
+  if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+    globalAudioCtx.resume().catch(() => {});
+  }
+  return globalAudioCtx;
+}
+
+// Auto-unlock Web Audio context on first user interaction
 if (typeof window !== 'undefined') {
   const unlockAudio = () => {
-    if (Howler.ctx && Howler.ctx.state === 'suspended') {
-      Howler.ctx.resume().catch(() => {});
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
     window.removeEventListener('click', unlockAudio);
     window.removeEventListener('touchstart', unlockAudio);
@@ -19,81 +39,103 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Howler.js Emergency Alarm Sound Player.
- * Uses Howler.js Web Audio engine with alarm.wav asset for 100% reliable 0ms sound playback.
+ * Pure Web Audio Emergency Alarm Siren Player.
+ * Synthesizes a loud, alternating dual-frequency emergency siren (600Hz <-> 1200Hz).
  */
 export function createEmergencyAlarmSound() {
-  let sound = new Howl({
-    src: [alarmSoundUrl],
-    loop: true,
-    volume: 1.0,
-    html5: false, // Uses Web Audio API for sub-millisecond instant sound
-    preload: true,
-  });
+  let osc = null;
+  let gain = null;
+  let intervalId = null;
+  let playing = false;
 
-  const player = {
+  const startSiren = () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    stopSirenInternal();
+
+    try {
+      osc = ctx.createOscillator();
+      gain = ctx.createGain();
+
+      osc.type = 'sawtooth'; // Penetrating loud emergency siren waveform
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(600, now);
+
+      gain.gain.setValueAtTime(0.7, now);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+
+      let high = true;
+      intervalId = setInterval(() => {
+        if (!globalAudioCtx || !osc) return;
+        const currentNow = globalAudioCtx.currentTime;
+        const targetFreq = high ? 1200 : 600;
+        osc.frequency.linearRampToValueAtTime(targetFreq, currentNow + 0.3);
+        high = !high;
+      }, 350);
+    } catch (err) {
+      console.warn('[soundUtils] Emergency siren synth error:', err);
+    }
+  };
+
+  const stopSirenInternal = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+    if (osc) {
+      try {
+        osc.stop();
+        osc.disconnect();
+      } catch {}
+      osc = null;
+    }
+    if (gain) {
+      try {
+        gain.disconnect();
+      } catch {}
+      gain = null;
+    }
+  };
+
+  return {
     get loop() {
       return true;
     },
-    set loop(val) {
-      if (sound) sound.loop(val);
-    },
+    set loop(val) {},
     get isPlaying() {
-      return sound ? sound.playing() : false;
+      return playing;
     },
 
     play: async () => {
-      if (!sound) return Promise.reject(new Error('Sound instance unmounted'));
-      if (sound.playing()) return Promise.resolve();
-
-      if (Howler.ctx && Howler.ctx.state === 'suspended') {
-        await Howler.ctx.resume().catch(() => {});
-      }
-
-      return new Promise((resolve, reject) => {
-        sound.once('play', () => {
-          resolve();
-        });
-        sound.once('playerror', (_id, err) => {
-          console.warn('[howler] Play error:', err);
-          reject(err);
-        });
-
-        const id = sound.play();
-        if (!id && id !== 0) {
-          reject(new Error('Howler play failed'));
-        }
-      });
+      if (playing) return Promise.resolve();
+      playing = true;
+      startSiren();
+      return Promise.resolve();
     },
 
     pause: () => {
-      if (sound) {
-        sound.stop();
-      }
+      playing = false;
+      stopSirenInternal();
     },
 
     unload: () => {
-      if (sound) {
-        sound.stop();
-        sound.unload();
-        sound = null;
-      }
+      playing = false;
+      stopSirenInternal();
     },
   };
-
-  return player;
 }
 
 /**
- * Plays a small confirmation sound when user clicks Emergency button.
+ * Plays a small synthesized confirmation chime when user clicks Emergency button.
  */
 export function playUserConfirmationSound() {
   try {
-    if (Howler.ctx && Howler.ctx.state === 'suspended') {
-      Howler.ctx.resume().catch(() => {});
-    }
-
-    const ctx = Howler.ctx;
+    const ctx = getAudioContext();
     if (!ctx) return;
 
     const osc = ctx.createOscillator();

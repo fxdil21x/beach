@@ -207,7 +207,7 @@ export default function UserHome() {
           </div>
         }
       />
-      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
         <div className="relative min-h-[210px] overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl border border-slate-800 flex flex-col justify-end p-5 sm:p-6">
           {/* Hero Image Background with Sleek Dark Overlay */}
           <img
