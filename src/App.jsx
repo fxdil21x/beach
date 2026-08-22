@@ -41,6 +41,7 @@ import PublicIssueReport from './pages/public/PublicIssueReport.jsx';
 import { EmergencyProvider } from './context/EmergencyContext.jsx';
 import { FeatureProvider } from './context/FeatureContext.jsx';
 import AdminEmergencyOverlay from './components/notifications/AdminEmergencyOverlay.jsx';
+import VoiceCallOverlay from './components/notifications/VoiceCallOverlay.jsx';
 import UserLocationTracker from './components/user/UserLocationTracker.jsx';
 
 export default function App() {
@@ -103,6 +104,10 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
+          {/* Global overlays — rendered outside BrowserRouter intentionally */}
+          <AdminEmergencyOverlay />
+          <VoiceCallOverlay />
+          <UserLocationTracker />
         </EmergencyProvider>
       </FeatureProvider>
     </AuthProvider>

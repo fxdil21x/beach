@@ -1,9 +1,9 @@
   import { useEffect } from 'react';
-import { Siren, ShieldAlert, PhoneCall, CheckCircle2, Volume2, MapPin, Clock, Radio } from 'lucide-react';
+import { Siren, ShieldAlert, Volume2, MapPin, Clock, Radio, PhoneCall } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 
 export default function AdminEmergencyOverlay() {
-  const { activeEmergencies, claimEmergency, autoplayBlocked, retryAudioUnlock } = useEmergency();
+  const { activeEmergencies, claimEmergency, startCall, autoplayBlocked, retryAudioUnlock } = useEmergency();
 
   const emergencyList = Object.values(activeEmergencies);
 
@@ -121,25 +121,21 @@ export default function AdminEmergencyOverlay() {
 
                 {/* Action Buttons */}
                 <div className="pt-2 border-t border-slate-800/80">
-                  {hasPhone ? (
-                    <a
-                      href={telUri}
-                      onClick={() => claimEmergency(item.emergencyId)}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] text-white font-extrabold text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer text-center"
-                    >
-                      <PhoneCall className="h-4 w-4 shrink-0" />
-                      <span className="truncate">CONNECT & CALL USER ({item.userPhone})</span>
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => claimEmergency(item.emergencyId)}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] text-white font-extrabold text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                    >
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      <span>CLAIM & RESPOND TO EMERGENCY</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      claimEmergency(item.emergencyId);
+                      startCall(
+                        item.emergencyId,
+                        item.userId,
+                        item.userName || 'Beach Visitor',
+                      );
+                    }}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] text-white font-extrabold text-xs px-4 py-3 rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <PhoneCall className="h-4 w-4 shrink-0 animate-pulse" />
+                    <span>🎙 CONNECT &amp; TALK TO USER</span>
+                  </button>
                 </div>
               </div>
             );
@@ -149,7 +145,7 @@ export default function AdminEmergencyOverlay() {
         {/* Footer info */}
         <div className="border-t border-slate-800/80 bg-slate-950/90 px-5 py-3 text-center">
           <p className="text-[11px] font-medium text-slate-400">
-            Tapping <strong className="text-emerald-400">CONNECT & CALL</strong> dials the user's phone directly and stops the alarm for all admins.
+            Tapping <strong className="text-emerald-400">CONNECT &amp; TALK</strong> opens a live voice call with the user and stops the alarm for all admins.
           </p>
         </div>
       </div>
