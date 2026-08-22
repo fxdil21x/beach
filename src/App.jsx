@@ -103,11 +103,12 @@ export default function App() {
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+
+            {/* Global overlays — MUST be inside BrowserRouter so router hooks work */}
+            <AdminEmergencyOverlay />
+            <VoiceCallOverlay />
+            <UserLocationTracker />
           </BrowserRouter>
-          {/* Global overlays — rendered outside BrowserRouter intentionally */}
-          <AdminEmergencyOverlay />
-          <VoiceCallOverlay />
-          <UserLocationTracker />
         </EmergencyProvider>
       </FeatureProvider>
     </AuthProvider>
