@@ -51,7 +51,7 @@ export default function UserLocationTracker() {
     }
   }, [userKey]);
 
-  // Automatically trigger location consent modal on user login or navigation when feature is enabled
+  // Automatically trigger location consent modal 1 second after user login when feature is enabled
   useEffect(() => {
     if (!isEnabled || !isNonAdminUser || hasDeclined) {
       stopTracking();
@@ -59,47 +59,16 @@ export default function UserLocationTracker() {
       return;
     }
 
-    const userIdKey = user?.id || user?._id || 'guest_user';
-    const storedConsent = localStorage.getItem(`location_sharing_consent_${userIdKey}`);
+    // If not already tracking, show the location access prompt modal after 1-second delay
+    if (!isTracking) {
+      setLocationError('');
+      const timer = setTimeout(() => {
+        setShowPrompt(true);
+      }, 1000);
 
-    // If user has already allowed location sharing, resume tracking automatically
-    if (storedConsent === 'allowed') {
-      setShowPrompt(false);
-      if (!isTracking) {
-        startGeolocationWatch();
-      }
-      return;
+      return () => clearTimeout(timer);
     }
-
-    // If declined previously, don't nag
-    if (storedConsent === 'declined') {
-      setShowPrompt(false);
-      return;
-    }
-
-    // If browser permission is already granted, start watch directly
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions
-        .query({ name: 'geolocation' })
-        .then((status) => {
-          if (status.state === 'granted') {
-            localStorage.setItem(`location_sharing_consent_${userIdKey}`, 'allowed');
-            setShowPrompt(false);
-            if (!isTracking) {
-              startGeolocationWatch();
-            }
-          } else {
-            // Permission is prompt or denied - show modal to explain why
-            setShowPrompt(true);
-          }
-        })
-        .catch(() => {
-          setShowPrompt(true);
-        });
-    } else {
-      setShowPrompt(true);
-    }
-  }, [isEnabled, isNonAdminUser, userKey, location.pathname, isTracking, hasDeclined]);
+  }, [isEnabled, isNonAdminUser, userKey, hasDeclined, isTracking]);
 
   // Teardown watch on unmount
   useEffect(() => {
@@ -175,9 +144,6 @@ export default function UserLocationTracker() {
     }
 
     setLocationError('');
-    const userIdKey = user?.id || user?._id || 'current_user';
-    localStorage.setItem(`location_sharing_consent_${userIdKey}`, 'allowed');
-
     const options = {
       enableHighAccuracy: true,
       timeout: 15000,
@@ -248,8 +214,6 @@ export default function UserLocationTracker() {
   const handleDecline = () => {
     setShowPrompt(false);
     setHasDeclined(true);
-    const userIdKey = user?.id || user?._id || 'current_user';
-    localStorage.setItem(`location_sharing_consent_${userIdKey}`, 'declined');
     stopTracking();
   };
 
@@ -260,30 +224,6 @@ export default function UserLocationTracker() {
 
   return (
     <>
-      {/* Active Tracking Pill Banner with Reset Trigger */}
-      {isTracking && (
-        <div className="fixed top-4 right-4 z-40 flex items-center gap-2 rounded-full bg-emerald-900/90 border border-emerald-500/40 px-3 py-1.5 text-xs font-semibold text-emerald-200 shadow-xl backdrop-blur-md animate-in fade-in">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span>Live Tracking Active</span>
-          <button
-            type="button"
-            onClick={() => {
-              const userIdKey = user?.id || user?._id || 'guest_user';
-              localStorage.removeItem(`location_sharing_consent_${userIdKey}`);
-              stopTracking();
-              setShowPrompt(true);
-            }}
-            className="ml-1 text-[10px] underline text-emerald-400 hover:text-white transition-colors cursor-pointer"
-            title="Re-open location permission modal"
-          >
-            Re-ask
-          </button>
-        </div>
-      )}
-
       {/* Location Consent Modal using CommonModal */}
       <CommonModal
         isOpen={showPrompt}
