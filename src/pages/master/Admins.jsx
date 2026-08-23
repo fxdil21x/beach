@@ -76,7 +76,7 @@ export default function Admins() {
         const payload = {
           name: form.name.trim(),
           username: form.username.trim(),
-          role: form.role,
+          role: 'ADMIN',
           isActive: form.isActive,
         };
         if (form.password && form.password.trim()) {
@@ -88,7 +88,7 @@ export default function Admins() {
           name: form.name.trim(),
           username: form.username.trim(),
           password: form.password,
-          role: form.role,
+          role: 'ADMIN',
         });
       }
 
@@ -280,53 +280,24 @@ export default function Admins() {
                 </div>
               </div>
 
-              {/* Role Selection */}
+              {/* Role Display */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
-                  Role <span className="text-red-500">*</span>
+                  Role
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, role: 'ADMIN' })}
-                    className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
-                      form.role === 'ADMIN'
-                        ? 'border-blue-500 bg-blue-500/10 text-white shadow-xs'
-                        : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/40'
-                    }`}
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center gap-1.5 font-semibold text-sm text-blue-300">
-                        <ShieldCheck className="h-4 w-4 text-blue-400" />
-                        Gate Admin
-                      </div>
-                      {form.role === 'ADMIN' && <Check className="h-4 w-4 text-blue-400" />}
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-white">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-blue-300">Gate Admin (Security Officer)</span>
+                      <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-mono text-blue-300">ADMIN</span>
                     </div>
-                    <span className="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      Verification, QR scanner & visitor entry control
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, role: 'MASTER_ADMIN' })}
-                    className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
-                      form.role === 'MASTER_ADMIN'
-                        ? 'border-purple-500 bg-purple-500/10 text-white shadow-xs'
-                        : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/40'
-                    }`}
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center gap-1.5 font-semibold text-sm text-purple-300">
-                        <Shield className="h-4 w-4 text-purple-400" />
-                        Master Admin
-                      </div>
-                      {form.role === 'MASTER_ADMIN' && <Check className="h-4 w-4 text-purple-400" />}
-                    </div>
-                    <span className="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      Full system access, resident records & logs
-                    </span>
-                  </button>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      QR pass verification, visitor entries, and gate security control.
+                    </p>
+                  </div>
                 </div>
               </div>
 
