@@ -11,6 +11,8 @@ export const getResidentRecords = (params) => api.get('/master/resident-records'
 export const createResidentRecord = (data) => api.post('/master/resident-records', data);
 export const updateResidentRecord = (id, data) => api.patch(`/master/resident-records/${id}`, data);
 export const deleteResidentRecord = (id) => api.delete(`/master/resident-records/${id}`);
+export const bulkDeleteResidentRecords = (ids) => api.post('/master/resident-records/bulk-delete', { ids });
+export const purgeAllResidentData = () => api.post('/master/resident-records/purge-all');
 export const getRegisteredResidents = (params) => api.get('/master/registered-residents', { params });
 export const getVisitorEntries = (params) => api.get('/master/visitor-entries', { params });
 export const getEntryLogs = (params) => api.get('/master/entry-logs', { params });
