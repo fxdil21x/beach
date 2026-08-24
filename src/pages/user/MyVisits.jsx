@@ -3,8 +3,11 @@ import { useTranslation } from 'react-i18next';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
+import BeachBanner from '../../components/common/BeachBanner.jsx';
+import TabMaintenanceOverlay from '../../components/common/TabMaintenanceOverlay.jsx';
 import { userNav } from '../../config/navigation.js';
 import * as passApi from '../../api/residentPassApi.js';
+import visitsBannerImg from '../../assets/banners/visits-banner.jpg';
 
 export default function MyVisits() {
   const { t } = useTranslation();
@@ -17,7 +20,17 @@ export default function MyVisits() {
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('visits.title')} showLanguage />
-      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
+      <main className="relative flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-5">
+        <TabMaintenanceOverlay tabId="my-visits" fallbackTitle="Visits Log Under Maintenance" />
+
+        <BeachBanner
+          badge="Access History"
+          title="My Beach Visits"
+          subtitle="Real-time log of your verified gate entries and drive-in beach visits."
+          image={visitsBannerImg}
+          compact
+        />
+
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
             <p className="text-sm text-gray-500">{t('visits.lastVisit')}</p>

@@ -12,6 +12,7 @@ export function FeatureProvider({ children }) {
     trackUserEnabled: false,
     orderFoodEnabled: true,
     resortBookingEnabled: true,
+    tabMaintenance: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -78,6 +79,14 @@ export function FeatureProvider({ children }) {
     return data.data?.settings;
   };
 
+  const getTabMaintenance = useCallback(
+    (tabId) => {
+      const tabs = featureSettings.tabMaintenance || [];
+      return tabs.find((t) => t.tabId === tabId) || { isBlocked: false };
+    },
+    [featureSettings.tabMaintenance]
+  );
+
   return (
     <FeatureContext.Provider
       value={{
@@ -85,6 +94,7 @@ export function FeatureProvider({ children }) {
         loading,
         fetchFeatures,
         updateFeatures,
+        getTabMaintenance,
       }}
     >
       {children}

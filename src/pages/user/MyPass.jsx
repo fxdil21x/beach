@@ -5,9 +5,12 @@ import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import ResidentQrPanel from '../../components/resident/ResidentQrPanel.jsx';
 import Button from '../../components/ui/Button.jsx';
+import BeachBanner from '../../components/common/BeachBanner.jsx';
+import TabMaintenanceOverlay from '../../components/common/TabMaintenanceOverlay.jsx';
 import { MyPassSkeleton } from '../../components/ui/Skeleton.jsx';
 import { userNav } from '../../config/navigation.js';
 import * as passApi from '../../api/residentPassApi.js';
+import passBannerImg from '../../assets/banners/pass-banner.jpg';
 
 export default function MyPass() {
   const { t } = useTranslation();
@@ -53,7 +56,17 @@ export default function MyPass() {
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('pass.title')} showLanguage />
-      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
+      <main className="relative flex-1 min-h-0 overflow-y-auto px-4 py-5 space-y-4">
+        <TabMaintenanceOverlay tabId="my-pass" fallbackTitle="Pass System Under Maintenance" />
+
+        <BeachBanner
+          badge="Digital Gate Clearance"
+          title="Beach Resident Pass"
+          subtitle="Scan your verified QR code at the entrance gates for seamless vehicle drive-in access."
+          image={passBannerImg}
+          compact
+        />
+
         {loading ? (
           <MyPassSkeleton />
         ) : !pass ? (

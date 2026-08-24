@@ -8,11 +8,14 @@ import ImageModal from '../../components/ui/ImageModal.jsx';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/Select.jsx';
 import Button from '../../components/ui/Button.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
+import BeachBanner from '../../components/common/BeachBanner.jsx';
+import TabMaintenanceOverlay from '../../components/common/TabMaintenanceOverlay.jsx';
 import { ReportsSkeleton } from '../../components/ui/Skeleton.jsx';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs.jsx';
 import { userNav } from '../../config/navigation.js';
 import { createReport, getMyReports, getUserReportEventsUrl } from '../../api/reportApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import reportsBannerImg from '../../assets/banners/reports-banner.jpg';
 
 const CATEGORIES = ['Garbage', 'Overflowing Bin', 'Unsafe Driving', 'Damaged Facility', 'Noise Problem', 'Safety Issue', 'Other'];
 const ITEMS_PER_PAGE = 5;
@@ -177,7 +180,17 @@ export default function UserReportIssue() {
         </div>
       </div>
 
-      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
+      <main className="relative flex-1 min-h-0 overflow-y-auto px-4 py-5 space-y-4">
+        <TabMaintenanceOverlay tabId="report" fallbackTitle="Issue Reporting Under Maintenance" />
+
+        <BeachBanner
+          badge="Beach Safety & Quality"
+          title="Community Reports"
+          subtitle="Report beach hazards, unsafe driving, waste disposal issues, or track your submitted tickets."
+          image={reportsBannerImg}
+          compact
+        />
+
         {/* Real-time Notification Banner */}
         {notification && (
           <div className="mb-4 flex items-center gap-3 rounded-2xl bg-amber-500 p-4 text-white shadow-lg animate-bounce">

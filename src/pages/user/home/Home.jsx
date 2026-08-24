@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlert, ShieldCheck } from 'lucide-react';
 import MobileHeader from '../../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../../components/layout/BottomNavigation.jsx';
 import Button from '../../../components/ui/Button.jsx';
@@ -11,6 +11,7 @@ import ResidentPassForm from '../../../components/resident/ResidentPassForm.jsx'
 import ResidentPhoneLoginForm from '../../../components/resident/ResidentPhoneLoginForm.jsx';
 import ResidentQrPanel from '../../../components/resident/ResidentQrPanel.jsx';
 import EmergencyButton from '../../../components/ui/EmergencyButton.jsx';
+import BeachBanner from '../../../components/common/BeachBanner.jsx';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import { useFeatureSettings } from '../../../context/FeatureContext.jsx';
 import { userNav } from '../../../config/navigation.js';
@@ -208,36 +209,32 @@ export default function UserHome() {
         }
       />
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
-        <div className="relative min-h-[210px] overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl border border-slate-800 flex flex-col justify-end p-5 sm:p-6">
-          {/* Hero Image Background with Sleek Dark Overlay */}
-          <img
-            src={heroBannerImage}
-            alt="Muzhappilangad Beach Banner"
-            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/40" />
-
-          {/* Banner Content */}
-          <div className="relative z-10 space-y-2">
-            <h2 className="text-xl font-extrabold leading-snug sm:text-2xl text-white drop-shadow-md">
-              {t('beach.welcome')}
-            </h2>
-            <p className="text-sm font-medium text-slate-200 drop-shadow-xs">
-              {t('beach.name')} — Asia's premier drive-in beach entrance system.
-            </p>
+        <BeachBanner
+          badge="Muzhappilangad Drive-In Beach"
+          title={t('beach.welcome')}
+          subtitle={`${t('beach.name')} — Asia's premier drive-in beach entrance system.`}
+          image={heroBannerImage}
+        >
+          <div className="flex flex-wrap items-center gap-2 pt-2">
             {showReportButton && (
-              <div className="pt-2">
-                <Link
-                  to="/user/report"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/20 border border-white/30 px-4 py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-xs"
-                >
-                  <TriangleAlert className="h-4 w-4 text-amber-300" />
-                  {t('report.reportButton')}
-                </Link>
-              </div>
+              <Link
+                to="/user/report"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 border border-white/30 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-xs"
+              >
+                <TriangleAlert className="h-3.5 w-3.5 text-amber-300" />
+                <span>{t('report.reportButton', 'Report Issue')}</span>
+              </Link>
             )}
+
+            <Link
+              to="/user/beach-rules"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/25 border border-amber-400/40 px-3.5 py-2 text-xs font-bold text-amber-200 backdrop-blur-md hover:bg-amber-500/35 transition-all shadow-xs"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-amber-300" />
+              <span>{t('nav.beachRules', 'Beach Safety Rules')}</span>
+            </Link>
           </div>
-        </div>
+        </BeachBanner>
 
         {showEmergencySos && <EmergencyButton />}
 

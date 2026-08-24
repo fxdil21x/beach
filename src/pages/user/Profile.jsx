@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Button from '../../components/ui/Button.jsx';
+import BeachBanner from '../../components/common/BeachBanner.jsx';
 import PhotoPicker from '../../components/resident/PhotoPicker.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { userNav } from '../../config/navigation.js';
 import * as passApi from '../../api/residentPassApi.js';
+import profileBannerImg from '../../assets/banners/profile-banner.jpg';
 
 export default function UserProfile() {
   const { t } = useTranslation();
@@ -52,7 +54,15 @@ export default function UserProfile() {
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('nav.profile')} showLanguage />
-      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-5">
+        <BeachBanner
+          badge="Verified Account"
+          title={user?.name || 'Resident Profile'}
+          subtitle="Manage your Muzhappilangad beach resident credentials and pass photo."
+          image={profileBannerImg}
+          compact
+        />
+
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-xl font-bold">{user?.name}</p>
           <p className="text-gray-600">@{user?.username}</p>
