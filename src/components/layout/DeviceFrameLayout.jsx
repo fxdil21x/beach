@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { DeviceFrameset } from 'react-device-frameset';
 import 'react-device-frameset/styles/marvel-devices.min.css';
-import UserLocationTracker from '../../pages/user/home/components/UserLocationTracker.jsx';
-import AdminEmergencyOverlay from '../notifications/AdminEmergencyOverlay.jsx';
 
 const DESKTOP_QUERY = '(min-width: 768px)';
 
@@ -58,13 +56,7 @@ export default function DeviceFrameLayout() {
   }, [isDesktop, modalLayerRef.current]);
 
   if (!isDesktop) {
-    return (
-      <>
-        <UserLocationTracker />
-        <AdminEmergencyOverlay />
-        <Outlet />
-      </>
-    );
+    return <Outlet />;
   }
 
   return (
@@ -75,8 +67,6 @@ export default function DeviceFrameLayout() {
             <div className="device-app-root">
               {/* Portal layer: modals render here to stay inside device screen */}
               <div ref={modalLayerRef} className="device-modal-layer" />
-              <UserLocationTracker />
-              <AdminEmergencyOverlay />
               <Outlet />
             </div>
           </DeviceFrameset>

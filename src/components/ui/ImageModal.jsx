@@ -1,7 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function ImageModal({ src, alt = 'Preview image', onClose }) {
+  const [portalTarget, setPortalTarget] = useState(null);
+  const resolvedRef = useRef(false);
+
+  useEffect(() => {
+    if (!src) return;
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
+    const deviceLayer = window.__deviceModalLayer;
+    setPortalTarget(deviceLayer || document.body);
+  }, [src]);
+
+  useEffect(() => {
+    if (!src) {
+      resolvedRef.current = false;
+      setPortalTarget(null);
+    }
+  }, [src]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -18,15 +37,15 @@ export default function ImageModal({ src, alt = 'Preview image', onClose }) {
     };
   }, [src, onClose]);
 
-  if (!src) return null;
+  if (!src || !portalTarget) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative max-h-[90vh] max-w-[95vw] flex flex-col items-center"
+        className="relative max-h-[90%] max-w-[95%] flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Right Close Button Only */}
@@ -46,11 +65,12 @@ export default function ImageModal({ src, alt = 'Preview image', onClose }) {
           <img
             src={src}
             alt={alt}
-            className="max-h-[80vh] max-w-[90vw] object-contain select-none"
+            className="max-h-[75vh] max-w-[85vw] object-contain select-none"
           />
         </div>
       </div>
-    </div>
+    </div>,
+    portalTarget
   );
 }
 

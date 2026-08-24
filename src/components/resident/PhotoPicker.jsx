@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Camera, ImagePlus, X, ZoomIn, ZoomOut, Check } from 'lucide-react';
 import Cropper from 'react-easy-crop';
@@ -26,6 +27,23 @@ export default function PhotoPicker({
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [cropping, setCropping] = useState(false);
+  const [portalTarget, setPortalTarget] = useState(null);
+  const resolvedRef = useRef(false);
+
+  useEffect(() => {
+    if (!tempSrc) return;
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
+    const deviceLayer = window.__deviceModalLayer;
+    setPortalTarget(deviceLayer || document.body);
+  }, [tempSrc]);
+
+  useEffect(() => {
+    if (!tempSrc) {
+      resolvedRef.current = false;
+      setPortalTarget(null);
+    }
+  }, [tempSrc]);
 
   useEffect(() => {
     return () => {
@@ -43,89 +61,94 @@ export default function PhotoPicker({
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
       setLocalError(t('resident.invalidPhoto'));
-      e.target.value = '';
       return;
     }
 
     setLocalError('');
-    if (tempSrc) URL.revokeObjectURL(tempSrc);
-
     const objectUrl = URL.createObjectURL(file);
     setTempSrc(objectUrl);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
-    e.target.value = '';
   };
 
-  const onCropComplete = useCallback((_croppedArea, croppedAreaPixelsParam) => {
-    setCroppedAreaPixels(croppedAreaPixelsParam);
+  const handleChoose = () => {
+    setLocalError('');
+    fileInputRef.current?.click();
+  };
+
+  const onCropComplete = useCallback((_croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
   }, []);
-
-  const handleCancelCrop = () => {
-    if (tempSrc) URL.revokeObjectURL(tempSrc);
-    setTempSrc(null);
-    setCroppedAreaPixels(null);
-  };
 
   const handleSaveCrop = async () => {
     if (!tempSrc || !croppedAreaPixels) return;
-    setCropping(true);
     try {
-      const { file, url } = await getCroppedImg(tempSrc, croppedAreaPixels);
+      setCropping(true);
+      const croppedBlob = await getCroppedImg(tempSrc, croppedAreaPixels);
+      const croppedFile = new File([croppedBlob], 'profile.jpg', { type: 'image/jpeg' });
+      
+      const newPreview = URL.createObjectURL(croppedBlob);
       if (preview) URL.revokeObjectURL(preview);
-      setPreview(url);
+      setPreview(newPreview);
+
+      // Clean up temporary image
+      URL.revokeObjectURL(tempSrc);
       setTempSrc(null);
-      onSelect?.(file);
+
+      // Trigger callback with cropped file
+      onSelect?.(croppedFile);
     } catch {
-      setLocalError(t('common.error'));
+      setLocalError(t('resident.invalidPhoto'));
     } finally {
       setCropping(false);
     }
   };
 
+  const handleCancelCrop = () => {
+    if (tempSrc) URL.revokeObjectURL(tempSrc);
+    setTempSrc(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div>
-      <p className="mb-3 text-sm font-medium text-gray-700">{label || t('resident.photoOptional')}</p>
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/jpg,image/webp"
-        className="sr-only"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        capture="user"
         onChange={handleFileChange}
+        className="hidden"
       />
-
-      {/* Centered Square Photo Display */}
-      <div className="mb-4 flex flex-col items-center justify-center">
-        {displaySrc ? (
-          <div className="relative h-44 w-44 overflow-hidden rounded-2xl border-2 border-slate-200 bg-slate-100 shadow-md transition-transform hover:scale-[1.01]">
+      <div className="flex items-center gap-4">
+        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-gray-300 bg-gray-50">
+          {hasPhoto ? (
             <img
               src={displaySrc}
-              alt="Photo preview"
+              alt="Resident"
               className="h-full w-full object-cover"
             />
-          </div>
-        ) : (
-          <div className="flex h-44 w-44 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/70 p-4 text-center text-sm font-medium text-blue-700 shadow-xs">
-            <ImagePlus className="mb-2 h-8 w-8 text-blue-500" />
-            <span>{t('resident.noPhoto')}</span>
-          </div>
-        )}
+          ) : (
+            <Camera className="h-8 w-8 text-gray-400" />
+          )}
+        </div>
+        <div className="flex-1 space-y-1">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleChoose}
+            disabled={uploading}
+            className="flex items-center gap-2"
+          >
+            <ImagePlus className="h-4 w-4" />
+            {hasPhoto ? t('resident.changePhoto') : (label || t('resident.uploadPhoto'))}
+          </Button>
+          <p className="text-xs text-gray-500">{t('resident.photoHelp')}</p>
+        </div>
       </div>
-
-      <Button
-        type="button"
-        disabled={uploading}
-        onClick={() => fileInputRef.current?.click()}
-        className="w-full gap-2 py-3.5 text-base shadow-sm"
-      >
-        {hasPhoto ? <Camera className="h-5 w-5 shrink-0" /> : <ImagePlus className="h-5 w-5 shrink-0" />}
-        {uploading
-          ? t('common.loading')
-          : hasPhoto
-            ? t('resident.changePhoto')
-            : t('resident.chooseFile')}
-      </Button>
-
       {(localError || error) && (
         <p className="mt-2 text-center text-sm font-medium text-red-600">{localError || error}</p>
       )}
@@ -133,10 +156,10 @@ export default function PhotoPicker({
         <p className="mt-2 text-center text-sm font-medium text-green-700">{success}</p>
       )}
 
-      {/* Crop Modal Dialog */}
-      {tempSrc && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      {/* Crop Modal Dialog (PORTALED INSIDE DEVICE FRAME) */}
+      {tempSrc && portalTarget && createPortal(
+        <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="relative flex max-h-[90%] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3.5">
               <h3 className="text-base font-bold text-slate-900">Crop & Position Photo</h3>
@@ -150,7 +173,7 @@ export default function PhotoPicker({
             </div>
 
             {/* Cropper Canvas Container */}
-            <div className="relative h-72 w-full bg-slate-950">
+            <div className="relative h-64 w-full bg-slate-950">
               <Cropper
                 image={tempSrc}
                 crop={crop}
@@ -199,12 +222,13 @@ export default function PhotoPicker({
                   className="gap-1.5 px-5 py-2"
                 >
                   <Check className="h-4 w-4" />
-                  {cropping ? t('common.loading') : t('common.save')}
+                  {cropping ? t('common.saving') : t('resident.applyPhoto')}
                 </Button>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        portalTarget
       )}
     </div>
   );

@@ -10,15 +10,17 @@ export default function NotificationBell({ targetRole = 'user' }) {
   const [hasUnread, setHasUnread] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  const userId = user?.id || user?._id;
+
   const fetchAnnouncements = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       setAnnouncements([]);
       setHasUnread(false);
       return;
     }
     try {
       const { data } = await getPublicAnnouncements(targetRole);
-      const list = data.data.announcements || [];
+      const list = data.data?.announcements || [];
       setAnnouncements(list);
 
       const storageKey = `last_seen_announcement_${targetRole}`;
@@ -37,13 +39,13 @@ export default function NotificationBell({ targetRole = 'user' }) {
       setAnnouncements([]);
       setHasUnread(false);
     }
-  }, [user, targetRole]);
+  }, [userId, targetRole]);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchAnnouncements();
     }
-  }, [user, fetchAnnouncements]);
+  }, [userId, targetRole, fetchAnnouncements]);
 
   if (!user) {
     return null;

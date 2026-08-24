@@ -1,74 +1,81 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MapPin, ShieldCheck, AlertCircle, X, Navigation } from 'lucide-react';
+import { MapPin, ShieldCheck, AlertCircle, Navigation } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext.jsx';
-import { useFeatureSettings } from '../../../../context/FeatureContext.jsx';
 import { useEmergency } from '../../../../context/EmergencyContext.jsx';
 import axios from '../../../../api/axios.js';
 import CommonModal from '../../../../components/common/CommonModal/index.js';
 
 export default function UserLocationTracker() {
   const { user } = useAuth();
-  const { featureSettings } = useFeatureSettings();
   const { socket } = useEmergency();
   const location = useLocation();
 
   const [showPrompt, setShowPrompt] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
-  const [hasDeclined, setHasDeclined] = useState(false);
   const [locationError, setLocationError] = useState('');
+
+  const hasInteractedRef = useRef(false);
   const watchIdRef = useRef(null);
   const lastSocketCallRef = useRef(0);
   const lastPathnameRef = useRef(location.pathname);
   const lastPosRef = useRef(null);
 
-  const isEnabled = Boolean(featureSettings.trackUserEnabled);
   const isOnlyLoggedInUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
   const userKey = user?.id || user?._id;
   const lastUserIdRef = useRef(userKey);
+
+  // Keep track of active user ID & reset interaction state on user login/logout
+  useEffect(() => {
+    hasInteractedRef.current = false;
+    if (userKey) {
+      lastUserIdRef.current = userKey;
+    }
+  }, [userKey]);
 
   // Listen for test-location-prompt event from admin test buttons
   useEffect(() => {
     const handleTestPrompt = () => {
       setLocationError('');
+      hasInteractedRef.current = false;
       setShowPrompt(true);
     };
     window.addEventListener('test-location-prompt', handleTestPrompt);
     return () => window.removeEventListener('test-location-prompt', handleTestPrompt);
   }, []);
 
-  // Keep track of active user ID for clean logout socket disconnect
+  // Main lifecycle: if already allowed in localStorage, start tracking silently without popup
   useEffect(() => {
-    if (userKey) {
-      lastUserIdRef.current = userKey;
-    }
-  }, [userKey]);
-
-  // Reset decline state on fresh user login
-  useEffect(() => {
-    if (userKey) {
-      setHasDeclined(false);
-    }
-  }, [userKey]);
-
-  // Automatically trigger location consent modal 1 second after user login when feature is enabled
-  useEffect(() => {
-    if (!isEnabled || !isOnlyLoggedInUser || hasDeclined) {
+    if (!isOnlyLoggedInUser || !userKey) {
       stopTracking();
       setShowPrompt(false);
       return;
     }
 
-    // If not already tracking, show the location access prompt modal after 1-second delay
-    if (!isTracking) {
-      setLocationError('');
-      const timer = setTimeout(() => {
-        setShowPrompt(true);
-      }, 1000);
+    const isAllowed = localStorage.getItem(`location_allowed_${userKey}`) === 'true';
+    const isDeclined = sessionStorage.getItem(`location_declined_${userKey}`) === 'true';
 
-      return () => clearTimeout(timer);
+    if (isAllowed) {
+      // User has already granted permission previously - start tracking silently
+      hasInteractedRef.current = true;
+      setShowPrompt(false);
+      startGeolocationWatch();
+      return;
     }
-  }, [isEnabled, isOnlyLoggedInUser, userKey, hasDeclined, isTracking]);
+
+    if (isDeclined || hasInteractedRef.current) {
+      return;
+    }
+
+    // First time for this user: show popup after a brief delay
+    const timer = setTimeout(() => {
+      if (!hasInteractedRef.current) {
+        setShowPrompt(true);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [isOnlyLoggedInUser, userKey]);
 
   // Teardown watch on unmount
   useEffect(() => {
@@ -85,7 +92,6 @@ export default function UserLocationTracker() {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Tab is minimized/hidden - trigger periodic getCurrentPosition heartbeat to bypass timer throttling
         bgIntervalId = setInterval(() => {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -96,7 +102,6 @@ export default function UserLocationTracker() {
           }
         }, 8000);
       } else {
-        // Tab is visible again - clear background interval
         if (bgIntervalId) {
           clearInterval(bgIntervalId);
           bgIntervalId = null;
@@ -160,7 +165,18 @@ export default function UserLocationTracker() {
       timestamp: new Date().toISOString(),
     };
 
-    // Continuous location update over socket & REST API (on movement > 10m, navigation, or every 10s heartbeat)
+    // Store latest location in localStorage
+    try {
+      localStorage.setItem('user_last_location', JSON.stringify(payload));
+      localStorage.setItem('user_location', JSON.stringify({ latitude: lat, longitude: lng, timestamp: payload.timestamp }));
+      if (userKey) {
+        localStorage.setItem(`user_location_${userKey}`, JSON.stringify(payload));
+        localStorage.setItem(`location_allowed_${userKey}`, 'true');
+      }
+    } catch (e) {
+      console.warn('[Geolocation] Could not save to localStorage:', e);
+    }
+
     const timeSinceLastUpdate = now - lastSocketCallRef.current;
     if (isNavigation || hasMoved || timeSinceLastUpdate >= 10000) {
       lastSocketCallRef.current = now;
@@ -183,26 +199,24 @@ export default function UserLocationTracker() {
     const options = {
       enableHighAccuracy: true,
       timeout: 15000,
-      maximumAge: 0, // Forces hardware GPS sensor query for real-time accuracy
+      maximumAge: 0,
     };
 
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
     }
 
-    // Trigger initial position call immediately (forces browser native GPS prompt)
+    // Trigger initial position call
     navigator.geolocation.getCurrentPosition(
       (position) => {
         sendLocationData(position, true);
         setIsTracking(true);
-        setShowPrompt(false);
       },
       (err) => {
         console.warn('[Geolocation] Initial position error:', err.message);
         if (err.code === err.PERMISSION_DENIED) {
           setLocationError('Location permission denied in browser settings. Please allow location in your browser address bar.');
           setIsTracking(false);
-          setShowPrompt(true);
         }
       },
       options
@@ -213,7 +227,6 @@ export default function UserLocationTracker() {
       (position) => {
         sendLocationData(position);
         setIsTracking(true);
-        setShowPrompt(false);
       },
       (err) => {
         console.warn('[Geolocation] Watch error:', err.message);
@@ -242,19 +255,26 @@ export default function UserLocationTracker() {
   };
 
   const handleAllow = () => {
+    hasInteractedRef.current = true;
     setShowPrompt(false);
     setLocationError('');
+    if (userKey) {
+      localStorage.setItem(`location_allowed_${userKey}`, 'true');
+    }
     startGeolocationWatch();
   };
 
   const handleDecline = () => {
+    hasInteractedRef.current = true;
     setShowPrompt(false);
-    setHasDeclined(true);
+    if (userKey) {
+      sessionStorage.setItem(`location_declined_${userKey}`, 'true');
+    }
     stopTracking();
   };
 
-  // If tracking feature is OFF or user is not logged in as a registered user, render nothing
-  if (!isEnabled || !isOnlyLoggedInUser) {
+  // If user is not logged in as a registered user, render nothing
+  if (!isOnlyLoggedInUser) {
     return null;
   }
 

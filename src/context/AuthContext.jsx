@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../api/axios.js';
 import * as authApi from '../api/authApi.js';
 
@@ -11,8 +11,26 @@ const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const clearToken = useCallback(() => {
+    try {
+      const savedUser = userRef.current;
+      const userId = savedUser?.id || savedUser?._id;
+      if (userId) {
+        localStorage.removeItem(`location_allowed_${userId}`);
+        localStorage.removeItem(`user_location_${userId}`);
+        sessionStorage.removeItem(`location_declined_${userId}`);
+      }
+      localStorage.removeItem('user_last_location');
+      localStorage.removeItem('user_location');
+    } catch {
+      // ignore
+    }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(TOKEN_TIME_KEY);
     delete api.defaults.headers.common.Authorization;
@@ -55,7 +73,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     loadUser();
-  }, [loadUser]);
+  }, []); // Run only once on mount
 
   // Auto logout timer when 30 minutes lapse while active
   useEffect(() => {

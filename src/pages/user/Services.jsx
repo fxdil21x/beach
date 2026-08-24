@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
   Car,
   Hotel,
@@ -13,9 +15,13 @@ import {
   X,
   CheckCircle2,
   Sparkles,
-  Clock,
-  ChevronRight,
   ShieldCheck,
+  MapPin,
+  Navigation,
+  ExternalLink,
+  LocateFixed,
+  Route,
+  Check,
 } from 'lucide-react';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
@@ -24,12 +30,47 @@ import { userNav } from '../../config/navigation.js';
 
 export default function Services() {
   const { t } = useTranslation();
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategory = searchParams.get('category') || 'all';
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModal, setActiveModal] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', date: '', notes: '' });
 
+  // Ride & Auto booking specific states
+  const [pickupLocation, setPickupLocation] = useState('Muzhappilangad Beach (Current Location)');
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState(null);
+  const [destSearch, setDestSearch] = useState('');
+  const [vehicleType, setVehicleType] = useState('auto'); // 'auto' | 'taxi'
+
+  const [portalTarget, setPortalTarget] = useState(null);
+  const resolvedRef = useRef(false);
+
+  useEffect(() => {
+    if (!activeModal) return;
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
+    const deviceLayer = window.__deviceModalLayer;
+    setPortalTarget(deviceLayer || document.body);
+  }, [activeModal]);
+
+  useEffect(() => {
+    if (!activeModal) {
+      resolvedRef.current = false;
+      setPortalTarget(null);
+    }
+  }, [activeModal]);
+
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat && cat !== 'nearby') {
+      setSelectedCategory(cat);
+    }
+  }, [searchParams]);
+
+  // Standard clean service categories
   const categories = [
     { id: 'all', label: 'All Services' },
     { id: 'transport', label: 'Rides & Auto' },
@@ -39,12 +80,79 @@ export default function Services() {
     { id: 'rentals', label: 'Rentals' },
   ];
 
+  // 10 KM Nearby Destinations from Muzhappilangad Beach Current Location
+  const nearbyDestinations = [
+    {
+      id: 'dharmadam',
+      name: 'Dharmadam Island & Beach',
+      distance: '2.5 km',
+      time: '6 mins',
+      autoFare: '₹60',
+      taxiFare: '₹120',
+      type: 'Island & Beach',
+    },
+    {
+      id: 'edakkad-station',
+      name: 'Edakkad Railway Station',
+      distance: '3.5 km',
+      time: '8 mins',
+      autoFare: '₹80',
+      taxiFare: '₹150',
+      type: 'Transit',
+    },
+    {
+      id: 'andaloor',
+      name: 'Andaloor Kavu Heritage Grove',
+      distance: '4.2 km',
+      time: '10 mins',
+      autoFare: '₹90',
+      taxiFare: '₹170',
+      type: 'Heritage Site',
+    },
+    {
+      id: 'kizhunna',
+      name: 'Kizhunna & Ezhara Beach',
+      distance: '5.5 km',
+      time: '12 mins',
+      autoFare: '₹120',
+      taxiFare: '₹220',
+      type: 'Twin Beach',
+    },
+    {
+      id: 'thottada',
+      name: 'Thottada Beach & Estuary',
+      distance: '7.2 km',
+      time: '16 mins',
+      autoFare: '₹150',
+      taxiFare: '₹270',
+      type: 'River & Beach',
+    },
+    {
+      id: 'thalassery-fort',
+      name: 'Thalassery Fort & Sea Pier',
+      distance: '9.0 km',
+      time: '18 mins',
+      autoFare: '₹180',
+      taxiFare: '₹320',
+      type: 'Fort & Town',
+    },
+    {
+      id: 'overburys',
+      name: 'Overbury’s Folly & Promenade',
+      distance: '9.8 km',
+      time: '20 mins',
+      autoFare: '₹200',
+      taxiFare: '₹350',
+      type: 'Sunset Viewpoint',
+    },
+  ];
+
   const servicesList = [
     {
       id: 'auto-booking',
       category: 'transport',
       title: 'Auto & Taxi Ride',
-      subtitle: 'Drive-in & local rides',
+      subtitle: 'Instant rides within 10 km',
       badge: 'Available 24/7',
       price: 'From ₹50',
       rating: 4.9,
@@ -53,8 +161,9 @@ export default function Services() {
       iconBg: 'bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-amber-500/20',
       icon: Car,
       phone: '+919876543210',
-      description: 'Instant auto-rickshaw and taxi booking to Muzhappilangad Beach and nearby railway station / town.',
-      features: ['Beach drive-in pickup', 'Fixed transparent fare', 'Verified local drivers', 'Emergency support'],
+      description: 'Book instant auto-rickshaws and taxis from your current location at Muzhappilangad Beach to destinations within 10 km.',
+      features: ['Auto GPS pickup', 'Fixed meter transparent fares', 'Verified drivers', 'Emergency support'],
+      isRide: true,
     },
     {
       id: 'resort-booking',
@@ -147,24 +256,76 @@ export default function Services() {
     return matchesCategory && matchesSearch;
   });
 
+  const handleCategoryChange = (catId) => {
+    setSelectedCategory(catId);
+    setSearchParams(catId === 'all' ? {} : { category: catId });
+  };
+
+  const handleDetectGPS = () => {
+    setIsDetectingGps(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setIsDetectingGps(false);
+          setPickupLocation('Muzhappilangad Beach Shore (GPS Live)');
+        },
+        () => {
+          setIsDetectingGps(false);
+          setPickupLocation('Muzhappilangad Drive-In Beach (Auto-detected)');
+        },
+        { timeout: 4000 }
+      );
+    } else {
+      setTimeout(() => {
+        setIsDetectingGps(false);
+        setPickupLocation('Muzhappilangad Beach (Auto-detected)');
+      }, 500);
+    }
+  };
+
   const handleOpenModal = (service) => {
     setActiveModal(service);
     setBookingSuccess(false);
     setFormData({ name: '', phone: '', date: '', notes: '' });
+    setSelectedDestination(null);
+    setDestSearch('');
+    setVehicleType('auto');
+    if (service.isRide) {
+      handleDetectGPS();
+    }
   };
 
   const handleCloseModal = () => {
     setActiveModal(null);
     setBookingSuccess(false);
+    setSelectedDestination(null);
+    setDestSearch('');
+  };
+
+  const handleSelectDestination = (dest) => {
+    setSelectedDestination(dest);
+    setDestSearch(dest.name);
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
     setBookingSuccess(true);
-    setTimeout(() => {
-      // Keep success state displayed in modal
-    }, 500);
   };
+
+  const filtered10KmSpots = destSearch.trim()
+    ? nearbyDestinations.filter(
+        (d) =>
+          d.name.toLowerCase().includes(destSearch.toLowerCase()) ||
+          d.distance.toLowerCase().includes(destSearch.toLowerCase()) ||
+          d.type.toLowerCase().includes(destSearch.toLowerCase())
+      )
+    : nearbyDestinations;
+
+  const currentFare = selectedDestination
+    ? vehicleType === 'auto'
+      ? selectedDestination.autoFare
+      : selectedDestination.taxiFare
+    : 'From ₹50';
 
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-slate-50">
@@ -186,7 +347,7 @@ export default function Services() {
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Main Search Bar */}
         <div className="relative mb-3.5">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
@@ -211,7 +372,7 @@ export default function Services() {
           {categories.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => handleCategoryChange(cat.id)}
               className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
                 selectedCategory === cat.id
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]'
@@ -231,7 +392,7 @@ export default function Services() {
               <div
                 key={service.id}
                 onClick={() => handleOpenModal(service)}
-                className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer border-gray-100 hover:border-blue-200`}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer border-gray-100 hover:border-blue-200"
               >
                 {/* Top Row: Icon & Badge */}
                 <div>
@@ -261,7 +422,7 @@ export default function Services() {
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     <span className="text-[11px] font-bold text-gray-800">{service.rating}</span>
                   </div>
-                  <span className="text-[11px] font-extrabold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-md">
+                  <span className="text-[11px] font-extrabold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-md truncate max-w-[100px]">
                     {service.price}
                   </span>
                 </div>
@@ -279,11 +440,19 @@ export default function Services() {
         )}
       </main>
 
-      {/* SERVICE DETAILS & BOOKING MODAL */}
-      {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
+      {/* SERVICE & RIDE BOOKING MODAL (PORTALED INSIDE DEVICE FRAME) */}
+      {activeModal && portalTarget && createPortal(
+        <div
+          className="absolute inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+          style={{
+            background: 'rgba(2, 6, 23, 0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          }}
+          onClick={handleCloseModal}
+        >
           <div
-            className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white p-5 shadow-2xl transition-all max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl transition-all max-h-[90%] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -300,7 +469,7 @@ export default function Services() {
                       {activeModal.rating} ({activeModal.reviews} reviews)
                     </span>
                     <span>•</span>
-                    <span className="font-semibold text-blue-600">{activeModal.price}</span>
+                    <span className="font-semibold text-blue-600">{currentFare}</span>
                   </div>
                 </div>
               </div>
@@ -318,17 +487,22 @@ export default function Services() {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
-                <h3 className="mt-3 text-base font-bold text-gray-900">Booking Request Sent!</h3>
+                <h3 className="mt-3 text-base font-bold text-gray-900">Ride Booking Confirmed!</h3>
                 <p className="mt-1 text-xs text-gray-600 px-4">
-                  Our service provider will contact you shortly on <span className="font-semibold text-gray-900">{formData.phone || 'your phone'}</span> to confirm details.
+                  {selectedDestination
+                    ? `Your ride from ${pickupLocation} to ${selectedDestination.name} is booked.`
+                    : 'Our driver will contact you shortly to confirm pickup.'}
                 </p>
                 <div className="mt-5 flex gap-2">
                   <Button
                     variant="outline"
                     className="w-full text-xs"
-                    onClick={() => setBookingSuccess(false)}
+                    onClick={() => {
+                      setBookingSuccess(false);
+                      setSelectedDestination(null);
+                    }}
                   >
-                    New Request
+                    New Booking
                   </Button>
                   <Button
                     className="w-full text-xs"
@@ -340,72 +514,260 @@ export default function Services() {
               </div>
             ) : (
               <div className="py-4 space-y-4">
-                <p className="text-xs text-gray-600 leading-relaxed">{activeModal.description}</p>
-
-                {/* Service Features */}
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Highlights</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {activeModal.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-700 bg-gray-50 rounded-lg p-2">
-                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                        <span className="truncate">{feat}</span>
+                {/* AUTO & TAXI RIDE WORKFLOW */}
+                {activeModal.isRide ? (
+                  <div className="space-y-3.5">
+                    {/* FROM: Auto-detected Current Location */}
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10.5px] font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1">
+                          <LocateFixed className={`h-3.5 w-3.5 text-blue-600 ${isDetectingGps ? 'animate-spin' : ''}`} />
+                          Pickup Location (From)
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Auto-Detected
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <p className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                        <span className="truncate">{pickupLocation}</span>
+                      </p>
+                    </div>
 
-                {/* Quick Call Direct */}
-                <div className="flex items-center justify-between rounded-xl bg-blue-50/80 border border-blue-100 p-3">
-                  <div>
-                    <p className="text-xs font-bold text-blue-950">Direct Operator Support</p>
-                    <p className="text-[11px] text-blue-700">Call for instant booking & help</p>
-                  </div>
-                  <a
-                    href={`tel:${activeModal.phone}`}
-                    className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
-                  >
-                    <PhoneCall className="h-3.5 w-3.5" />
-                    <span>Call Now</span>
-                  </a>
-                </div>
+                    {/* TO: Choose 10 KM Destination */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                          <Navigation className="h-3.5 w-3.5 text-amber-600" />
+                          Destination (To • Within 10 km)
+                        </span>
+                        {selectedDestination && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDestination(null)}
+                            className="text-[10px] font-semibold text-blue-600 hover:underline"
+                          >
+                            Change
+                          </button>
+                        )}
+                      </div>
 
-                {/* Instant Request Form */}
-                <form onSubmit={handleFormSubmit} className="space-y-3 pt-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">Request Booking</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Your Name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
-                    />
-                    <input
-                      type="tel"
-                      required
-                      placeholder="Phone Number"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
-                    />
+                      {/* Search Destination Input */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          value={destSearch}
+                          onChange={(e) => {
+                            setDestSearch(e.target.value);
+                            if (selectedDestination && selectedDestination.name !== e.target.value) {
+                              setSelectedDestination(null);
+                            }
+                          }}
+                          placeholder="Search spot around 10 km (e.g. Dharmadam, Thalassery)..."
+                          className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-8.5 pr-3 text-xs focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      {/* 10 KM Destination Selection Cards (Around Current Location) */}
+                      {!selectedDestination && (
+                        <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+                            Spots Around Current Location (Within 10 km)
+                          </p>
+                          {filtered10KmSpots.map((dest) => (
+                            <div
+                              key={dest.id}
+                              onClick={() => handleSelectDestination(dest)}
+                              className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200/70 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                                  <MapPin className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-bold text-slate-800 leading-snug">{dest.name}</p>
+                                  <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                                    <span className="font-semibold text-emerald-600">{dest.distance} away</span>
+                                    <span>•</span>
+                                    <span>{dest.time}</span>
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="font-bold text-blue-700 bg-blue-100/70 px-1.5 py-0.5 rounded text-[11px]">
+                                  {vehicleType === 'auto' ? dest.autoFare : dest.taxiFare}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Selected Route Summary Banner */}
+                      {selectedDestination && (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-2.5 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
+                              <Route className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-emerald-950">{selectedDestination.name}</p>
+                              <p className="text-[10.5px] font-semibold text-emerald-700">
+                                {selectedDestination.distance} • ~{selectedDestination.time} drive
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs font-extrabold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-lg">
+                            {vehicleType === 'auto' ? selectedDestination.autoFare : selectedDestination.taxiFare}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Vehicle Type Toggle */}
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setVehicleType('auto')}
+                        className={`flex items-center justify-center gap-2 rounded-xl p-2.5 text-xs font-bold transition-all ${
+                          vehicleType === 'auto'
+                            ? 'border-2 border-amber-500 bg-amber-50 text-amber-900 shadow-xs'
+                            : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Car className="h-4 w-4 text-amber-600" />
+                        <span>Auto-Rickshaw</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVehicleType('taxi')}
+                        className={`flex items-center justify-center gap-2 rounded-xl p-2.5 text-xs font-bold transition-all ${
+                          vehicleType === 'taxi'
+                            ? 'border-2 border-blue-500 bg-blue-50 text-blue-900 shadow-xs'
+                            : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Car className="h-4 w-4 text-blue-600" />
+                        <span>Taxi / Cab (AC)</span>
+                      </button>
+                    </div>
+
+                    {/* Quick Call Direct */}
+                    <div className="flex items-center justify-between rounded-xl bg-blue-50/80 border border-blue-100 p-2.5">
+                      <div>
+                        <p className="text-xs font-bold text-blue-950">Direct Operator Dispatch</p>
+                        <p className="text-[11px] text-blue-700">Call for instant driver assignment</p>
+                      </div>
+                      <a
+                        href={`tel:${activeModal.phone}`}
+                        className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                      >
+                        <PhoneCall className="h-3.5 w-3.5" />
+                        <span>Call Now</span>
+                      </a>
+                    </div>
+
+                    {/* Booking Form */}
+                    <form onSubmit={handleFormSubmit} className="space-y-2.5 pt-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          required
+                          placeholder="Your Name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="tel"
+                          required
+                          placeholder="Phone Number"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                      <Button type="submit" className="w-full text-xs font-bold py-2.5">
+                        {selectedDestination
+                          ? `Confirm ${vehicleType === 'auto' ? 'Auto' : 'Taxi'} Booking (${vehicleType === 'auto' ? selectedDestination.autoFare : selectedDestination.taxiFare})`
+                          : `Request ${vehicleType === 'auto' ? 'Auto' : 'Taxi'} Ride`}
+                      </Button>
+                    </form>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Preferred Date / Time / Notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
-                  />
-                  <Button type="submit" className="w-full text-xs font-bold py-2.5">
-                    Submit Booking Request
-                  </Button>
-                </form>
+                ) : (
+                  /* Standard Service Flow (Resort, Food, Sports, Rentals) */
+                  <div className="space-y-4">
+                    <p className="text-xs text-gray-600 leading-relaxed">{activeModal.description}</p>
+
+                    {/* Highlights */}
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Highlights</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {activeModal.features.map((feat, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-700 bg-gray-50 rounded-lg p-2">
+                            <ShieldCheck className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                            <span className="truncate">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quick Call Direct */}
+                    <div className="flex items-center justify-between rounded-xl bg-blue-50/80 border border-blue-100 p-3">
+                      <div>
+                        <p className="text-xs font-bold text-blue-950">Direct Operator Support</p>
+                        <p className="text-[11px] text-blue-700">Call for instant booking & help</p>
+                      </div>
+                      <a
+                        href={`tel:${activeModal.phone}`}
+                        className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                      >
+                        <PhoneCall className="h-3.5 w-3.5" />
+                        <span>Call Now</span>
+                      </a>
+                    </div>
+
+                    {/* Instant Request Form */}
+                    <form onSubmit={handleFormSubmit} className="space-y-3 pt-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">Request Booking</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          required
+                          placeholder="Your Name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="tel"
+                          required
+                          placeholder="Phone Number"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Preferred Date / Time / Notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
+                      />
+                      <Button type="submit" className="w-full text-xs font-bold py-2.5">
+                        Submit Booking Request
+                      </Button>
+                    </form>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        portalTarget
       )}
 
       <BottomNavigation items={userNav} />

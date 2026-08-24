@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { io } from 'socket.io-client';
 import axios from '../api/axios.js';
 
 const FeatureContext = createContext(null);
@@ -36,6 +37,8 @@ export function FeatureProvider({ children }) {
 
   // Listen for real-time socket feature settings updates
   useEffect(() => {
+    let socketInstance = null;
+
     const handleFeaturesUpdated = (payload) => {
       if (payload?.settings) {
         setFeatureSettings((prev) => ({
@@ -45,20 +48,26 @@ export function FeatureProvider({ children }) {
       }
     };
 
-    // Lazy load socket from EmergencyContext if available
     const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
       : 'https://beach-verification-backend.onrender.com';
 
-    import('socket.io-client').then(({ io }) => {
-      const s = io(SOCKET_SERVER_URL, {
+    try {
+      socketInstance = io(SOCKET_SERVER_URL, {
         path: '/api/socket.io',
         withCredentials: true,
-        transports: ['websocket', 'polling'],
+        transports: ['websocket'],
       });
-      s.on('features:updated', handleFeaturesUpdated);
-      return () => s.disconnect();
-    }).catch(() => {});
+      socketInstance.on('features:updated', handleFeaturesUpdated);
+    } catch (e) {
+      console.error('FeatureContext socket error:', e);
+    }
+
+    return () => {
+      if (socketInstance) {
+        socketInstance.disconnect();
+      }
+    };
   }, []);
 
   const updateFeatures = async (newSettings) => {

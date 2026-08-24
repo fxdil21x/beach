@@ -16,6 +16,7 @@ import {
   Waves,
   Sliders,
   MapPin,
+  History,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -23,8 +24,9 @@ import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 
 const links = [
   { to: '/master/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { to: '/master/activity-logs', labelKey: 'Activity Logs', icon: History },
   { to: '/master/features', labelKey: 'Feature Controls', icon: Sliders },
-  { to: '/master/track-user', labelKey: 'Track User', icon: MapPin, featureKey: 'trackUserEnabled' },
+  { to: '/master/track-user', labelKey: 'Track User', icon: MapPin },
   { to: '/master/import', labelKey: 'nav.import', icon: Upload },
   { to: '/master/resident-records', labelKey: 'nav.residentRecords', icon: Database },
   { to: '/master/registered-residents', labelKey: 'nav.registeredResidents', icon: BadgeCheck },

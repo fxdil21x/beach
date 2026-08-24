@@ -33,6 +33,7 @@ import MasterReports from './pages/master/Reports.jsx';
 import MasterNotifications from './pages/master/Notifications.jsx';
 import MasterFeatureSettings from './pages/master/FeatureSettings.jsx';
 import MasterTrackUser from './pages/master/TrackUser.jsx';
+import MasterActivityLogs from './pages/master/AuditLogs.jsx';
 
 import VisitorEntry from './pages/public/VisitorEntry.jsx';
 import EntrySuccess from './pages/public/EntrySuccess.jsx';
@@ -96,6 +97,8 @@ export default function App() {
                   <Route path="resident-entries" element={<ResidentEntries />} />
                   <Route path="visitor-entries" element={<VisitorEntries />} />
                   <Route path="analytics" element={<Analytics />} />
+                  <Route path="activity-logs" element={<MasterActivityLogs />} />
+                  <Route path="audit-logs" element={<Navigate to="/master/activity-logs" replace />} />
                   <Route path="notifications" element={<MasterNotifications />} />
                   <Route path="reports" element={<MasterReports />} />
                 </Route>
