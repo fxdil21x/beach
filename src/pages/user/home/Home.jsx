@@ -103,7 +103,7 @@ export default function UserHome() {
   };
 
   const applySession = (payload) => {
-    setSession(payload.token, payload.user);
+    setSession(payload.accessToken || payload.token, payload.user, payload.refreshToken);
     setPass(payload.pass);
     setQrToken(payload.qrToken);
   };

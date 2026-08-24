@@ -5,8 +5,9 @@ import * as authApi from '../api/authApi.js';
 const AuthContext = createContext(null);
 
 const TOKEN_KEY = 'beach_app_token';
+const REFRESH_TOKEN_KEY = 'beach_app_refresh_token';
 const TOKEN_TIME_KEY = 'beach_app_token_time';
-const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -32,14 +33,18 @@ export function AuthProvider({ children }) {
       // ignore
     }
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(TOKEN_TIME_KEY);
     delete api.defaults.headers.common.Authorization;
     setUser(null);
   }, []);
 
-  const saveToken = useCallback((token) => {
+  const saveToken = useCallback((token, refreshToken) => {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(TOKEN_TIME_KEY, Date.now().toString());
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    }
     api.defaults.headers.common.Authorization = `Bearer ${token}`;
   }, []);
 
@@ -53,19 +58,26 @@ export function AuthProvider({ children }) {
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem(TOKEN_KEY);
     const remaining = getRemainingTime();
+    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
-    if (!token || remaining <= 0) {
+    if (!token && !storedRefreshToken) {
       clearToken();
       setLoading(false);
       return;
     }
 
     try {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      if (token) {
+        api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      }
       const { data } = await authApi.getMe();
       setUser(data.data.user);
     } catch {
-      clearToken();
+      // If token expired but refresh token exists, axios interceptor will handle it
+      const hasRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (!hasRefreshToken) {
+        clearToken();
+      }
     } finally {
       setLoading(false);
     }
@@ -75,53 +87,46 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []); // Run only once on mount
 
-  // Auto logout timer when 30 minutes lapse while active
+  // Auto token expiry timer when 2 hours lapse without activity/refresh
   useEffect(() => {
     if (!user) return;
     const remaining = getRemainingTime();
     if (remaining <= 0) {
-      clearToken();
+      const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (!storedRefreshToken) {
+        clearToken();
+      }
       return;
     }
 
     const timer = setTimeout(() => {
-      clearToken();
+      const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (!storedRefreshToken) {
+        clearToken();
+      }
     }, remaining);
 
     return () => clearTimeout(timer);
   }, [user, getRemainingTime, clearToken]);
 
-  // Check expiration on tab visibility change
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user) {
-        if (getRemainingTime() <= 0) {
-          clearToken();
-        }
-      }
-    };
-    window.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [user, getRemainingTime, clearToken]);
-
   const login = async (username, password) => {
     const { data } = await authApi.login({ username, password });
-    const { token, user: userData } = data.data;
-    saveToken(token);
+    const { token, accessToken, refreshToken, user: userData } = data.data;
+    saveToken(accessToken || token, refreshToken);
     setUser(userData);
     return userData;
   };
 
   const register = async (formData) => {
     const { data } = await authApi.register(formData);
-    const { token, user: userData } = data.data;
-    saveToken(token);
+    const { token, accessToken, refreshToken, user: userData } = data.data;
+    saveToken(accessToken || token, refreshToken);
     setUser(userData);
     return userData;
   };
 
-  const setSession = (token, userData) => {
-    saveToken(token);
+  const setSession = (token, userData, refreshToken) => {
+    saveToken(token, refreshToken);
     setUser(userData);
     return userData;
   };
