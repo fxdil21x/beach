@@ -28,7 +28,6 @@ export default function MyVisits() {
           title="My Beach Visits"
           subtitle="Real-time log of your verified gate entries and drive-in beach visits."
           image={visitsBannerImg}
-          compact
         />
 
         <div className="grid grid-cols-2 gap-3">

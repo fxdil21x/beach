@@ -29,7 +29,6 @@ export default function BeachRules() {
           badge="Safety & Guidelines"
           title={t('beach.rulesTitle', 'Beach Safety Guidelines')}
           subtitle="Please follow all drive-in beach rules for a safe and memorable experience."
-          compact
         />
         {INSTRUCTIONS.map((key) => (
           <BeachInstructionCard key={key} instructionKey={key} />

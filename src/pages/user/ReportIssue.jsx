@@ -188,7 +188,6 @@ export default function UserReportIssue() {
           title="Community Reports"
           subtitle="Report beach hazards, unsafe driving, waste disposal issues, or track your submitted tickets."
           image={reportsBannerImg}
-          compact
         />
 
         {/* Real-time Notification Banner */}

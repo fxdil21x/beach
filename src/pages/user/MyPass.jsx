@@ -64,7 +64,6 @@ export default function MyPass() {
           title="Beach Resident Pass"
           subtitle="Scan your verified QR code at the entrance gates for seamless vehicle drive-in access."
           image={passBannerImg}
-          compact
         />
 
         {loading ? (

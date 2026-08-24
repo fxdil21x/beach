@@ -2,20 +2,17 @@ import { Sparkles } from 'lucide-react';
 import defaultBeachImage from '../../pages/public/image/Gemini_Generated_Image_kxdt3pkxdt3pkxdt.png';
 
 export default function BeachBanner({
-  badge = 'Muzhappilangad Beach Directory',
+  badge = 'Muzhappilangad Drive-In Beach',
   title,
   subtitle,
   image = defaultBeachImage,
   icon: Icon = Sparkles,
   children,
   className = '',
-  compact = false,
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl border border-slate-800/80 flex flex-col justify-end p-4.5 sm:p-6 ${
-        compact ? 'min-h-[145px] mb-3.5' : 'min-h-[175px] sm:min-h-[200px] mb-4'
-      } ${className}`}
+      className={`relative min-h-[210px] sm:min-h-[225px] overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl border border-slate-800 flex flex-col justify-end p-5 sm:p-6 mb-4 ${className}`}
     >
       {/* Background Beach Photo */}
       {image && (
@@ -30,24 +27,24 @@ export default function BeachBanner({
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-900/40" />
 
       {/* Banner Content */}
-      <div className="relative z-10 space-y-1">
+      <div className="relative z-10 space-y-1.5">
         {badge && (
-          <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-300 drop-shadow-sm">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-300 drop-shadow-sm">
             {Icon && <Icon className="h-3.5 w-3.5 text-amber-300" />}
             <span>{badge}</span>
           </div>
         )}
         {title && (
-          <h1 className="text-lg font-extrabold leading-snug sm:text-2xl text-white drop-shadow-md">
+          <h2 className="text-xl font-extrabold leading-snug sm:text-2xl text-white drop-shadow-md">
             {title}
-          </h1>
+          </h2>
         )}
         {subtitle && (
           <p className="text-xs sm:text-sm font-medium text-slate-200 drop-shadow-xs leading-relaxed max-w-xl">
             {subtitle}
           </p>
         )}
-        {children && <div className="pt-2">{children}</div>}
+        {children && <div className="pt-1.5">{children}</div>}
       </div>
     </div>
   );

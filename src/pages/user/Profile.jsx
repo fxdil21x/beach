@@ -60,7 +60,6 @@ export default function UserProfile() {
           title={user?.name || 'Resident Profile'}
           subtitle="Manage your Muzhappilangad beach resident credentials and pass photo."
           image={profileBannerImg}
-          compact
         />
 
         <div className="rounded-2xl bg-white p-5 shadow-sm">
