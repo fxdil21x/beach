@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { DeviceFrameset } from 'react-device-frameset';
 import 'react-device-frameset/styles/marvel-devices.min.css';
 
@@ -56,7 +57,17 @@ export default function DeviceFrameLayout() {
   }, [isDesktop, modalLayerRef.current]);
 
   if (!isDesktop) {
-    return <Outlet />;
+    return (
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        className="w-full h-full flex flex-col min-h-0"
+      >
+        <Outlet />
+      </motion.div>
+    );
   }
 
   return (
@@ -67,7 +78,15 @@ export default function DeviceFrameLayout() {
             <div className="device-app-root">
               {/* Portal layer: modals render here to stay inside device screen */}
               <div ref={modalLayerRef} className="device-modal-layer" />
-              <Outlet />
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="w-full h-full flex flex-col min-h-0"
+              >
+                <Outlet />
+              </motion.div>
             </div>
           </DeviceFrameset>
         </div>

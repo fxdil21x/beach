@@ -6,6 +6,7 @@ import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Button from '../../components/ui/Button.jsx';
 import BeachBanner from '../../components/common/BeachBanner.jsx';
 import PhotoPicker from '../../components/resident/PhotoPicker.jsx';
+import { ProfileSkeleton } from '../../components/ui/Skeleton.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { userNav } from '../../config/navigation.js';
 import * as passApi from '../../api/residentPassApi.js';
@@ -16,15 +17,21 @@ export default function UserProfile() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [pass, setPass] = useState(null);
+  const [loading, setLoading] = useState(Boolean(user?.residentPassId));
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [photoSuccess, setPhotoSuccess] = useState('');
 
   useEffect(() => {
-    if (!user?.residentPassId) return undefined;
+    if (!user?.residentPassId) {
+      setLoading(false);
+      return undefined;
+    }
+    setLoading(true);
     passApi.getMyPass()
       .then(({ data }) => setPass(data.data.pass))
-      .catch(() => setPass(null));
+      .catch(() => setPass(null))
+      .finally(() => setLoading(false));
     return undefined;
   }, [user?.residentPassId]);
 
@@ -62,23 +69,29 @@ export default function UserProfile() {
           image={profileBannerImg}
         />
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-xl font-bold">{user?.name}</p>
-          <p className="text-gray-600">@{user?.username}</p>
-          <p className="mt-2 text-sm text-gray-500">{user?.role}</p>
-        </div>
-        {pass && (
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <PhotoPicker
-              existingUrl={pass.photoUrl}
-              onSelect={handleUploadPhoto}
-              uploading={photoUploading}
-              error={photoError}
-              success={photoSuccess}
-            />
-          </div>
+        {loading ? (
+          <ProfileSkeleton />
+        ) : (
+          <>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-xl font-bold">{user?.name}</p>
+              <p className="text-gray-600">@{user?.username}</p>
+              <p className="mt-2 text-sm text-gray-500">{user?.role}</p>
+            </div>
+            {pass && (
+              <div className="rounded-2xl bg-white p-5 shadow-sm">
+                <PhotoPicker
+                  existingUrl={pass.photoUrl}
+                  onSelect={handleUploadPhoto}
+                  uploading={photoUploading}
+                  error={photoError}
+                  success={photoSuccess}
+                />
+              </div>
+            )}
+            <Button variant="secondary" onClick={handleLogout} className="w-full py-4">{t('common.logout')}</Button>
+          </>
         )}
-        <Button variant="secondary" onClick={handleLogout} className="w-full py-4">{t('common.logout')}</Button>
       </main>
       <BottomNavigation items={userNav} />
     </div>

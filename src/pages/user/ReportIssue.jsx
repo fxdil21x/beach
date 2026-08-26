@@ -118,7 +118,8 @@ export default function UserReportIssue() {
   const paginatedMyReports = myReports.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+      <TabMaintenanceOverlay tabId="report" fallbackTitle="Issue Reporting Under Maintenance" />
       <MobileHeader title={t('report.title')} showLanguage />
 
       {/* Top Header Tabs & Justified Pagination Bar */}
@@ -181,7 +182,6 @@ export default function UserReportIssue() {
       </div>
 
       <main className="relative flex-1 min-h-0 overflow-y-auto px-4 py-5 space-y-4">
-        <TabMaintenanceOverlay tabId="report" fallbackTitle="Issue Reporting Under Maintenance" />
 
         <BeachBanner
           badge="Beach Safety & Quality"

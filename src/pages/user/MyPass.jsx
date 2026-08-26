@@ -54,10 +54,10 @@ export default function MyPass() {
   };
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+      <TabMaintenanceOverlay tabId="my-pass" fallbackTitle="Pass System Under Maintenance" />
       <MobileHeader title={t('pass.title')} showLanguage />
       <main className="relative flex-1 min-h-0 overflow-y-auto px-4 py-5 space-y-4">
-        <TabMaintenanceOverlay tabId="my-pass" fallbackTitle="Pass System Under Maintenance" />
 
         <BeachBanner
           badge="Digital Gate Clearance"
@@ -77,10 +77,6 @@ export default function MyPass() {
           <ResidentQrPanel
             pass={pass}
             qrToken={qrToken}
-            onUploadPhoto={handleUploadPhoto}
-            photoUploading={photoUploading}
-            photoError={photoError}
-            photoSuccess={photoSuccess}
           />
         )}
       </main>

@@ -6,6 +6,8 @@ import { useEmergency } from '../../../../context/EmergencyContext.jsx';
 import axios from '../../../../api/axios.js';
 import CommonModal from '../../../../components/common/CommonModal/index.js';
 
+const LOCATION_PERMISSION_WINDOW = 30 * 60 * 1000; // 30 minutes in ms
+
 export default function UserLocationTracker() {
   const { user } = useAuth();
   const { socket } = useEmergency();
@@ -24,6 +26,19 @@ export default function UserLocationTracker() {
   const isOnlyLoggedInUser = Boolean(user && user.role !== 'ADMIN' && user.role !== 'MASTER_ADMIN');
   const userKey = user?.id || user?._id;
   const lastUserIdRef = useRef(userKey);
+
+  // Helper to check if the 30-minute location permission is still valid
+  const isPermissionValid = (userId) => {
+    if (!userId) return false;
+    const isAllowed = localStorage.getItem(`location_allowed_${userId}`) === 'true';
+    const timestampStr = localStorage.getItem(`location_allowed_time_${userId}`);
+    if (!isAllowed || !timestampStr) return false;
+
+    const timestamp = parseInt(timestampStr, 10);
+    if (isNaN(timestamp)) return false;
+
+    return Date.now() - timestamp < LOCATION_PERMISSION_WINDOW;
+  };
 
   // Keep track of active user ID & reset interaction state on user login/logout
   useEffect(() => {
@@ -44,7 +59,90 @@ export default function UserLocationTracker() {
     return () => window.removeEventListener('test-location-prompt', handleTestPrompt);
   }, []);
 
-  // Main lifecycle: if already allowed in localStorage, start tracking silently without popup
+  // Send location payload once (WebSocket primary, HTTP fallback)
+  const sendLocationPayload = (payload) => {
+    if (!user) return;
+    const now = Date.now();
+    lastSocketCallRef.current = now;
+    lastPathnameRef.current = location.pathname;
+
+    // Cache locally & refresh activity timestamp if permission is active
+    try {
+      localStorage.setItem('user_last_location', JSON.stringify(payload));
+      localStorage.setItem('user_location', JSON.stringify({ latitude: payload.latitude, longitude: payload.longitude, timestamp: payload.timestamp }));
+      if (userKey && localStorage.getItem(`location_allowed_${userKey}`) === 'true') {
+        localStorage.setItem(`user_location_${userKey}`, JSON.stringify(payload));
+        localStorage.setItem(`location_allowed_${userKey}`, 'true');
+        localStorage.setItem(`location_allowed_time_${userKey}`, now.toString());
+      }
+    } catch (e) {
+      console.warn('[Geolocation] LocalStorage save error:', e);
+    }
+
+    // Send update: WebSocket preferred, REST API fallback
+    if (socket && socket.connected) {
+      socket.emit('user:location-update', payload);
+    } else {
+      axios.post('/user/location', payload).catch(() => {});
+    }
+  };
+
+  const fetchAndSendCurrentLocation = () => {
+    if (!user || !userKey) return;
+    if (!isPermissionValid(userKey)) return;
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    // Try reading cached location first for instant update
+    try {
+      const cached = localStorage.getItem(`user_location_${userKey}`) || localStorage.getItem('user_last_location');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        sendLocationPayload({
+          ...parsed,
+          userId: String(user.id || user._id),
+          userName: user.name || user.fullName || 'Registered Resident',
+          username: user.username || '',
+          userPhone: user.phone || '',
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.warn('[Geolocation] Cached location read error:', e);
+    }
+
+    // Get single fresh GPS fix from device
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsTracking(true);
+        const payload = {
+          userId: String(user.id || user._id),
+          userName: user.name || user.fullName || 'Registered Resident',
+          username: user.username || '',
+          userPhone: user.phone || '',
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          speed: pos.coords.speed,
+          heading: pos.coords.heading,
+          accuracy: pos.coords.accuracy,
+          timestamp: new Date().toISOString(),
+        };
+        sendLocationPayload(payload);
+      },
+      (err) => {
+        console.warn('[Geolocation] Position fetch error:', err.message);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError('Location permission denied in browser settings.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
+    );
+  };
+
+  // Main lifecycle: if already allowed in localStorage within 30 minutes, sync once silently
   useEffect(() => {
     if (!isOnlyLoggedInUser || !userKey) {
       stopTracking();
@@ -52,22 +150,26 @@ export default function UserLocationTracker() {
       return;
     }
 
-    const isAllowed = localStorage.getItem(`location_allowed_${userKey}`) === 'true';
+    const hasValidPermission = isPermissionValid(userKey);
     const isDeclined = sessionStorage.getItem(`location_declined_${userKey}`) === 'true';
 
-    if (isAllowed) {
-      // User has already granted permission previously - start tracking silently
+    if (hasValidPermission) {
+      // User has active 30-minute valid permission - sync location ONCE silently
       hasInteractedRef.current = true;
       setShowPrompt(false);
-      startGeolocationWatch();
+      fetchAndSendCurrentLocation();
       return;
     }
+
+    // Permission expired (> 30 mins) or not granted yet: reset permission state and show popup
+    localStorage.removeItem(`location_allowed_${userKey}`);
+    localStorage.removeItem(`location_allowed_time_${userKey}`);
 
     if (isDeclined || hasInteractedRef.current) {
       return;
     }
 
-    // First time for this user: show popup after a brief delay
+    // Show popup after a brief delay so user can confirm location access
     const timer = setTimeout(() => {
       if (!hasInteractedRef.current) {
         setShowPrompt(true);
@@ -77,173 +179,15 @@ export default function UserLocationTracker() {
     return () => clearTimeout(timer);
   }, [isOnlyLoggedInUser, userKey]);
 
-  // Teardown watch on unmount
+  // Sync location ONLY when Tab / Route changes (Home, My Pass, Services, Reports, Profile, etc.)
   useEffect(() => {
-    return () => {
-      stopTracking();
-    };
-  }, []);
-
-  // Handle Page Visibility change (when web app is minimized or tab is in background)
-  useEffect(() => {
-    if (!isTracking) return;
-
-    let bgIntervalId = null;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        bgIntervalId = setInterval(() => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (pos) => sendLocationData(pos, true),
-              (err) => console.warn('[Geolocation] Background position fetch error:', err.message),
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-          }
-        }, 8000);
-      } else {
-        if (bgIntervalId) {
-          clearInterval(bgIntervalId);
-          bgIntervalId = null;
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (bgIntervalId) {
-        clearInterval(bgIntervalId);
-      }
-    };
-  }, [isTracking]);
-
-  // Calculate approximate distance in meters between two coordinates
-  const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
-    const R = 6371000;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  };
-
-  const sendLocationData = (position, isNavigationAction = false) => {
-    if (!user) return;
-    const now = Date.now();
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
-
-    const isNavigation = isNavigationAction || location.pathname !== lastPathnameRef.current;
-    let hasMoved = false;
-
-    if (lastPosRef.current) {
-      const dist = getDistanceMeters(lastPosRef.current.lat, lastPosRef.current.lng, lat, lng);
-      if (dist >= 10) {
-        hasMoved = true;
-      }
-    } else {
-      hasMoved = true;
+    if (!isOnlyLoggedInUser || !userKey) return;
+    if (isPermissionValid(userKey)) {
+      fetchAndSendCurrentLocation();
     }
-
-    lastPosRef.current = { lat, lng };
-
-    const payload = {
-      userId: String(user.id || user._id),
-      userName: user.name || user.fullName || 'Registered Resident',
-      username: user.username || '',
-      userPhone: user.phone || '',
-      latitude: lat,
-      longitude: lng,
-      speed: position.coords.speed,
-      heading: position.coords.heading,
-      accuracy: position.coords.accuracy,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Store latest location in localStorage
-    try {
-      localStorage.setItem('user_last_location', JSON.stringify(payload));
-      localStorage.setItem('user_location', JSON.stringify({ latitude: lat, longitude: lng, timestamp: payload.timestamp }));
-      if (userKey) {
-        localStorage.setItem(`user_location_${userKey}`, JSON.stringify(payload));
-        localStorage.setItem(`location_allowed_${userKey}`, 'true');
-      }
-    } catch (e) {
-      console.warn('[Geolocation] Could not save to localStorage:', e);
-    }
-
-    const timeSinceLastUpdate = now - lastSocketCallRef.current;
-    if (isNavigation || hasMoved || timeSinceLastUpdate >= 10000) {
-      lastSocketCallRef.current = now;
-      lastPathnameRef.current = location.pathname;
-
-      if (socket && socket.connected) {
-        socket.emit('user:location-update', payload);
-      }
-      axios.post('/user/location', payload).catch(() => {});
-    }
-  };
-
-  const startGeolocationWatch = () => {
-    if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser.');
-      return;
-    }
-
-    setLocationError('');
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
-    };
-
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
-
-    // Trigger initial position call
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        sendLocationData(position, true);
-        setIsTracking(true);
-      },
-      (err) => {
-        console.warn('[Geolocation] Initial position error:', err.message);
-        if (err.code === err.PERMISSION_DENIED) {
-          setLocationError('Location permission denied in browser settings. Please allow location in your browser address bar.');
-          setIsTracking(false);
-        }
-      },
-      options
-    );
-
-    // Continuous location watch
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        sendLocationData(position);
-        setIsTracking(true);
-      },
-      (err) => {
-        console.warn('[Geolocation] Watch error:', err.message);
-        if (err.code === err.PERMISSION_DENIED) {
-          setLocationError('Location permission denied in browser settings.');
-          setIsTracking(false);
-        }
-      },
-      options
-    );
-  };
+  }, [location.pathname]);
 
   const stopTracking = () => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
     const targetUserId = user?.id || user?._id || lastUserIdRef.current;
     if (targetUserId) {
       if (socket && socket.connected) {
@@ -260,8 +204,9 @@ export default function UserLocationTracker() {
     setLocationError('');
     if (userKey) {
       localStorage.setItem(`location_allowed_${userKey}`, 'true');
+      localStorage.setItem(`location_allowed_time_${userKey}`, Date.now().toString());
     }
-    startGeolocationWatch();
+    fetchAndSendCurrentLocation();
   };
 
   const handleDecline = () => {

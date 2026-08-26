@@ -42,7 +42,7 @@ export default function TabMaintenanceOverlay({ tabId, fallbackTitle = 'Feature 
   const IconComponent = ICON_MAP[info.icon] || Wrench;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-lg bg-slate-950/80 animate-in fade-in duration-200">
+    <div className="absolute inset-0 z-40 flex items-center justify-center p-4 pb-20 backdrop-blur-xl bg-slate-950/80 animate-in fade-in duration-200">
       <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-amber-500/30 bg-slate-900/95 p-6 text-center text-white shadow-2xl shadow-amber-950/50">
         {/* Glowing Background Ring */}
         <div className="absolute -top-16 -left-16 h-36 w-36 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />

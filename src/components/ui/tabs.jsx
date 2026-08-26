@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TabsContext = createContext(null);
 
@@ -44,13 +45,20 @@ export function TabsTrigger({ value, children, className = '', disabled = false 
       aria-selected={isActive}
       disabled={disabled}
       onClick={() => handleTabChange(value)}
-      className={`inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer ${
+      className={`relative inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer ${
         isActive
-          ? 'bg-white text-blue-700 shadow-sm font-bold scale-[1.01]'
-          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+          ? 'text-blue-700 font-bold'
+          : 'text-slate-600 hover:text-slate-900'
       } ${className}`}
     >
-      {children}
+      {isActive && (
+        <motion.div
+          layoutId="activeTabPill"
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          className="absolute inset-0 rounded-lg bg-white shadow-sm"
+        />
+      )}
+      <span className="relative z-10">{children}</span>
     </button>
   );
 }
@@ -60,8 +68,15 @@ export function TabsContent({ value, children, className = '' }) {
   if (activeTab !== value) return null;
 
   return (
-    <div role="tabpanel" className={`mt-3 outline-none ${className}`}>
+    <motion.div
+      key={value}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      role="tabpanel"
+      className={`mt-3 outline-none ${className}`}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }

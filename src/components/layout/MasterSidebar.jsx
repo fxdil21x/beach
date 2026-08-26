@@ -55,20 +55,24 @@ export default function MasterSidebar({ isOpen = false, onClose = () => {} }) {
 
   const navContent = (
     <div className="flex h-full w-64 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-300">
-      <div className="flex items-center justify-between border-b border-zinc-800 p-5">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center justify-between border-b border-zinc-800 p-4 sm:p-5">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400">
             <Waves className="h-5 w-5" strokeWidth={2} />
           </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-bold text-white">{t('app.title')}</h1>
-            <p className="truncate text-[11px] text-zinc-500">{t('app.subtitle')}</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-sm font-bold text-white" title={t('app.title')}>
+              {t('app.title')}
+            </h1>
+            <p className="truncate text-[11px] text-zinc-500" title={t('app.subtitle')}>
+              {t('app.subtitle')}
+            </p>
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white md:hidden"
+          className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white md:hidden shrink-0 ml-1"
           aria-label="Close Sidebar"
         >
           <X className="h-5 w-5" />
@@ -122,12 +126,12 @@ export default function MasterSidebar({ isOpen = false, onClose = () => {} }) {
 
       {/* Mobile Drawer Backdrop & Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
+        <div className="fixed inset-0 z-[9999] flex md:hidden">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
             onClick={onClose}
           />
-          <div className="relative z-10 flex h-full max-w-full">
+          <div className="relative z-10 flex h-full max-w-full shadow-2xl">
             {navContent}
           </div>
         </div>

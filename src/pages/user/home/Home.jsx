@@ -12,6 +12,7 @@ import ResidentPhoneLoginForm from '../../../components/resident/ResidentPhoneLo
 import ResidentQrPanel from '../../../components/resident/ResidentQrPanel.jsx';
 import EmergencyButton from '../../../components/ui/EmergencyButton.jsx';
 import BeachBanner from '../../../components/common/BeachBanner.jsx';
+import { MyPassSkeleton } from '../../../components/ui/Skeleton.jsx';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import { useFeatureSettings } from '../../../context/FeatureContext.jsx';
 import { userNav } from '../../../config/navigation.js';
@@ -23,7 +24,7 @@ import heroBannerImage from '../../public/image/Gemini_Generated_Image_kxdt3pkxd
 export default function UserHome() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, setSession, logout } = useAuth();
+  const { user, setSession, logout, loading: authLoading } = useAuth();
   const { featureSettings } = useFeatureSettings();
   const isResident = Boolean(user?.residentPassId);
 
@@ -39,6 +40,7 @@ export default function UserHome() {
   const [error, setError] = useState('');
   const [pass, setPass] = useState(null);
   const [qrToken, setQrToken] = useState('');
+  const [passLoading, setPassLoading] = useState(true);
   const [credentials, setCredentials] = useState(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState('');
@@ -48,8 +50,10 @@ export default function UserHome() {
     if (!user?.residentPassId) {
       setPass(null);
       setQrToken('');
+      setPassLoading(false);
       return;
     }
+    setPassLoading(true);
     try {
       const { data } = await passApi.getMyPass();
       const passData = data.data.pass;
@@ -63,6 +67,8 @@ export default function UserHome() {
     } catch {
       setPass(null);
       setQrToken('');
+    } finally {
+      setPassLoading(false);
     }
   }, [user?.residentPassId]);
 
@@ -106,6 +112,7 @@ export default function UserHome() {
     setSession(payload.accessToken || payload.token, payload.user, payload.refreshToken);
     setPass(payload.pass);
     setQrToken(payload.qrToken);
+    setPassLoading(false);
   };
 
   const handleRegister = async ({ phone, photo }) => {
@@ -181,11 +188,18 @@ export default function UserHome() {
   const handleLogout = () => {
     logout();
     setPass(null);
+    setPassLoading(false);
     setSelected(null);
     navigate('/user/home', { replace: true });
   };
 
-  const showPass = isResident && pass;
+  const hasStoredToken = typeof window !== 'undefined' && Boolean(
+    localStorage.getItem('beach_app_token') || localStorage.getItem('beach_app_refresh_token')
+  );
+  const isInitialAuthLoading = authLoading && hasStoredToken;
+  const isResidentPassLoading = Boolean(user?.residentPassId) && passLoading;
+  const isShimmerLoading = isInitialAuthLoading || isResidentPassLoading;
+  const showPass = isResident && Boolean(pass);
 
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
@@ -238,15 +252,13 @@ export default function UserHome() {
 
         {showEmergencySos && <EmergencyButton />}
 
-        {showPass ? (
+        {isShimmerLoading ? (
+          <MyPassSkeleton />
+        ) : showPass ? (
           <ResidentQrPanel
             pass={pass}
             qrToken={qrToken}
             credentials={credentials}
-            onUploadPhoto={handleUploadPhoto}
-            photoUploading={photoUploading}
-            photoError={photoError}
-            photoSuccess={photoSuccess}
           />
         ) : (
           <div className="rounded-2xl bg-white p-5 shadow-sm">

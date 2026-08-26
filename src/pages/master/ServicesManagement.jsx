@@ -62,6 +62,7 @@ export default function ServicesManagement() {
     cuisineTypes: 'Malabar, Seafood, Traditional',
     openingHours: '11:00 AM - 11:00 PM',
     isPureVeg: false,
+    dietaryType: 'all', // 'all' | 'veg' | 'non-veg' | 'seafood' | 'fried'
     // Transport specifics
     driverName: '',
     vehicleNumber: '',
@@ -157,6 +158,7 @@ export default function ServicesManagement() {
       cuisineTypes: 'Malabar, Seafood, Traditional',
       openingHours: '11:00 AM - 11:00 PM',
       isPureVeg: false,
+      dietaryType: 'all',
       driverName: '',
       vehicleNumber: '',
       vehicleType: 'auto',
@@ -186,6 +188,7 @@ export default function ServicesManagement() {
       cuisineTypes: service.restaurantDetails?.cuisineTypes?.join(', ') || 'Malabar, Seafood',
       openingHours: service.restaurantDetails?.openingHours || '11:00 AM - 11:00 PM',
       isPureVeg: service.restaurantDetails?.isPureVeg || false,
+      dietaryType: service.restaurantDetails?.dietaryType || (service.restaurantDetails?.isPureVeg ? 'veg' : 'all'),
       driverName: service.transportDetails?.driverName || '',
       vehicleNumber: service.transportDetails?.vehicleNumber || '',
       vehicleType: service.transportDetails?.vehicleType || 'auto',
@@ -226,7 +229,8 @@ export default function ServicesManagement() {
         payload.restaurantDetails = {
           cuisineTypes: serviceForm.cuisineTypes.split(',').map((c) => c.trim()).filter(Boolean),
           openingHours: serviceForm.openingHours,
-          isPureVeg: Boolean(serviceForm.isPureVeg),
+          isPureVeg: serviceForm.dietaryType === 'veg' || Boolean(serviceForm.isPureVeg),
+          dietaryType: serviceForm.dietaryType || 'all',
         };
       } else if (serviceForm.category === 'transport') {
         payload.transportDetails = {
@@ -246,16 +250,24 @@ export default function ServicesManagement() {
         };
       }
 
+      let createdService = null;
       if (editingService) {
-        await serviceApi.updateService(editingService._id, payload);
+        const res = await serviceApi.updateService(editingService._id, payload);
+        createdService = res?.data;
         showToast(`${serviceForm.name} updated successfully!`);
       } else {
-        await serviceApi.createService(payload);
+        const res = await serviceApi.createService(payload);
+        createdService = res?.data;
         showToast(`${serviceForm.name} added to ${serviceForm.category} directory!`);
       }
 
       setIsAddServiceModalOpen(false);
-      loadServices();
+      await loadServices();
+
+      // Automatically open food menu manager if newly created service is a restaurant
+      if (!editingService && serviceForm.category === 'restaurant' && createdService) {
+        handleOpenMenuManager(createdService);
+      }
     } catch (err) {
       console.error('Error saving service:', err);
       showToast(err.response?.data?.message || 'Failed to save service', 'error');
@@ -294,10 +306,25 @@ export default function ServicesManagement() {
   // ── Food Menu Management Handlers ──────────────────────────────────────────
   const handleOpenMenuManager = (restaurant) => {
     setManagingMenuRestaurant(restaurant);
+    const dType = restaurant?.restaurantDetails?.dietaryType || (restaurant?.restaurantDetails?.isPureVeg ? 'veg' : 'all');
+    let defaultType = 'non-veg';
+    let defaultCategory = 'Main Course';
+
+    if (dType === 'veg' || restaurant?.restaurantDetails?.isPureVeg) {
+      defaultType = 'veg';
+      defaultCategory = 'Main Course';
+    } else if (dType === 'seafood') {
+      defaultType = 'seafood';
+      defaultCategory = 'Seafood Specials';
+    } else if (dType === 'fried') {
+      defaultType = 'non-veg';
+      defaultCategory = 'Snacks & Quick Bites';
+    }
+
     setFoodForm({
       name: '',
-      category: 'Main Course',
-      type: 'non-veg',
+      category: defaultCategory,
+      type: defaultType,
       price: '',
       description: '',
       isSpecial: false,
@@ -516,61 +543,99 @@ export default function ServicesManagement() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredServices.map((service) => (
-            <div
-              key={service._id}
-              className="flex flex-col justify-between rounded-2xl border border-zinc-800/90 bg-zinc-900/70 p-5 backdrop-blur-sm transition-all hover:border-zinc-700 hover:shadow-xl relative group"
-            >
-              <div>
-                {/* Top Badge & Status */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium border ${
-                        service.status === 'active'
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-zinc-800 text-zinc-400 border-zinc-700'
-                      }`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${service.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
-                      {service.status === 'active' ? 'Active & Live' : 'Hidden / Inactive'}
-                    </span>
-                    {service.restaurantDetails?.isPureVeg && (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-green-500/10 px-2 py-0.5 text-[11px] font-medium text-green-400 border border-green-500/20">
-                        <Leaf className="h-3 w-3" /> Pure Veg
+          {filteredServices.map((service) => {
+            const isRestaurant = service.category === 'restaurant';
+            return (
+              <div
+                key={service._id}
+                onClick={isRestaurant ? () => handleOpenMenuManager(service) : undefined}
+                className={`flex flex-col justify-between rounded-2xl border border-zinc-800/90 bg-zinc-900/70 p-5 backdrop-blur-sm transition-all hover:border-zinc-700 hover:shadow-xl relative group ${
+                  isRestaurant ? 'cursor-pointer hover:border-orange-500/50 hover:bg-zinc-900/90' : ''
+                }`}
+              >
+                <div>
+                  {/* Top Badge & Status */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium border ${
+                          service.status === 'active'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                        }`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${service.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
+                        {service.status === 'active' ? 'Active & Live' : 'Hidden / Inactive'}
                       </span>
-                    )}
-                  </div>
-
-                  {/* Edit / Delete / Toggle buttons */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleToggleStatus(service)}
-                      title={service.status === 'active' ? 'Hide from user app' : 'Publish to user app'}
-                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-                    >
-                      {service.status === 'active' ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-zinc-500" />
+                      {service.category === 'restaurant' && (
+                        <>
+                          {(service.restaurantDetails?.dietaryType === 'veg' || service.restaurantDetails?.isPureVeg) && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-green-500/10 px-2 py-0.5 text-[11px] font-medium text-green-400 border border-green-500/20">
+                              <Leaf className="h-3 w-3" /> Pure Veg
+                            </span>
+                          )}
+                          {service.restaurantDetails?.dietaryType === 'seafood' && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 px-2 py-0.5 text-[11px] font-medium text-cyan-400 border border-cyan-500/20">
+                              <Fish className="h-3 w-3" /> Seafood
+                            </span>
+                          )}
+                          {service.restaurantDetails?.dietaryType === 'fried' && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-400 border border-amber-500/20">
+                              🍟 Fried & Snacks
+                            </span>
+                          )}
+                          {service.restaurantDetails?.dietaryType === 'non-veg' && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-400 border border-rose-500/20">
+                              🔴 Non-Veg
+                            </span>
+                          )}
+                          {(service.restaurantDetails?.dietaryType === 'all' || !service.restaurantDetails?.dietaryType) && !service.restaurantDetails?.isPureVeg && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5 text-[11px] font-medium text-orange-400 border border-orange-500/20">
+                              🍽️ All Items
+                            </span>
+                          )}
+                        </>
                       )}
-                    </button>
-                    <button
-                      onClick={() => handleOpenEditModal(service)}
-                      title="Edit Service Details"
-                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-orange-400 transition-colors"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteService(service)}
-                      title="Delete Service"
-                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-rose-950/40 hover:text-rose-400 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    </div>
+
+                    {/* Edit / Delete / Toggle buttons */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(service);
+                        }}
+                        title={service.status === 'active' ? 'Hide from user app' : 'Publish to user app'}
+                        className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                      >
+                        {service.status === 'active' ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-zinc-500" />
+                        )}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEditModal(service);
+                        }}
+                        title="Edit Service Details"
+                        className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-orange-400 transition-colors"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteService(service);
+                        }}
+                        title="Delete Service"
+                        className="rounded-lg p-1.5 text-zinc-400 hover:bg-rose-950/40 hover:text-rose-400 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Main Details */}
                 <div className="flex gap-3.5 mb-3.5">
@@ -674,8 +739,11 @@ export default function ServicesManagement() {
               <div className="mt-4 pt-3.5 border-t border-zinc-800/80 flex items-center gap-2">
                 {service.category === 'restaurant' ? (
                   <button
-                    onClick={() => handleOpenMenuManager(service)}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500/15 py-2.5 px-3 text-xs font-bold text-orange-400 border border-orange-500/30 transition-all hover:bg-orange-500 hover:text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenMenuManager(service);
+                    }}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500/15 py-2.5 px-3 text-xs font-bold text-orange-400 border border-orange-500/30 transition-all hover:bg-orange-500 hover:text-white cursor-pointer"
                   >
                     <Flame className="h-4 w-4" />
                     <span>Manage Menu ({service.restaurantDetails?.menuItems?.length || 0} Foods)</span>
@@ -684,6 +752,7 @@ export default function ServicesManagement() {
                 ) : (
                   <a
                     href={`tel:${service.phone}`}
+                    onClick={(e) => e.stopPropagation()}
                     className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-800 py-2.5 px-3 text-xs font-semibold text-zinc-200 transition-colors hover:bg-zinc-700"
                   >
                     <Phone className="h-3.5 w-3.5 text-emerald-400" />
@@ -692,7 +761,8 @@ export default function ServicesManagement() {
                 )}
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       )}
 
@@ -986,17 +1056,92 @@ export default function ServicesManagement() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-1">
-                        <input
-                          type="checkbox"
-                          id="pureVegCheck"
-                          checked={serviceForm.isPureVeg}
-                          onChange={(e) => setServiceForm({ ...serviceForm, isPureVeg: e.target.checked })}
-                          className="rounded border-zinc-700 bg-zinc-800 text-orange-500 focus:ring-0"
-                        />
-                        <label htmlFor="pureVegCheck" className="text-xs text-zinc-300 font-medium">
-                          This is a 100% Pure Vegetarian Restaurant
+                      {/* Dietary / Food Serving Type Selection */}
+                      <div>
+                        <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                          Food Serving Type / Menu Focus *
                         </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setServiceForm({ ...serviceForm, dietaryType: 'all', isPureVeg: false })}
+                            className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold border transition-all text-left cursor-pointer ${
+                              (serviceForm.dietaryType === 'all' || !serviceForm.dietaryType) && !serviceForm.isPureVeg
+                                ? 'bg-orange-500/20 text-orange-300 border-orange-500 shadow-sm ring-1 ring-orange-500/30'
+                                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850 hover:text-zinc-200'
+                            }`}
+                          >
+                            <span className="text-lg">🍽️</span>
+                            <div>
+                              <p className="font-bold text-zinc-100 leading-none">All Items</p>
+                              <p className="text-[10px] text-zinc-400 mt-0.5">Veg, Non-Veg & Seafood</p>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setServiceForm({ ...serviceForm, dietaryType: 'veg', isPureVeg: true })}
+                            className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold border transition-all text-left cursor-pointer ${
+                              serviceForm.dietaryType === 'veg' || serviceForm.isPureVeg
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500 shadow-sm ring-1 ring-emerald-500/30'
+                                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850 hover:text-zinc-200'
+                            }`}
+                          >
+                            <span className="text-lg">🟢</span>
+                            <div>
+                              <p className="font-bold text-zinc-100 leading-none">Pure Veg</p>
+                              <p className="text-[10px] text-zinc-400 mt-0.5">100% Vegetarian</p>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setServiceForm({ ...serviceForm, dietaryType: 'non-veg', isPureVeg: false })}
+                            className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold border transition-all text-left cursor-pointer ${
+                              serviceForm.dietaryType === 'non-veg' && !serviceForm.isPureVeg
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500 shadow-sm ring-1 ring-rose-500/30'
+                                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850 hover:text-zinc-200'
+                            }`}
+                          >
+                            <span className="text-lg">🔴</span>
+                            <div>
+                              <p className="font-bold text-zinc-100 leading-none">Non-Veg</p>
+                              <p className="text-[10px] text-zinc-400 mt-0.5">Chicken, Beef & Mutton</p>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setServiceForm({ ...serviceForm, dietaryType: 'seafood', isPureVeg: false })}
+                            className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold border transition-all text-left cursor-pointer ${
+                              serviceForm.dietaryType === 'seafood'
+                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500 shadow-sm ring-1 ring-cyan-500/30'
+                                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850 hover:text-zinc-200'
+                            }`}
+                          >
+                            <span className="text-lg">🦐</span>
+                            <div>
+                              <p className="font-bold text-zinc-100 leading-none">Seafood</p>
+                              <p className="text-[10px] text-zinc-400 mt-0.5">Fresh Fish, Prawn & Crab</p>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setServiceForm({ ...serviceForm, dietaryType: 'fried', isPureVeg: false })}
+                            className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold border transition-all text-left cursor-pointer ${
+                              serviceForm.dietaryType === 'fried'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500 shadow-sm ring-1 ring-amber-500/30'
+                                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850 hover:text-zinc-200'
+                            }`}
+                          >
+                            <span className="text-lg">🍟</span>
+                            <div>
+                              <p className="font-bold text-zinc-100 leading-none">Fried & Snacks</p>
+                              <p className="text-[10px] text-zinc-400 mt-0.5">Fish Fry, Fries & Bites</p>
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1096,9 +1241,9 @@ export default function ServicesManagement() {
 
                 <form onSubmit={handleAddFoodItem} className="space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                    {/* Food Name */}
+                    {/* Food Name / Title */}
                     <div className="sm:col-span-5">
-                      <label className="block text-[11px] font-semibold text-zinc-300 mb-1">Dish / Item Name *</label>
+                      <label className="block text-[11px] font-semibold text-zinc-300 mb-1">Food Name / Title *</label>
                       <input
                         type="text"
                         required
@@ -1158,6 +1303,18 @@ export default function ServicesManagement() {
                     </div>
                   </div>
 
+                  {/* Description Input */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-zinc-300 mb-1">Description / Ingredients (Optional)</label>
+                    <input
+                      type="text"
+                      value={foodForm.description}
+                      onChange={(e) => setFoodForm({ ...foodForm, description: e.target.value })}
+                      placeholder="e.g. Authentic Malabar Biriyani with tender meat cooked in fragrant kaima rice, raita & pickle"
+                      className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+                    />
+                  </div>
+
                   {/* Description & Today's Special Toggle */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1176,7 +1333,7 @@ export default function ServicesManagement() {
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-50"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-50 cursor-pointer"
                     >
                       {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                       Add Dish to Menu
@@ -1244,7 +1401,10 @@ export default function ServicesManagement() {
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-zinc-400">{item.category}</p>
+                          {item.description && (
+                            <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">{item.description}</p>
+                          )}
+                          <p className="text-[10px] text-zinc-500 mt-0.5">{item.category}</p>
                         </div>
                       </div>
 

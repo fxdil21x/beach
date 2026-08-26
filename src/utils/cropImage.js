@@ -7,7 +7,17 @@ export const createImage = (url) =>
     image.src = url;
   });
 
-export default async function getCroppedImg(imageSrc, pixelCrop, fileName = 'cropped-photo.jpg') {
+/**
+ * Crops and heavily compresses an image using HTML5 Canvas
+ * Scales 10MP+ photos down to max 320x320 with quality compression (typically 5KB - 20KB)
+ */
+export default async function getCroppedImg(
+  imageSrc,
+  pixelCrop,
+  fileName = 'profile.jpg',
+  maxDimension = 320,
+  quality = 0.72
+) {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -16,8 +26,22 @@ export default async function getCroppedImg(imageSrc, pixelCrop, fileName = 'cro
     throw new Error('Canvas context unavailable');
   }
 
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  // Calculate target dimensions, scaling down to maxDimension if larger
+  let targetWidth = pixelCrop.width;
+  let targetHeight = pixelCrop.height;
+
+  if (targetWidth > maxDimension || targetHeight > maxDimension) {
+    const ratio = Math.min(maxDimension / targetWidth, maxDimension / targetHeight);
+    targetWidth = Math.round(targetWidth * ratio);
+    targetHeight = Math.round(targetHeight * ratio);
+  }
+
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  // Use smooth image smoothing for high quality downscaling
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   ctx.drawImage(
     image,
@@ -27,18 +51,27 @@ export default async function getCroppedImg(imageSrc, pixelCrop, fileName = 'cro
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    targetWidth,
+    targetHeight
   );
 
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Canvas is empty'));
-        return;
-      }
-      const croppedFile = new File([blob], fileName, { type: 'image/jpeg' });
-      resolve({ file: croppedFile, url: URL.createObjectURL(blob) });
-    }, 'image/jpeg', 0.95);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'));
+          return;
+        }
+        const file = new File([blob], fileName, { type: 'image/jpeg', lastModified: Date.now() });
+        resolve({
+          blob,
+          file,
+          url: URL.createObjectURL(blob),
+          sizeBytes: blob.size,
+        });
+      },
+      'image/jpeg',
+      quality
+    );
   });
 }

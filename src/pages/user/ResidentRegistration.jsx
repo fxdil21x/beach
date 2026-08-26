@@ -34,7 +34,7 @@ export default function ResidentRegistration() {
       formData.append('phone', phone);
       if (photo) formData.append('photo', photo);
       await passApi.createPass(formData);
-      navigate('/user/my-pass');
+      navigate('/user/home');
     } catch (err) {
       setError(err.response?.data?.message || t('common.error'));
     } finally {

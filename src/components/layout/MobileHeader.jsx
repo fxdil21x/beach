@@ -7,7 +7,7 @@ export default function MobileHeader({ title, showLanguage = false, action = nul
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-50 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-md px-3.5 py-3 shadow-2xs sm:px-4 sm:py-3.5">
+    <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-md px-3.5 py-3 shadow-2xs sm:px-4 sm:py-3.5">
 
       <div className="flex items-center justify-between gap-2 sm:gap-3">
         <Link to="/user/home" className="min-w-0 flex-1 text-left">

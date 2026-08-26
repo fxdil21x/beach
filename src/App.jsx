@@ -70,7 +70,7 @@ export default function App() {
 
                 <Route element={<ProtectedRoute roles={['USER']} />}>
                   <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
-                  <Route path="/user/my-pass" element={<MyPass />} />
+                  <Route path="/user/my-pass" element={<Navigate to="/user/home" replace />} />
                   <Route path="/user/my-visits" element={<MyVisits />} />
                   <Route path="/user/services" element={<UserServices />} />
                   <Route path="/user/profile" element={<UserProfile />} />

@@ -23,12 +23,17 @@ import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import BeachBanner from '../../components/common/BeachBanner.jsx';
 import TabMaintenanceOverlay from '../../components/common/TabMaintenanceOverlay.jsx';
+import { ServicesSkeleton } from '../../components/ui/Skeleton.jsx';
 import { userNav } from '../../config/navigation.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useEmergency } from '../../context/EmergencyContext.jsx';
 import * as serviceApi from '../../api/serviceApi.js';
 import servicesBannerImg from '../../assets/banners/services-banner.jpg';
 
 export default function Services() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { socket } = useEmergency();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -133,12 +138,46 @@ export default function Services() {
     return currentDishes.filter((d) => d.category === selectedFoodCategory);
   }, [currentDishes, selectedFoodCategory]);
 
+  // Direct call handler: notifies socket.io server and navigates user to normal phone call
+  const handleMakeCall = (itemOrPhone, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const phone = typeof itemOrPhone === 'object' ? itemOrPhone?.phone : itemOrPhone;
+    if (!phone) return;
+    const cleanPhone = String(phone).replace(/[^\d+]/g, '');
+    if (!cleanPhone) return;
+
+    // 1. Emit socket.io event
+    try {
+      if (socket && socket.connected) {
+        const item = typeof itemOrPhone === 'object' ? itemOrPhone : null;
+        socket.emit('service:call-click', {
+          serviceId: item?._id,
+          serviceName: item?.name,
+          category: item?.category,
+          phone: cleanPhone,
+          driverName: item?.transportDetails?.driverName,
+          vehicleNumber: item?.transportDetails?.vehicleNumber,
+          userId: user?.id || user?._id || 'ANONYMOUS',
+          userName: user?.name || user?.phone || 'Visitor',
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      console.warn('[Socket] Call click event emit error:', err);
+    }
+
+    // 2. Navigate user to normal phone call
+    window.location.href = `tel:${cleanPhone}`;
+  };
+
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-slate-50">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-slate-50">
+      <TabMaintenanceOverlay tabId="services" fallbackTitle="Services & Rides Under Maintenance" />
       <MobileHeader title={t('nav.services', 'Services')} showLanguage />
 
       <main className="relative flex-1 min-h-0 overflow-y-auto px-3.5 py-4 sm:px-5 pb-20">
-        <TabMaintenanceOverlay tabId="services" fallbackTitle="Services & Rides Under Maintenance" />
 
         {/* Banner */}
         <BeachBanner
@@ -187,10 +226,7 @@ export default function Services() {
 
         {/* ── 2-COLUMN GRID OF SERVICES ADDED BY MASTER ADMIN ── */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-            <Loader2 className="h-7 w-7 animate-spin text-orange-500 mb-2" />
-            <p className="text-xs font-medium">Loading beach services...</p>
-          </div>
+          <ServicesSkeleton count={4} />
         ) : filteredServices.length === 0 ? (
           <div className="my-8 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center">
             <Search className="mx-auto h-8 w-8 text-gray-400" />
@@ -253,8 +289,9 @@ export default function Services() {
                     {/* Direct Call Button */}
                     <div className="mt-3 pt-2 border-t border-gray-100">
                       <a
-                        href={`tel:${item.phone}`}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-orange-500 py-2 text-xs font-bold text-white shadow-sm shadow-orange-500/20 hover:bg-orange-600 active:scale-98 transition-all"
+                        href={`tel:${String(item.phone || '').replace(/[^\d+]/g, '')}`}
+                        onClick={(e) => handleMakeCall(item, e)}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-orange-500 py-2 text-xs font-bold text-white shadow-sm shadow-orange-500/20 hover:bg-orange-600 active:scale-98 transition-all cursor-pointer"
                       >
                         <Phone className="h-3.5 w-3.5" />
                         <span>Call ({item.phone})</span>
@@ -287,11 +324,23 @@ export default function Services() {
                         ) : (
                           <Utensils className="h-7 w-7 text-orange-500" />
                         )}
-                        {item.restaurantDetails?.isPureVeg && (
+                        {item.restaurantDetails?.dietaryType === 'veg' || item.restaurantDetails?.isPureVeg ? (
                           <span className="absolute top-1.5 left-1.5 rounded-md bg-green-600 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
                             Veg
                           </span>
-                        )}
+                        ) : item.restaurantDetails?.dietaryType === 'seafood' ? (
+                          <span className="absolute top-1.5 left-1.5 rounded-md bg-cyan-600 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs flex items-center gap-0.5">
+                            🦐 Seafood
+                          </span>
+                        ) : item.restaurantDetails?.dietaryType === 'fried' ? (
+                          <span className="absolute top-1.5 left-1.5 rounded-md bg-amber-600 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs flex items-center gap-0.5">
+                            🍟 Fried & Snacks
+                          </span>
+                        ) : item.restaurantDetails?.dietaryType === 'non-veg' ? (
+                          <span className="absolute top-1.5 left-1.5 rounded-md bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                            Non-Veg
+                          </span>
+                        ) : null}
                         <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-md bg-black/70 backdrop-blur-xs px-1.5 py-0.5 text-[9.5px] font-bold text-white">
                           <Flame className="h-3 w-3 text-orange-400" />
                           {item.restaurantDetails?.menuItems?.length || 0} Foods
@@ -399,11 +448,23 @@ export default function Services() {
                 <div className="min-w-0">
                   <h2 className="text-base font-bold text-gray-900 truncate flex items-center gap-1.5">
                     <span>{selectedRestaurant.name}</span>
-                    {selectedRestaurant.restaurantDetails?.isPureVeg && (
+                    {selectedRestaurant.restaurantDetails?.dietaryType === 'veg' || selectedRestaurant.restaurantDetails?.isPureVeg ? (
                       <span className="inline-flex items-center gap-0.5 rounded bg-green-100 px-1.5 py-0.2 text-[9.5px] font-bold text-green-700">
                         <Leaf className="h-2.5 w-2.5" /> Veg
                       </span>
-                    )}
+                    ) : selectedRestaurant.restaurantDetails?.dietaryType === 'seafood' ? (
+                      <span className="inline-flex items-center gap-0.5 rounded bg-cyan-100 px-1.5 py-0.2 text-[9.5px] font-bold text-cyan-700">
+                        🦐 Seafood
+                      </span>
+                    ) : selectedRestaurant.restaurantDetails?.dietaryType === 'fried' ? (
+                      <span className="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1.5 py-0.2 text-[9.5px] font-bold text-amber-700">
+                        🍟 Fried & Snacks
+                      </span>
+                    ) : selectedRestaurant.restaurantDetails?.dietaryType === 'non-veg' ? (
+                      <span className="inline-flex items-center gap-0.5 rounded bg-rose-100 px-1.5 py-0.2 text-[9.5px] font-bold text-rose-700">
+                        🔴 Non-Veg
+                      </span>
+                    ) : null}
                   </h2>
                   <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5 truncate">
                     <MapPin className="h-3 w-3 text-gray-400 shrink-0" />
@@ -429,8 +490,9 @@ export default function Services() {
                 <p className="text-[11px] text-orange-700 mt-0.5">Call to order food or table reservation</p>
               </div>
               <a
-                href={`tel:${selectedRestaurant.phone}`}
-                className="flex items-center gap-1.5 rounded-xl bg-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition-colors shrink-0"
+                href={`tel:${String(selectedRestaurant.phone || '').replace(/[^\d+]/g, '')}`}
+                onClick={(e) => handleMakeCall(selectedRestaurant, e)}
+                className="flex items-center gap-1.5 rounded-xl bg-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition-colors shrink-0 cursor-pointer"
               >
                 <PhoneCall className="h-3.5 w-3.5" />
                 <span>Call Now</span>
@@ -531,8 +593,9 @@ export default function Services() {
             {/* Bottom Call to Order */}
             <div className="mt-3 pt-3 border-t border-gray-100">
               <a
-                href={`tel:${selectedRestaurant.phone}`}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-colors"
+                href={`tel:${String(selectedRestaurant.phone || '').replace(/[^\d+]/g, '')}`}
+                onClick={(e) => handleMakeCall(selectedRestaurant, e)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-colors cursor-pointer"
               >
                 <PhoneCall className="h-4 w-4" />
                 <span>Call to Order ({selectedRestaurant.phone})</span>
@@ -606,8 +669,9 @@ export default function Services() {
               {/* Call Reception */}
               <div className="pt-2 border-t border-gray-100">
                 <a
-                  href={`tel:${selectedResort.phone}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 transition-colors"
+                  href={`tel:${String(selectedResort.phone || '').replace(/[^\d+]/g, '')}`}
+                  onClick={(e) => handleMakeCall(selectedResort, e)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 transition-colors cursor-pointer"
                 >
                   <PhoneCall className="h-4 w-4" />
                   <span>Call Reception ({selectedResort.phone})</span>

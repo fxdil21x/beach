@@ -24,6 +24,7 @@ export function AuthProvider({ children }) {
       const userId = savedUser?.id || savedUser?._id;
       if (userId) {
         localStorage.removeItem(`location_allowed_${userId}`);
+        localStorage.removeItem(`location_allowed_time_${userId}`);
         localStorage.removeItem(`user_location_${userId}`);
         sessionStorage.removeItem(`location_declined_${userId}`);
       }

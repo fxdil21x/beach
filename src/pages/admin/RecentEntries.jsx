@@ -3,18 +3,22 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
+import { RecentEntriesSkeleton } from '../../components/ui/Skeleton.jsx';
 import { adminNav } from '../../config/navigation.js';
 import * as adminApi from '../../api/adminApi.js';
 
 export default function RecentEntries() {
   const { t } = useTranslation();
   const [visitorEntries, setVisitorEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
+    setLoading(true);
     adminApi
       .getVisitorEntries()
       .then(({ data }) => setVisitorEntries(data.data.entries || []))
-      .catch(() => setVisitorEntries([]));
+      .catch(() => setVisitorEntries([]))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -45,27 +49,31 @@ export default function RecentEntries() {
           <p className="mt-2 text-sm opacity-90 sm:text-base">{t('admin.visitorSummary')}</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                <CheckCircle2 className="h-6 w-6" strokeWidth={2} />
+        {loading ? (
+          <RecentEntriesSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                  <CheckCircle2 className="h-6 w-6" strokeWidth={2} />
+                </div>
+                <p className="text-sm font-semibold text-gray-700">{t('admin.approvedCount')}</p>
               </div>
-              <p className="text-sm font-semibold text-gray-700">{t('admin.approvedCount')}</p>
+              <p className="mt-4 text-4xl font-bold text-gray-900">{counts.approved}</p>
             </div>
-            <p className="mt-4 text-4xl font-bold text-gray-900">{counts.approved}</p>
-          </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-700">
-                <XCircle className="h-6 w-6" strokeWidth={2} />
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-700">
+                  <XCircle className="h-6 w-6" strokeWidth={2} />
+                </div>
+                <p className="text-sm font-semibold text-gray-700">{t('admin.rejectedCount')}</p>
               </div>
-              <p className="text-sm font-semibold text-gray-700">{t('admin.rejectedCount')}</p>
+              <p className="mt-4 text-4xl font-bold text-gray-900">{counts.rejected}</p>
             </div>
-            <p className="mt-4 text-4xl font-bold text-gray-900">{counts.rejected}</p>
           </div>
-        </div>
+        )}
       </main>
       <BottomNavigation items={adminNav} />
     </div>

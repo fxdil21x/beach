@@ -6,8 +6,6 @@ import Cropper from 'react-easy-crop';
 import Button from '../ui/Button.jsx';
 import getCroppedImg from '../../utils/cropImage.js';
 
-const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-
 export default function PhotoPicker({
   existingUrl = null,
   onSelect,
@@ -59,8 +57,12 @@ export default function PhotoPicker({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setLocalError(t('resident.invalidPhoto'));
+    // Accept all images and common image extensions (including HEIC / HEIF / WebP / JPG / PNG / RAW)
+    const isImageMime = file.type && file.type.startsWith('image/');
+    const hasImageExt = /\.(jpe?g|png|webp|gif|bmp|avif|heic|heif|tiff?|svg)$/i.test(file.name);
+
+    if (!isImageMime && !hasImageExt) {
+      setLocalError(t('resident.invalidPhoto', 'Invalid image file. Please choose an image.'));
       return;
     }
 
@@ -84,21 +86,20 @@ export default function PhotoPicker({
     if (!tempSrc || !croppedAreaPixels) return;
     try {
       setCropping(true);
-      const croppedBlob = await getCroppedImg(tempSrc, croppedAreaPixels);
-      const croppedFile = new File([croppedBlob], 'profile.jpg', { type: 'image/jpeg' });
+      const result = await getCroppedImg(tempSrc, croppedAreaPixels, 'profile.jpg', 320, 0.72);
       
-      const newPreview = URL.createObjectURL(croppedBlob);
       if (preview) URL.revokeObjectURL(preview);
-      setPreview(newPreview);
+      setPreview(result.url);
 
       // Clean up temporary image
       URL.revokeObjectURL(tempSrc);
       setTempSrc(null);
 
-      // Trigger callback with cropped file
-      onSelect?.(croppedFile);
-    } catch {
-      setLocalError(t('resident.invalidPhoto'));
+      // Trigger callback with compressed file
+      onSelect?.(result.file);
+    } catch (err) {
+      console.error('Failed to crop and compress photo:', err);
+      setLocalError(t('resident.invalidPhoto', 'Failed to process image.'));
     } finally {
       setCropping(false);
     }
@@ -117,7 +118,7 @@ export default function PhotoPicker({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept="image/*"
         capture="user"
         onChange={handleFileChange}
         className="hidden"

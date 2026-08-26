@@ -78,7 +78,18 @@ export default function MasterTrackUser() {
 
     mapInstanceRef.current = map;
 
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    });
+
+    if (mapRef.current) {
+      resizeObserver.observe(mapRef.current);
+    }
+
     return () => {
+      resizeObserver.disconnect();
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -104,9 +115,12 @@ export default function MasterTrackUser() {
     tileLayerRef.current = newTileLayer;
   }, [mapStyle]);
 
-  // REST API Polling Fallback (ensures Vercel & serverless deployments get live user locations)
-  const pollActiveLocations = useCallback(async () => {
-    if (!isEnabled) return;
+  const isFetchingActiveRef = useRef(false);
+
+  // Fetch active user locations from REST API (called once on mount / on demand, prevents multiple concurrent calls)
+  const fetchActiveLocations = useCallback(async () => {
+    if (!isEnabled || isFetchingActiveRef.current) return;
+    isFetchingActiveRef.current = true;
     try {
       const { data } = await axios.get('/user/location/active');
       const activeList = data.data?.users || data.data?.locations || data.locations || [];
@@ -122,16 +136,17 @@ export default function MasterTrackUser() {
         setUsers(freshMap);
       }
     } catch {
-      // Ignore polling errors
+      // Ignore errors
+    } finally {
+      isFetchingActiveRef.current = false;
     }
   }, [isEnabled]);
 
+  // Fetch once on mount / enabled, no continuous setInterval spamming
   useEffect(() => {
     if (!isEnabled) return;
-    pollActiveLocations();
-    const interval = setInterval(pollActiveLocations, 5000);
-    return () => clearInterval(interval);
-  }, [isEnabled, pollActiveLocations]);
+    fetchActiveLocations();
+  }, [isEnabled, fetchActiveLocations]);
 
   // Join tracking room & listen to location events
   useEffect(() => {
@@ -309,7 +324,7 @@ export default function MasterTrackUser() {
   });
 
   return (
-    <div className="space-y-4 h-[calc(100vh-100px)] flex flex-col">
+    <div className="space-y-4 min-h-full flex flex-col pb-8 lg:pb-0 lg:h-[calc(100vh-120px)] lg:overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
@@ -355,11 +370,11 @@ export default function MasterTrackUser() {
       {/* Main Content Layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
         {/* Map Container */}
-        <div className="lg:col-span-3 rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden shadow-2xl relative min-h-[350px]">
+        <div className="lg:col-span-3 rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden shadow-2xl relative h-[380px] sm:h-[450px] lg:h-full min-h-[300px]">
           <div ref={mapRef} className="w-full h-full z-0" />
 
           {/* Map Layer Switcher Control */}
-          <div className="absolute top-4 right-4 z-[1000] flex items-center gap-1 rounded-xl bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-1 shadow-2xl">
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-1 rounded-xl bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-1 shadow-2xl">
             <button
               type="button"
               onClick={() => setMapStyle('satellite')}
@@ -418,7 +433,7 @@ export default function MasterTrackUser() {
           </div>
 
           {users.size === 0 && (
-            <div className="absolute bottom-4 left-4 z-[1000] bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 shadow-xl flex items-center gap-2">
+            <div className="absolute bottom-4 left-4 z-20 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 shadow-xl flex items-center gap-2">
               <Navigation className="h-4 w-4 text-orange-400 animate-pulse" />
               <span>Waiting for active user location streams...</span>
             </div>
@@ -426,7 +441,7 @@ export default function MasterTrackUser() {
         </div>
 
         {/* Live Users Sidebar */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 flex flex-col min-h-0 space-y-3">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 flex flex-col min-h-0 space-y-3 lg:col-span-1 shadow-xl">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
               <UserCheck className="h-4 w-4 text-emerald-400" />
@@ -447,7 +462,7 @@ export default function MasterTrackUser() {
           </div>
 
           {/* User List Scrollable */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[380px] sm:max-h-[440px] lg:max-h-none overscroll-contain touch-pan-y">
             {filteredUsers.length === 0 ? (
               <div className="text-center py-8 text-zinc-500 text-xs space-y-2">
                 <Smartphone className="h-8 w-8 mx-auto text-zinc-600 opacity-60" />

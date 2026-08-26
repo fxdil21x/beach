@@ -65,7 +65,7 @@ export default function AdminPendingVisitorAlert() {
   const isSubmitting = submittingId === entry._id;
 
   return (
-    <div className="absolute bottom-full mb-3 left-4 right-4 z-50 mx-auto max-w-lg rounded-2xl border border-amber-400/80 bg-white/95 backdrop-blur-md p-4 shadow-2xl transition-all duration-300">
+    <div className="pointer-events-auto absolute bottom-full mb-3 left-4 right-4 z-50 mx-auto max-w-lg rounded-2xl border border-amber-400/80 bg-white/95 backdrop-blur-md p-4 shadow-2xl transition-all duration-300">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
