@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import QRScanner from '../../components/qr/QRScanner.jsx';
@@ -10,6 +11,7 @@ import * as adminApi from '../../api/adminApi.js';
 
 export default function Scanner() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [result, setResult] = useState(null);
   const [scanning, setScanning] = useState(true);
   const [searching, setSearching] = useState(false);
@@ -35,7 +37,7 @@ export default function Scanner() {
   const handleClose = () => {
     setResult(null);
     setSearching(false);
-    setScanning(true);
+    navigate('/admin/search');
   };
 
   return (

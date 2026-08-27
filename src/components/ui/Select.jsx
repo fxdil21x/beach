@@ -54,9 +54,9 @@ export function SelectTrigger({ children, className = '' }) {
   );
 }
 
-export function SelectValue({ placeholder = 'Select an option...' }) {
+export function SelectValue({ placeholder = 'Select an option...', children }) {
   const { value } = useContext(SelectContext);
-  return <span className="truncate">{value || placeholder}</span>;
+  return <span className="truncate">{children !== undefined && children !== null ? children : (value || placeholder)}</span>;
 }
 
 export function SelectContent({ children, className = '' }) {

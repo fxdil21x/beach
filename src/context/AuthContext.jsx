@@ -7,7 +7,7 @@ const AuthContext = createContext(null);
 const TOKEN_KEY = 'beach_app_token';
 const REFRESH_TOKEN_KEY = 'beach_app_refresh_token';
 const TOKEN_TIME_KEY = 'beach_app_token_time';
-const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+const SESSION_DURATION = 15 * 60 * 60 * 1000; // 15 hours in milliseconds
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

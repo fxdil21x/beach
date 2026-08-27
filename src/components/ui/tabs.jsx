@@ -58,7 +58,9 @@ export function TabsTrigger({ value, children, className = '', disabled = false 
           className="absolute inset-0 rounded-lg bg-white shadow-sm"
         />
       )}
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10 inline-flex items-center justify-center gap-1.5 whitespace-nowrap">
+        {children}
+      </span>
     </button>
   );
 }

@@ -126,19 +126,19 @@ export default function UserReportIssue() {
       <div className="border-b border-slate-200 bg-white px-3.5 py-2 shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }} className="w-auto">
-            <TabsList className="h-9 w-auto bg-slate-100/90 px-2 p-1">
-              <TabsTrigger value="submit" className=" gap-1.5 px-3 text-xs font-semibold">
+            <TabsList className="h-10 w-auto bg-slate-100 p-1 rounded-xl gap-1">
+              <TabsTrigger value="submit" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
                 <PlusCircle className="h-3.5 w-3.5 shrink-0" />
                 <span>{t('report.submit')}</span>
               </TabsTrigger>
 
               {user && (
-                <TabsTrigger value="my-reports" className="h-7 gap-1.5 px-3 text-xs font-semibold">
+                <TabsTrigger value="my-reports" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
                   <FileText className="h-3.5 w-3.5 shrink-0" />
                   <span>My Reports</span>
                   {myReports.length > 0 && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                      activeTab === 'my-reports' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'
+                    <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold ${
+                      activeTab === 'my-reports' ? 'bg-blue-100 text-blue-700 shadow-xs' : 'bg-slate-200/80 text-slate-600'
                     }`}>
                       {myReports.length}
                     </span>

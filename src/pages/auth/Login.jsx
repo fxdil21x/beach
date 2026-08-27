@@ -21,7 +21,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(form.username, form.password);
-      if (user.role === 'ADMIN') navigate('/admin/recent');
+      if (user.role === 'ADMIN') navigate('/admin/search');
       else if (user.role === 'MASTER_ADMIN') navigate('/master/dashboard');
       else navigate('/user/home');
     } catch (err) {

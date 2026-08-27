@@ -260,5 +260,12 @@
     "en": "English",
     "ml": "മലയാളം",
     "hi": "हिन्दी"
+  },
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "language": "ऐप की भाषा",
+    "selectLanguage": "अपनी पसंदीदा भाषा चुनें",
+    "adminAccount": "गेट सुरक्षा अधिकारी",
+    "accountDetails": "खाता विवरण"
   }
 }

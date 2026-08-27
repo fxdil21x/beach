@@ -22,7 +22,7 @@ export default function BottomNavigation({ items }) {
   const isAdminNavigation = items.some((item) => item.to === '/admin/scan');
 
   return (
-    <nav className="sticky bottom-2.5 sm:bottom-4 inset-x-0 z-50 shrink-0 w-full flex flex-col items-center justify-end pb-safe px-2 pointer-events-none select-none">
+    <nav className="sticky bottom-0 inset-x-0 z-50 shrink-0 w-full flex flex-col items-center justify-end px-3 pt-1 pb-[calc(max(1rem,env(safe-area-inset-bottom))+8px)] sm:pb-5 pointer-events-none select-none">
       {isAdminNavigation && <AdminPendingVisitorAlert />}
       <FloatingDock items={formattedItems} />
     </nav>

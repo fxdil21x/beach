@@ -259,5 +259,12 @@
     "en": "English",
     "ml": "Malayalam",
     "hi": "Hindi"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "App Language",
+    "selectLanguage": "Select your preferred language",
+    "adminAccount": "Gate Security Officer",
+    "accountDetails": "Account Details"
   }
 }

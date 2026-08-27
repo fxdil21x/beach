@@ -29,7 +29,7 @@ function FloatingDockCore({ items, className }) {
       onMouseMove={(e) => mouseX.set(e.pageX)}
       onMouseLeave={() => mouseX.set(Infinity)}
       className={cn(
-        'pointer-events-auto w-full flex items-center justify-around rounded-2xl sm:rounded-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-gray-200/90 dark:border-neutral-800/90 px-1.5 sm:px-3.5 py-1.5 sm:py-2 shadow-[0_10px_35px_rgba(0,0,0,0.12)]',
+        'pointer-events-auto w-full flex items-center justify-around rounded-full bg-neutral-900/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-800/90 px-2 sm:px-4 py-2 sm:py-2.5 shadow-[0_14px_40px_rgba(0,0,0,0.32)]',
         className
       )}
     >
@@ -130,7 +130,7 @@ function DockIcon({ mouseX, item }) {
             <motion.span
               layoutId="activeDockDot"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              className="absolute -bottom-1 h-1 w-1 rounded-full bg-blue-600 dark:bg-blue-400 z-10"
+              className="absolute bottom-0 h-1.5 w-1.5 rounded-full bg-blue-500 z-10"
             />
           )}
         </motion.div>

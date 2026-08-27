@@ -25,6 +25,15 @@ export default function UserHome() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, setSession, logout, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN') {
+      navigate('/admin/search', { replace: true });
+    } else if (user?.role === 'MASTER_ADMIN') {
+      navigate('/master/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+
   const { featureSettings } = useFeatureSettings();
   const isResident = Boolean(user?.residentPassId);
 

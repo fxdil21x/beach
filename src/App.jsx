@@ -82,7 +82,7 @@ export default function App() {
                   <Route path="/admin/recent" element={<RecentEntries />} />
                   <Route path="/admin/reports" element={<AdminReports />} />
                   <Route path="/admin/profile" element={<AdminProfile />} />
-                  <Route path="/admin" element={<Navigate to="/admin/recent" replace />} />
+                  <Route path="/admin" element={<Navigate to="/admin/search" replace />} />
                 </Route>
               </Route>
 
