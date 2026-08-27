@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Shield, AlertCircle } from 'lucide-react';
@@ -9,11 +9,21 @@ import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert.j
 
 export default function Login() {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN') {
+      navigate('/admin/search', { replace: true });
+    } else if (user?.role === 'MASTER_ADMIN') {
+      navigate('/master/dashboard', { replace: true });
+    } else if (user) {
+      navigate('/user/home', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

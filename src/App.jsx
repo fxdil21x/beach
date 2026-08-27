@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
-import { ProtectedRoute, RoleRedirect } from './components/layout/ProtectedRoute.jsx';
+import { ProtectedRoute, GuestRoute, RoleRedirect } from './components/layout/ProtectedRoute.jsx';
 import DeviceFrameLayout from './components/layout/DeviceFrameLayout.jsx';
 
 import Login from './pages/auth/Login.jsx';
@@ -57,8 +57,10 @@ export default function App() {
               <Route path="/" element={<RoleRedirect />} />
 
               <Route element={<DeviceFrameLayout />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                <Route element={<GuestRoute />}>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                </Route>
 
                 <Route path="/entry" element={<VisitorEntry />} />
                 <Route path="/entry/success" element={<EntrySuccess />} />
