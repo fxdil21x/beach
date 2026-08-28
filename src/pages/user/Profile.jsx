@@ -61,7 +61,7 @@ export default function UserProfile() {
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <MobileHeader title={t('nav.profile')} showLanguage />
-      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-5">
+      <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-5 pb-28">
         <BeachBanner
           badge="Verified Account"
           title={user?.name || 'Resident Profile'}

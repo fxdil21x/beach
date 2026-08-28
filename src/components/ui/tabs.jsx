@@ -54,13 +54,28 @@ export function TabsTrigger({ value, children, className = '', disabled = false 
       {isActive && (
         <motion.div
           layoutId="activeTabPill"
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 28 }}
           className="absolute inset-0 rounded-lg bg-white shadow-sm"
         />
       )}
-      <span className="relative z-10 inline-flex items-center justify-center gap-1.5 whitespace-nowrap">
+      <motion.span
+        key={isActive ? `active-${value}` : `inactive-${value}`}
+        animate={
+          isActive
+            ? {
+                y: [0, -5, 0, -3, 0],
+                scale: [1, 1.06, 1, 1.03, 1],
+              }
+            : { y: 0, scale: 1 }
+        }
+        transition={{
+          duration: 0.45,
+          ease: 'easeOut',
+        }}
+        className="relative z-10 inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
+      >
         {children}
-      </span>
+      </motion.span>
     </button>
   );
 }

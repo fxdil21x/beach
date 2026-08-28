@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ScanLine } from 'lucide-react';
+import { ScanLine, Search } from 'lucide-react';
 import AdminPendingVisitorAlert from './AdminPendingVisitorAlert.jsx';
 import { FloatingDock } from '../ui/floating-dock.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -24,22 +24,39 @@ export default function BottomNavigation({ items }) {
 
   const isAdminNavigation = items.some((item) => item.to === '/admin/scan');
   const showScanFab = isAdminNavigation && location.pathname !== '/admin/scan';
+  const showSearchFab = isAdminNavigation && location.pathname !== '/admin/search';
+  const hasFloatingButtons = showScanFab || showSearchFab;
 
   return (
-    <nav className="sticky bottom-0 inset-x-0 z-50 shrink-0 w-full flex flex-col items-center justify-end px-3 pt-1 pb-[calc(max(1rem,env(safe-area-inset-bottom))+8px)] sm:pb-5 pointer-events-none select-none">
+    <nav className="absolute bottom-0 inset-x-0 z-50 w-full  flex flex-col items-center justify-end px-3 pt-1 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+6px)] sm:pb-4 pointer-events-none select-none">
       {isAdminNavigation && <AdminPendingVisitorAlert />}
 
-      {/* WhatsApp-style Floating Sticky Scan Button (Bottom Right) */}
-      {showScanFab && (
-        <div className="w-full max-w-lg mx-auto relative flex justify-end">
-          <Link
-            to="/admin/scan"
-            aria-label={t('nav.scan') || 'Scan Pass'}
-            className="pointer-events-auto absolute right-1 sm:right-2 -top-36 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-600 text-white shadow-[0_8px_25px_rgba(37,99,235,0.45)] ring-3 ring-white dark:ring-slate-900 active:scale-90 hover:scale-105 transition-all duration-200 z-50 group"
-          >
-            <ScanLine className="h-6 w-6 stroke-[2.3] transition-transform group-hover:scale-110" />
-            <span className="sr-only">Scan</span>
-          </Link>
+      {/* Floating Action Buttons Stack (Independent Absolute Positioning so dock hover never shifts it) */}
+      {hasFloatingButtons && (
+        <div className="w-full max-w-lg mx-auto absolute bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+96px)] sm:bottom-28 inset-x-0 flex flex-col items-end gap-2.5 px-3 pointer-events-none">
+          {/* Top Search Button */}
+          {showSearchFab && (
+            <Link
+              to="/admin/search"
+              aria-label={t('nav.search') || 'Search Resident'}
+              className="pointer-events-auto flex h-12 w-12 sm:h-13 sm:w-13 items-center justify-center rounded-full bg-gradient-to-tr from-sky-600 via-cyan-500 to-blue-600 text-white shadow-[0_8px_25px_rgba(2,132,199,0.45)] ring-3 ring-white dark:ring-slate-900 active:scale-90 hover:scale-105 transition-all duration-200 z-50 group"
+            >
+              <Search className="h-5 w-5 sm:h-5.5 sm:w-5.5 stroke-[2.4] transition-transform group-hover:scale-110" />
+              <span className="sr-only">Search</span>
+            </Link>
+          )}
+
+          {/* Bottom Scan Button */}
+          {showScanFab && (
+            <Link
+              to="/admin/scan"
+              aria-label={t('nav.scan') || 'Scan Pass'}
+              className="pointer-events-auto flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-600 text-white shadow-[0_8px_25px_rgba(37,99,235,0.45)] ring-3 ring-white dark:ring-slate-900 active:scale-90 hover:scale-105 transition-all duration-200 z-50 group"
+            >
+              <ScanLine className="h-6 w-6 stroke-[2.3] transition-transform group-hover:scale-110" />
+              <span className="sr-only">Scan</span>
+            </Link>
+          )}
         </div>
       )}
 

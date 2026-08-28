@@ -177,7 +177,7 @@ export default function Services() {
       <TabMaintenanceOverlay tabId="services" fallbackTitle="Services & Rides Under Maintenance" />
       <MobileHeader title={t('nav.services', 'Services')} showLanguage />
 
-      <main className="relative flex-1 min-h-0 overflow-y-auto px-3.5 py-4 sm:px-5 pb-20">
+      <main className="relative flex-1 min-h-0 overflow-y-auto px-3.5 py-4 sm:px-5 pb-28">
 
         {/* Banner */}
         <BeachBanner

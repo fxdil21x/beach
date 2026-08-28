@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   AnimatePresence,
   motion,
@@ -43,6 +43,22 @@ function FloatingDockCore({ items, className }) {
 function DockIcon({ mouseX, item }) {
   const ref = useRef(null);
   const [hovered, setHovered] = useState(false);
+  const [actionPulse, setActionPulse] = useState(0);
+  const location = useLocation();
+
+  // Listen to any page actions, status updates, or refresh events to trigger 2x shake
+  useEffect(() => {
+    const handleAction = () => {
+      setActionPulse((c) => c + 1);
+    };
+
+    window.addEventListener('app-action', handleAction);
+    window.addEventListener('visitor-entry-updated', handleAction);
+    return () => {
+      window.removeEventListener('app-action', handleAction);
+      window.removeEventListener('visitor-entry-updated', handleAction);
+    };
+  }, []);
 
   const distance = useTransform(mouseX, (val) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
@@ -113,8 +129,23 @@ function DockIcon({ mouseX, item }) {
             )}
           </AnimatePresence>
 
+          {/* Icon with 2-time lively bounce + shake animation on active tab / tab change / actions */}
           <motion.div
+            key={`${item.to}-${location.pathname}-${actionPulse}`}
             style={{ width: widthIcon, height: heightIcon }}
+            animate={
+              isActive
+                ? {
+                    y: [0, -8, 0, -4, 0],
+                    rotate: [0, -12, 12, -8, 8, 0],
+                    scale: [1, 1.25, 1.06, 1.16, 1],
+                  }
+                : { y: 0, rotate: 0, scale: 1 }
+            }
+            transition={{
+              duration: 0.55,
+              ease: 'easeInOut',
+            }}
             className="relative z-10 flex items-center justify-center"
           >
             {Icon ? (

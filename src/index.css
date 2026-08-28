@@ -25,7 +25,9 @@
   padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
 }
 
-html, body {
+html, body, #root {
+  height: 100%;
+  width: 100%;
   -webkit-tap-highlight-color: transparent;
 }
 

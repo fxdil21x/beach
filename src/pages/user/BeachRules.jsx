@@ -23,7 +23,7 @@ export default function BeachRules() {
     <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <TabMaintenanceOverlay tabId="beach-rules" fallbackTitle="Safety Guidelines Under Update" />
       <MobileHeader title={t('nav.beachRules')} showLanguage />
-      <main className="relative flex-1 min-h-0 overflow-y-auto space-y-3 px-4 py-5">
+      <main className="relative flex-1 min-h-0 overflow-y-auto space-y-3 px-4 py-5 pb-28">
 
         <BeachBanner
           badge="Safety & Guidelines"

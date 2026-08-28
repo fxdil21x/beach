@@ -63,7 +63,7 @@ export default function DeviceFrameLayout() {
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="w-full h-full flex flex-col min-h-0"
+        className="w-full h-full flex flex-col min-h-0 relative"
       >
         <Outlet />
       </motion.div>
@@ -83,7 +83,7 @@ export default function DeviceFrameLayout() {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="w-full h-full flex flex-col min-h-0"
+                className="w-full h-full flex flex-col min-h-0 relative"
               >
                 <Outlet />
               </motion.div>
