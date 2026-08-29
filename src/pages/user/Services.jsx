@@ -222,14 +222,13 @@ export default function Services() {
             <button
               key={cat.id}
               onClick={() => handleCategoryChange(cat.id)}
-              className={`shrink-0 ${cardRadius} px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              className={`shrink-0 ${cardRadius} px-3.5 py-1.5 text-xs font-semibold transition-all select-none ${
                 selectedCategory === cat.id
-                  ? 'text-white shadow-md scale-[1.02]'
+                  ? 'text-white font-bold'
                   : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
               style={{
                 backgroundColor: selectedCategory === cat.id ? accentColor : undefined,
-                boxShadow: selectedCategory === cat.id ? `0 4px 14px ${glowColor}` : undefined,
               }}
             >
               {cat.label}
