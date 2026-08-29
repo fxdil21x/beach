@@ -26,6 +26,8 @@ export default function BeachBanner({
         <img
           src={activeImage}
           alt="Beach Background"
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 hover:scale-105"
         />
       )}

@@ -1,46 +1,52 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ProtectedRoute, GuestRoute, RoleRedirect } from './components/layout/ProtectedRoute.jsx';
 import DeviceFrameLayout from './components/layout/DeviceFrameLayout.jsx';
+import { AppShellSkeleton } from './components/ui/Skeleton.jsx';
 
-import Login from './pages/auth/Login.jsx';
-import Register from './pages/auth/Register.jsx';
+// ── Lazy-loaded Auth Pages ──
+const Login = lazy(() => import('./pages/auth/Login.jsx'));
+const Register = lazy(() => import('./pages/auth/Register.jsx'));
 
-import UserDashboard from './pages/user/home/index.js';
-import MyPass from './pages/user/MyPass.jsx';
-import MyVisits from './pages/user/MyVisits.jsx';
-import UserServices from './pages/user/Services.jsx';
-import BeachRules from './pages/user/BeachRules.jsx';
-import UserReportIssue from './pages/user/ReportIssue.jsx';
-import UserProfile from './pages/user/Profile.jsx';
+// ── Lazy-loaded User Pages ──
+const UserDashboard = lazy(() => import('./pages/user/home/index.js'));
+const MyVisits = lazy(() => import('./pages/user/MyVisits.jsx'));
+const UserServices = lazy(() => import('./pages/user/Services.jsx'));
+const BeachRules = lazy(() => import('./pages/user/BeachRules.jsx'));
+const UserReportIssue = lazy(() => import('./pages/user/ReportIssue.jsx'));
+const UserProfile = lazy(() => import('./pages/user/Profile.jsx'));
 
-import Scanner from './pages/admin/Scanner.jsx';
-import AdminResidentSearch from './pages/admin/ResidentSearch.jsx';
-import RecentEntries from './pages/admin/RecentEntries.jsx';
-import AdminReports from './pages/admin/Reports.jsx';
-import AdminProfile from './pages/admin/Profile.jsx';
+// ── Lazy-loaded Admin Pages ──
+const Scanner = lazy(() => import('./pages/admin/Scanner.jsx'));
+const AdminResidentSearch = lazy(() => import('./pages/admin/ResidentSearch.jsx'));
+const RecentEntries = lazy(() => import('./pages/admin/RecentEntries.jsx'));
+const AdminReports = lazy(() => import('./pages/admin/Reports.jsx'));
+const AdminProfile = lazy(() => import('./pages/admin/Profile.jsx'));
 
-import { MasterLayout } from './pages/master/Dashboard.jsx';
-import MasterDashboard from './pages/master/Dashboard.jsx';
-import ImportResidents from './pages/master/ImportResidents.jsx';
-import ResidentRecords from './pages/master/ResidentRecords.jsx';
-import RegisteredResidents from './pages/master/RegisteredResidents.jsx';
-import Admins from './pages/master/Admins.jsx';
-import ResidentEntries from './pages/master/ResidentEntries.jsx';
-import VisitorEntries from './pages/master/VisitorEntries.jsx';
-import Analytics from './pages/master/Analytics.jsx';
-import MasterReports from './pages/master/Reports.jsx';
-import MasterNotifications from './pages/master/Notifications.jsx';
-import MasterFeatureSettings from './pages/master/FeatureSettings.jsx';
-import MasterTrackUser from './pages/master/TrackUser.jsx';
-import MasterActivityLogs from './pages/master/AuditLogs.jsx';
-import ServicesManagement from './pages/master/ServicesManagement.jsx';
-import TabMaintenance from './pages/master/TabMaintenance.jsx';
-import Appearance from './pages/master/Appearance.jsx';
+// ── Master Admin Layout & Pages ──
+import MasterLayout from './pages/master/MasterLayout.jsx';
+const MasterDashboard = lazy(() => import('./pages/master/Dashboard.jsx'));
+const ImportResidents = lazy(() => import('./pages/master/ImportResidents.jsx'));
+const ResidentRecords = lazy(() => import('./pages/master/ResidentRecords.jsx'));
+const RegisteredResidents = lazy(() => import('./pages/master/RegisteredResidents.jsx'));
+const Admins = lazy(() => import('./pages/master/Admins.jsx'));
+const ResidentEntries = lazy(() => import('./pages/master/ResidentEntries.jsx'));
+const VisitorEntries = lazy(() => import('./pages/master/VisitorEntries.jsx'));
+const Analytics = lazy(() => import('./pages/master/Analytics.jsx'));
+const MasterReports = lazy(() => import('./pages/master/Reports.jsx'));
+const MasterNotifications = lazy(() => import('./pages/master/Notifications.jsx'));
+const MasterFeatureSettings = lazy(() => import('./pages/master/FeatureSettings.jsx'));
+const MasterTrackUser = lazy(() => import('./pages/master/TrackUser.jsx'));
+const MasterActivityLogs = lazy(() => import('./pages/master/AuditLogs.jsx'));
+const ServicesManagement = lazy(() => import('./pages/master/ServicesManagement.jsx'));
+const TabMaintenance = lazy(() => import('./pages/master/TabMaintenance.jsx'));
+const Appearance = lazy(() => import('./pages/master/Appearance.jsx'));
 
-import VisitorEntry from './pages/public/VisitorEntry.jsx';
-import EntrySuccess from './pages/public/EntrySuccess.jsx';
-import PublicIssueReport from './pages/public/PublicIssueReport.jsx';
+// ── Lazy-loaded Public Pages ──
+const VisitorEntry = lazy(() => import('./pages/public/VisitorEntry.jsx'));
+const EntrySuccess = lazy(() => import('./pages/public/EntrySuccess.jsx'));
+const PublicIssueReport = lazy(() => import('./pages/public/PublicIssueReport.jsx'));
 
 import { EmergencyProvider } from './context/EmergencyContext.jsx';
 import { FeatureProvider } from './context/FeatureContext.jsx';
@@ -54,7 +60,8 @@ export default function App() {
       <FeatureProvider>
         <EmergencyProvider>
           <BrowserRouter>
-            <Routes>
+            <Suspense fallback={<AppShellSkeleton />}>
+              <Routes>
               <Route path="/" element={<RoleRedirect />} />
 
               <Route element={<DeviceFrameLayout />}>
@@ -114,6 +121,7 @@ export default function App() {
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+          </Suspense>
 
             {/* Global overlays — MUST be inside BrowserRouter so router hooks work */}
             <AdminEmergencyOverlay />
