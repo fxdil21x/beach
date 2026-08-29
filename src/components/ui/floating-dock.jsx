@@ -14,25 +14,28 @@ export function FloatingDock({
   items,
   className,
   mobileClassName,
+  isFlush: isFlushProp,
 }) {
   const { featureSettings } = useFeatureSettings() || {};
   const appearance = featureSettings?.appearance || {};
   const navComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'nav') : null;
-  const isFlush = (appearance.dockStyle || navComp?.style) === 'flush';
+  const isAdminNavigation = items.some((item) => item.to?.startsWith('/admin'));
+  const dockStyle = isAdminNavigation
+    ? appearance.adminDockStyle || 'flush'
+    : appearance.userDockStyle || appearance.dockStyle || navComp?.style || 'floating';
+  const isFlush = isFlushProp !== undefined ? isFlushProp : dockStyle === 'flush';
 
   return (
     <div className={cn('floating-dock-wrapper w-full flex justify-center pointer-events-none', isFlush ? 'max-w-full' : 'max-w-lg mx-auto', className)}>
-      <FloatingDockCore items={items} className={mobileClassName} />
+      <FloatingDockCore items={items} className={mobileClassName} isFlush={isFlush} />
     </div>
   );
 }
 
-function FloatingDockCore({ items, className }) {
+function FloatingDockCore({ items, className, isFlush }) {
   const mouseX = useMotionValue(Infinity);
   const { featureSettings } = useFeatureSettings() || {};
   const appearance = featureSettings?.appearance || {};
-  const navComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'nav') : null;
-  const isFlush = (appearance.dockStyle || navComp?.style) === 'flush';
   const accentColor = appearance.accentColor || '#0284C7';
   const glowColor = appearance.glowColor || 'rgba(2, 132, 199, 0.35)';
 

@@ -163,19 +163,37 @@ export default function ThemeColorCustomizer({
           },
         ];
 
+    let updatePayload = {
+      ...themeSettings,
+      [key]: value,
+    };
+
     if (key === 'dockStyle') {
-      const idx = components.findIndex((c) => c.id === 'nav');
-      if (idx !== -1) {
-        components[idx] = { ...components[idx], style: value };
+      if (activeTab === 'admin') {
+        updatePayload = {
+          ...themeSettings,
+          adminDockStyle: value,
+        };
       } else {
-        components.push({
-          id: 'nav',
-          name: 'Bottom Menu Bar',
-          type: 'navigation',
-          style: value,
-          options: ['floating', 'flush'],
-          active: true,
-        });
+        const idx = components.findIndex((c) => c.id === 'nav');
+        if (idx !== -1) {
+          components[idx] = { ...components[idx], style: value };
+        } else {
+          components.push({
+            id: 'nav',
+            name: 'Bottom Menu Bar',
+            type: 'navigation',
+            style: value,
+            options: ['floating', 'flush'],
+            active: true,
+          });
+        }
+        updatePayload = {
+          ...themeSettings,
+          dockStyle: value,
+          userDockStyle: value,
+          components,
+        };
       }
     } else if (key === 'cardRadius') {
       const idx = components.findIndex((c) => c.id === 'cards');
@@ -191,6 +209,7 @@ export default function ThemeColorCustomizer({
           active: true,
         });
       }
+      updatePayload.components = components;
     } else if (key === 'headerStyle') {
       const idx = components.findIndex((c) => c.id === 'header');
       if (idx !== -1) {
@@ -205,17 +224,18 @@ export default function ThemeColorCustomizer({
           active: true,
         });
       }
+      updatePayload.components = components;
     }
 
-    onChangeTheme({
-      ...themeSettings,
-      [key]: value,
-      components,
-    });
+    onChangeTheme(updatePayload);
   };
 
   const isLight = themeSettings.themeMode === 'light';
   const activeColor = themeSettings.accentColor || '#7C3AED';
+  const currentDockStyle =
+    activeTab === 'admin'
+      ? themeSettings.adminDockStyle || 'flush'
+      : themeSettings.userDockStyle || themeSettings.dockStyle || 'floating';
 
   return (
     <div className="space-y-5">

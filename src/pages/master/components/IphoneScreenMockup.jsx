@@ -46,7 +46,10 @@ export default function IphoneScreenMockup({
   const navComp = components.find((c) => c.id === 'nav');
   const cardsComp = components.find((c) => c.id === 'cards');
 
-  const dockStyle = themeSettings.dockStyle || navComp?.style || 'floating';
+  const dockStyle =
+    activeTab === 'admin'
+      ? themeSettings.adminDockStyle || 'flush'
+      : themeSettings.userDockStyle || themeSettings.dockStyle || navComp?.style || 'floating';
   const rawCardRadius = themeSettings.cardRadius || cardsComp?.style || 'rounded-2xl';
 
   // Dynamic Theme Colors based directly on isLight mode

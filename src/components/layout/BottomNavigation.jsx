@@ -14,7 +14,11 @@ export default function BottomNavigation({ items }) {
   const { featureSettings } = useFeatureSettings() || {};
   const appearance = featureSettings?.appearance || {};
   const navComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'nav') : null;
-  const isFlush = (appearance.dockStyle || navComp?.style) === 'flush';
+  const isAdminNavigation = items.some((item) => item.to?.startsWith('/admin'));
+  const dockStyle = isAdminNavigation
+    ? appearance.adminDockStyle || 'flush'
+    : appearance.userDockStyle || appearance.dockStyle || navComp?.style || 'floating';
+  const isFlush = dockStyle === 'flush';
 
   const formattedItems = useMemo(() => {
     return items.map((item) => ({
@@ -27,7 +31,6 @@ export default function BottomNavigation({ items }) {
     return null;
   }
 
-  const isAdminNavigation = items.some((item) => item.to === '/admin/scan');
   const showScanFab = isAdminNavigation && location.pathname !== '/admin/scan';
   const showSearchFab = isAdminNavigation && location.pathname !== '/admin/search';
   const hasFloatingButtons = showScanFab || showSearchFab;

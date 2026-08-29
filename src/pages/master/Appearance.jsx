@@ -34,6 +34,8 @@ const DEFAULT_THEME = {
   glowColor: 'rgba(2, 132, 199, 0.35)',
   cardRadius: 'rounded-2xl',
   dockStyle: 'floating',
+  userDockStyle: 'floating',
+  adminDockStyle: 'flush',
   headerStyle: 'glass',
   glowMode: 'vibrant',
   components: [
