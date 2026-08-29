@@ -160,6 +160,7 @@ export default function IphoneScreenMockup({
                   borderColor={borderColor}
                   innerBg={innerBg}
                   cardRadius={cardRadius}
+                  banners={themeSettings?.banners}
                 />
               )}
 
@@ -173,6 +174,7 @@ export default function IphoneScreenMockup({
                   borderColor={borderColor}
                   innerBg={innerBg}
                   cardRadius={cardRadius}
+                  banners={themeSettings?.banners}
                 />
               )}
 
@@ -186,6 +188,7 @@ export default function IphoneScreenMockup({
                   borderColor={borderColor}
                   innerBg={innerBg}
                   cardRadius={cardRadius}
+                  banners={themeSettings?.banners}
                 />
               )}
 
@@ -199,6 +202,7 @@ export default function IphoneScreenMockup({
                   borderColor={borderColor}
                   innerBg={innerBg}
                   cardRadius={cardRadius}
+                  banners={themeSettings?.banners}
                 />
               )}
 
@@ -212,6 +216,7 @@ export default function IphoneScreenMockup({
                   borderColor={borderColor}
                   innerBg={innerBg}
                   cardRadius={cardRadius}
+                  banners={themeSettings?.banners}
                 />
               )}
 
@@ -225,6 +230,7 @@ export default function IphoneScreenMockup({
                   borderColor={borderColor}
                   innerBg={innerBg}
                   cardRadius={cardRadius}
+                  banners={themeSettings?.banners}
                 />
               )}
 
@@ -500,13 +506,14 @@ export default function IphoneScreenMockup({
 // ACTUAL USER APP SCREENS (With Dynamic Light & Dark Color Adaptations)
 // ----------------------------------------------------------------------
 
-function ActualUserHomeScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, innerBg, cardRadius }) {
+function ActualUserHomeScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, innerBg, cardRadius, banners }) {
+  const homeBannerImg = banners?.home || defaultBeachImage;
   return (
     <div className="space-y-3 animate-in fade-in duration-150">
       {/* 1. ACTUAL BeachBanner Component with Photo Background */}
       <div className={`relative min-h-[140px] overflow-hidden ${cardRadius} bg-slate-950 text-white shadow-md border border-slate-800/80 flex flex-col justify-end p-3.5 transition-all duration-200`}>
         <img
-          src={defaultBeachImage}
+          src={homeBannerImg}
           alt="Beach Background"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
@@ -618,12 +625,13 @@ function ActualUserHomeScreen({ isLight, accent, cardBg, textPrimary, textSecond
   );
 }
 
-function ActualUserPassScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius }) {
+function ActualUserPassScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius, banners }) {
+  const passBannerImg = banners?.pass || passBanner;
   return (
     <div className="space-y-3 text-center animate-in fade-in duration-150">
       {/* Pass Banner with Real Photo */}
       <div className={`relative min-h-[110px] overflow-hidden ${cardRadius} bg-slate-950 text-white shadow-md flex flex-col justify-end p-3 border border-slate-800 transition-all duration-200`}>
-        <img src={passBanner} alt="Pass Banner" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={passBannerImg} alt="Pass Banner" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
         <div className="relative z-10 text-left">
           <span className="text-[9px] font-bold text-amber-300 uppercase">OFFICIAL RESIDENT BADGE</span>
@@ -667,12 +675,13 @@ function ActualUserPassScreen({ isLight, accent, cardBg, textPrimary, textSecond
   );
 }
 
-function ActualUserServicesScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius }) {
+function ActualUserServicesScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius, banners }) {
+  const servicesBannerImg = banners?.services || servicesBanner;
   return (
     <div className="space-y-3 animate-in fade-in duration-150">
       {/* Services Banner */}
       <div className={`relative min-h-[110px] overflow-hidden ${cardRadius} bg-slate-950 text-white shadow-md flex flex-col justify-end p-3 border border-slate-800 transition-all duration-200`}>
-        <img src={servicesBanner} alt="Services" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={servicesBannerImg} alt="Services" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
         <div className="relative z-10 text-left">
           <span className="text-[9px] font-bold text-amber-300 uppercase">LOCAL DIRECTORY</span>
@@ -735,12 +744,13 @@ function ActualUserServicesScreen({ isLight, accent, cardBg, textPrimary, textSe
   );
 }
 
-function ActualUserReportScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius }) {
+function ActualUserReportScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius, banners }) {
+  const reportsBannerImg = banners?.reports || reportsBanner;
   return (
     <div className="space-y-3 animate-in fade-in duration-150">
       {/* Reports Banner */}
       <div className="relative min-h-[110px] overflow-hidden rounded-2xl bg-slate-950 text-white shadow-md flex flex-col justify-end p-3 border border-slate-800">
-        <img src={reportsBanner} alt="Reports" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={reportsBannerImg} alt="Reports" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
         <div className="relative z-10 text-left">
           <span className="text-[9px] font-bold text-rose-300 uppercase">SAFETY & CLEANLINESS</span>
@@ -772,12 +782,13 @@ function ActualUserReportScreen({ isLight, accent, cardBg, textPrimary, textSeco
   );
 }
 
-function ActualUserVisitsScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius }) {
+function ActualUserVisitsScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius, banners }) {
+  const visitsBannerImg = banners?.visits || visitsBanner;
   return (
     <div className="space-y-2.5 animate-in fade-in duration-150">
       {/* Visits Banner */}
       <div className="relative min-h-[110px] overflow-hidden rounded-2xl bg-slate-950 text-white shadow-md flex flex-col justify-end p-3 border border-slate-800">
-        <img src={visitsBanner} alt="Visits" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={visitsBannerImg} alt="Visits" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
         <div className="relative z-10 text-left">
           <span className="text-[9px] font-bold text-emerald-300 uppercase">ACCESS LOG</span>
@@ -820,12 +831,13 @@ function ActualUserVisitsScreen({ isLight, accent, cardBg, textPrimary, textSeco
   );
 }
 
-function ActualUserProfileScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius }) {
+function ActualUserProfileScreen({ isLight, accent, cardBg, textPrimary, textSecondary, borderColor, cardRadius, banners }) {
+  const profileBannerImg = banners?.profile || profileBanner;
   return (
     <div className="space-y-3 animate-in fade-in duration-150">
       {/* Profile Banner */}
       <div className="relative min-h-[110px] overflow-hidden rounded-2xl bg-slate-950 text-white shadow-md flex flex-col justify-end p-3 border border-slate-800">
-        <img src={profileBanner} alt="Profile" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={profileBannerImg} alt="Profile" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent" />
         <div className="relative z-10 flex items-center gap-2.5">
           <img

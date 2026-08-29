@@ -16,6 +16,8 @@ import {
   Box,
 } from 'lucide-react';
 
+import BannerCustomizer from './BannerCustomizer.jsx';
+
 export const THEME_PRESETS = [
   {
     id: 'ocean-blue',
@@ -546,6 +548,12 @@ export default function ThemeColorCustomizer({
           })}
         </div>
       </div>
+
+      {/* 7. Tab Banner Images & Hero Backgrounds Customizer */}
+      <BannerCustomizer
+        themeSettings={themeSettings}
+        onChangeTheme={onChangeTheme}
+      />
     </div>
   );
 }

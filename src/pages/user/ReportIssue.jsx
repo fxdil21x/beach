@@ -193,6 +193,7 @@ export default function UserReportIssue() {
       <main className="relative flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-32 space-y-4">
 
         <BeachBanner
+          tabId="report"
           badge="Beach Safety & Quality"
           title="Community Reports"
           subtitle="Report beach hazards, unsafe driving, waste disposal issues, or track your submitted tickets."

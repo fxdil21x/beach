@@ -60,6 +60,7 @@ export default function MyPass() {
       <main className="relative flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-32 space-y-4">
 
         <BeachBanner
+          tabId="pass"
           badge="Digital Gate Clearance"
           title="Beach Resident Pass"
           subtitle="Scan your verified QR code at the entrance gates for seamless vehicle drive-in access."

@@ -190,6 +190,7 @@ export default function Services() {
 
         {/* Banner */}
         <BeachBanner
+          tabId="services"
           badge="Muzhappilangad Beach Directory"
           title="Direct Beach Services & Rides"
           subtitle="Contact verified auto drivers, explore restaurants & live menus, and find beachfront stays."

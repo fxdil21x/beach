@@ -30,6 +30,7 @@ export default function MyVisits() {
       <main className="relative flex-1 min-h-0 overflow-y-auto space-y-4 px-4 pt-4 pb-32">
 
         <BeachBanner
+          tabId="visits"
           badge="Access History"
           title="My Beach Visits"
           subtitle="Real-time log of your verified gate entries and drive-in beach visits."

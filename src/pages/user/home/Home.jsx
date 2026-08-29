@@ -233,6 +233,7 @@ export default function UserHome() {
       />
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 pt-4 pb-32">
         <BeachBanner
+          tabId="home"
           badge="Muzhappilangad Drive-In Beach"
           title={t('beach.welcome')}
           subtitle={`${t('beach.name')} — Asia's premier drive-in beach entrance system.`}

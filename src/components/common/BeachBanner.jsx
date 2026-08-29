@@ -1,4 +1,5 @@
 import { Sparkles } from 'lucide-react';
+import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 import defaultBeachImage from '../../pages/public/image/Gemini_Generated_Image_kxdt3pkxdt3pkxdt.png';
 
 export default function BeachBanner({
@@ -6,18 +7,24 @@ export default function BeachBanner({
   title,
   subtitle,
   image = defaultBeachImage,
+  tabId = null,
   icon: Icon = Sparkles,
   children,
   className = '',
 }) {
+  const { featureSettings } = useFeatureSettings() || {};
+  const appearance = featureSettings?.appearance || {};
+  const customBanner = tabId && appearance.banners?.[tabId];
+  const activeImage = customBanner || image || defaultBeachImage;
+
   return (
     <div
       className={`relative min-h-[210px] sm:min-h-[225px] overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl border border-slate-800 flex flex-col justify-end p-5 sm:p-6 mb-4 ${className}`}
     >
       {/* Background Beach Photo */}
-      {image && (
+      {activeImage && (
         <img
-          src={image}
+          src={activeImage}
           alt="Beach Background"
           className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 hover:scale-105"
         />
