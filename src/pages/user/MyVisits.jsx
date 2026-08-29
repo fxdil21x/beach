@@ -24,7 +24,7 @@ export default function MyVisits() {
   }, []);
 
   return (
-    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <TabMaintenanceOverlay tabId="my-visits" fallbackTitle="Visits Log Under Maintenance" />
       <MobileHeader title={t('visits.title')} showLanguage />
       <main className="relative flex-1 min-h-0 overflow-y-auto space-y-4 px-4 pt-4 pb-32">
@@ -42,21 +42,21 @@ export default function MyVisits() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="text-sm text-gray-500">{t('visits.lastVisit')}</p>
-                <p className="text-lg font-bold">{data.lastVisit ? new Date(data.lastVisit).toLocaleString() : '—'}</p>
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 shadow-sm transition-colors">
+                <p className="text-sm text-gray-500 dark:text-slate-400">{t('visits.lastVisit')}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{data.lastVisit ? new Date(data.lastVisit).toLocaleString() : '—'}</p>
               </div>
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="text-sm text-gray-500">{t('visits.totalScans')}</p>
-                <p className="text-lg font-bold">{data.total}</p>
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 shadow-sm transition-colors">
+                <p className="text-sm text-gray-500 dark:text-slate-400">{t('visits.totalScans')}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{data.total}</p>
               </div>
             </div>
             {data.entries.length === 0 ? (
               <EmptyState title={t('visits.noVisits')} />
             ) : (
               data.entries.map((entry) => (
-                <div key={entry._id} className="rounded-2xl bg-white p-4 shadow-sm">
-                  <p className="font-medium">{new Date(entry.checkedAt).toLocaleString()}</p>
+                <div key={entry._id} className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 shadow-sm transition-colors">
+                  <p className="font-medium text-gray-900 dark:text-white">{new Date(entry.checkedAt).toLocaleString()}</p>
                 </div>
               ))
             )}

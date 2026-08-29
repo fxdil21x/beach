@@ -54,7 +54,7 @@ export default function MyPass() {
   };
 
   return (
-    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <TabMaintenanceOverlay tabId="my-pass" fallbackTitle="Pass System Under Maintenance" />
       <MobileHeader title={t('pass.title')} showLanguage />
       <main className="relative flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-32 space-y-4">
@@ -70,8 +70,8 @@ export default function MyPass() {
         {loading ? (
           <MyPassSkeleton />
         ) : !pass ? (
-          <div className="text-center">
-            <p className="text-gray-600">{t('pass.noPass')}</p>
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center shadow-sm">
+            <p className="text-gray-600 dark:text-slate-400">{t('pass.noPass')}</p>
             <Link to="/user/search"><Button className="mt-4">{t('pass.getPass')}</Button></Link>
           </div>
         ) : (

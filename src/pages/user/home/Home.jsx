@@ -211,7 +211,7 @@ export default function UserHome() {
   const showPass = isResident && Boolean(pass);
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader
         title={t('nav.home')}
         showLanguage
@@ -271,10 +271,10 @@ export default function UserHome() {
             credentials={credentials}
           />
         ) : (
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-sm transition-colors">
             <div className="mb-5">
               <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="h-11 w-full bg-slate-100 p-1">
+                <TabsList className="h-11 w-full bg-slate-100 dark:bg-slate-800/90 border dark:border-slate-700/60 p-1">
                   <TabsTrigger value="register" className="h-9 text-xs sm:text-sm font-semibold">
                     {t('resident.registerTab')}
                   </TabsTrigger>

@@ -60,19 +60,19 @@ export default function BeachInstructionCard({ instructionKey, index = 0 }) {
 
   return (
     <div
-      className="group relative flex items-center justify-between gap-4 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-4.5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
+      className="group relative flex items-center justify-between gap-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-4 sm:p-4.5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-300 dark:hover:border-cyan-500/40 hover:shadow-md"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex items-center gap-3.5 min-w-0">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${config.gradient} text-white shadow-sm ${config.shadow} transition-transform duration-200 group-hover:scale-105`}>
           <IconComp className="h-5.5 w-5.5" strokeWidth={2} />
         </div>
-        <p className="text-sm sm:text-base font-semibold leading-snug text-slate-800">
+        <p className="text-sm sm:text-base font-semibold leading-snug text-slate-800 dark:text-white">
           {t(instructionKey)}
         </p>
       </div>
 
-      <span className="shrink-0 text-xs font-black text-slate-300 group-hover:text-cyan-600 transition-colors">
+      <span className="shrink-0 text-xs font-black text-slate-300 dark:text-slate-600 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
         #{stepNumber}
       </span>
     </div>

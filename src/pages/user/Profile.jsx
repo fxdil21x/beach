@@ -59,7 +59,7 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('nav.profile')} showLanguage />
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-5 pb-28">
         <BeachBanner
@@ -74,13 +74,13 @@ export default function UserProfile() {
           <ProfileSkeleton />
         ) : (
           <>
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-xl font-bold">{user?.name}</p>
-              <p className="text-gray-600">@{user?.username}</p>
-              <p className="mt-2 text-sm text-gray-500">{user?.role}</p>
+            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-sm transition-colors">
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{user?.name}</p>
+              <p className="text-gray-600 dark:text-slate-400">@{user?.username}</p>
+              <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">{user?.role}</p>
             </div>
             {pass && (
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-sm transition-colors">
                 <PhotoPicker
                   existingUrl={pass.photoUrl}
                   onSelect={handleUploadPhoto}

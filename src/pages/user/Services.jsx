@@ -461,25 +461,25 @@ export default function Services() {
           onClick={() => setSelectedRestaurant(null)}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl transition-all max-h-[92%] overflow-y-auto flex flex-col"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-2xl transition-all max-h-[92%] overflow-y-auto flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-start justify-between border-b border-gray-100 pb-3">
+            <div className="flex items-start justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-3">
                 {selectedRestaurant.image ? (
                   <img
                     src={selectedRestaurant.image}
                     alt={selectedRestaurant.name}
-                    className="h-12 w-12 rounded-2xl object-cover border border-gray-100 shrink-0"
+                    className="h-12 w-12 rounded-2xl object-cover border border-gray-100 dark:border-slate-700 shrink-0"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400">
                     <Utensils className="h-6 w-6" />
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h2 className="text-base font-bold text-gray-900 truncate flex items-center gap-1.5">
+                  <h2 className="text-base font-bold text-gray-900 dark:text-white truncate flex items-center gap-1.5">
                     <span>{selectedRestaurant.name}</span>
                     {selectedRestaurant.restaurantDetails?.dietaryType === 'veg' || selectedRestaurant.restaurantDetails?.isPureVeg ? (
                       <span className="inline-flex items-center gap-0.5 rounded bg-green-100 px-1.5 py-0.2 text-[9.5px] font-bold text-green-700">
@@ -667,17 +667,17 @@ export default function Services() {
           onClick={() => setSelectedResort(null)}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl transition-all max-h-[90%] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-2xl transition-all max-h-[90%] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between border-b border-gray-100 pb-3">
+            <div className="flex items-start justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-purple-100 text-purple-600">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-purple-100 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
                   <Hotel className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">{selectedResort.name}</h2>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                  <h2 className="text-base font-bold text-gray-900 dark:text-white">{selectedResort.name}</h2>
+                  <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                     <MapPin className="h-3.5 w-3.5 text-gray-400" />
                     <span>{selectedResort.location}</span>
                   </p>
@@ -685,7 +685,7 @@ export default function Services() {
               </div>
               <button
                 onClick={() => setSelectedResort(null)}
-                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-700 dark:hover:text-slate-200"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -693,20 +693,20 @@ export default function Services() {
 
             <div className="mt-4 space-y-3">
               {/* Tariff */}
-              <div className="flex items-center justify-between rounded-xl bg-purple-50 p-3">
-                <span className="text-xs text-purple-900 font-medium">Estimated Tariff</span>
-                <span className="text-base font-extrabold text-purple-700">
+              <div className="flex items-center justify-between rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/50 p-3">
+                <span className="text-xs text-purple-900 dark:text-purple-200 font-medium">Estimated Tariff</span>
+                <span className="text-base font-extrabold text-purple-700 dark:text-purple-300">
                   ₹{selectedResort.stayDetails?.pricePerNight || 2500} / night
                 </span>
               </div>
 
               {/* Amenities */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Amenities</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-slate-300 mb-2">Amenities</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {(selectedResort.stayDetails?.amenities || ['Beach View', 'AC Rooms', 'Wi-Fi', 'Free Parking']).map((amenity, i) => (
-                    <div key={i} className="flex items-center gap-1.5 rounded-lg bg-gray-50 p-2 text-xs text-gray-700">
-                      <ShieldCheck className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+                    <div key={i} className="flex items-center gap-1.5 rounded-lg bg-gray-50 dark:bg-slate-800 border dark:border-slate-700 p-2 text-xs text-gray-700 dark:text-slate-300">
+                      <ShieldCheck className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
                       <span className="truncate">{amenity}</span>
                     </div>
                   ))}
@@ -714,7 +714,7 @@ export default function Services() {
               </div>
 
               {/* Call Reception */}
-              <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-gray-100 dark:border-slate-800">
                 <a
                   href={`tel:${String(selectedResort.phone || '').replace(/[^\d+]/g, '')}`}
                   onClick={(e) => handleMakeCall(selectedResort, e)}

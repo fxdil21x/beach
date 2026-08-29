@@ -15,10 +15,10 @@ export default function ResidentPassForm({ resident, onSubmit, loading, error })
   };
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-900">{t('resident.completeRegistration')}</h3>
-      <div className="mt-3 rounded-xl bg-blue-50 p-4 text-sm text-gray-700">
-        <p className="font-medium text-gray-900">{resident.name}</p>
+    <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-sm transition-colors">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('resident.completeRegistration')}</h3>
+      <div className="mt-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 p-4 text-sm text-gray-700 dark:text-slate-300">
+        <p className="font-medium text-gray-900 dark:text-white">{resident.name}</p>
         <p>{t('resident.fatherName')}: {resident.guardianName || '—'}</p>
         <p>{t('resident.houseName')}: {resident.houseName || '—'}</p>
         <p>{t('resident.gender')}: {resident.gender || '—'}</p>

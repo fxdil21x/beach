@@ -17,7 +17,7 @@ export default function ResidentSearchPanel({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm leading-relaxed text-gray-600">{t('resident.progressiveSearchHint')}</p>
+      <p className="text-sm leading-relaxed text-gray-600 dark:text-slate-400">{t('resident.progressiveSearchHint')}</p>
       <SearchInput
         value={query}
         onChange={onQueryChange}
@@ -27,7 +27,7 @@ export default function ResidentSearchPanel({
       {searching && <ResidentSearchSkeleton count={2} />}
 
       {!searching && searched && records.length === 0 && (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        <p className="rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-300">
           {t('resident.notInData')}
         </p>
       )}
