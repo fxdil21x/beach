@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Shield, Globe, LogOut, CheckCircle2, User } from 'lucide-react';
+import { Shield, Globe, LogOut, CheckCircle2, Check } from 'lucide-react';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -8,6 +9,29 @@ import LanguageSwitcher from '../../components/language/LanguageSwitcher.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 import { adminNav } from '../../config/navigation.js';
+
+function GoogleIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+      />
+    </svg>
+  );
+}
 
 export default function AdminProfile() {
   const { t } = useTranslation();
@@ -18,13 +42,35 @@ export default function AdminProfile() {
   const accentColor = appearance.accentColor || '#0284C7';
   const glowColor = appearance.glowColor || 'rgba(2, 132, 199, 0.35)';
 
-  const adminEmail = user?.email || (user?.username ? `${user.username}@beachverification.com` : 'admin@beachverification.com');
+  const [connected, setConnected] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const [connectMessage, setConnectMessage] = useState('');
+
+  const adminEmail = user?.email || (user?.username ? `${user.username}@gmail.com` : 'admin@gmail.com');
+
+  const handleConnectGoogle = () => {
+    setConnecting(true);
+    setTimeout(() => {
+      setConnecting(false);
+      setConnected(true);
+      setConnectMessage('Google Account Connected Successfully!');
+      setTimeout(() => setConnectMessage(''), 3000);
+    }, 800);
+  };
 
   return (
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('nav.profile', 'Profile')} targetRole="admin" />
 
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6 pb-28">
+        {/* Toast Alert */}
+        {connectMessage && (
+          <div className="flex items-center gap-2 rounded-xl bg-emerald-500 p-3 text-xs font-bold text-white shadow-md animate-in fade-in duration-200">
+            <Check className="h-4 w-4 shrink-0" />
+            <span>{connectMessage}</span>
+          </div>
+        )}
+
         {/* 1. Admin Identity Card */}
         <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-gray-100 dark:border-slate-800 space-y-3 transition-colors">
           <div className="flex items-center justify-between">
@@ -60,30 +106,40 @@ export default function AdminProfile() {
           </div>
         </div>
 
-        {/* 2. Admin Email Card with Action Button */}
-        <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-gray-100 dark:border-slate-800 space-y-3 transition-colors">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
-            <Mail className="h-4 w-4" style={{ color: accentColor }} />
-            <span>Admin Email</span>
+        {/* 2. Connect Google Account Card */}
+        <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-gray-100 dark:border-slate-800 space-y-3.5 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <GoogleIcon className="h-4.5 w-4.5 shrink-0" />
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-slate-300">Google Account</span>
+            </div>
+            {connected ? (
+              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Connected
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 text-[10.5px] font-bold text-amber-700 dark:text-amber-400">
+                Not Connected
+              </span>
+            )}
           </div>
 
           <div className="flex items-center justify-between gap-3 pt-1">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-gray-900 dark:text-white">{adminEmail}</p>
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">Official gate operations communication</p>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400">Synced for Google verification & notifications</p>
             </div>
 
-            <a
-              href={`mailto:${adminEmail}`}
-              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-              style={{
-                backgroundColor: accentColor,
-                boxShadow: `0 4px 14px ${glowColor}`,
-              }}
+            <button
+              type="button"
+              disabled={connecting}
+              onClick={handleConnectGoogle}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-gray-800 dark:text-gray-100 shadow-xs hover:bg-gray-50 dark:hover:bg-slate-700/80 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
-              <Mail className="h-3.5 w-3.5" />
-              <span>Send Email</span>
-            </a>
+              <GoogleIcon className="h-4 w-4 shrink-0" />
+              <span>{connecting ? 'Connecting...' : 'Connect Google'}</span>
+            </button>
           </div>
         </div>
 
@@ -106,7 +162,7 @@ export default function AdminProfile() {
             logout();
             navigate('/login', { replace: true });
           }}
-          className="w-full py-4 text-sm font-bold gap-2 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-950/60 hover:bg-red-50 dark:hover:bg-red-950/30"
+          className="w-full py-4 text-sm font-bold gap-2 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-950/60 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
         >
           <LogOut className="h-4 w-4" />
           <span>{t('common.logout', 'Logout')}</span>
