@@ -125,13 +125,13 @@ export function MasterDashboardSkeleton() {
  * Shimmer skeleton matching exact design of Posted Feature Announcement cards
  */
 export function NotificationsSkeleton({ count = 3, dark = false }) {
-  const cardBg = dark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white border-slate-200/80';
+  const cardBg = dark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800';
   return (
     <div className="space-y-3 w-full animate-in fade-in duration-200">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border ${cardBg} p-4`}
+          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border ${cardBg} p-4 transition-colors`}
         >
           <div className="min-w-0 flex-1 space-y-3 w-full">
             {/* Header: Icon, Title, Badge */}
@@ -163,15 +163,15 @@ export function NotificationsSkeleton({ count = 3, dark = false }) {
  * Shimmer skeleton matching exact design of Incident Reports (Admin / Master / User)
  */
 export function ReportsSkeleton({ count = 2, dark = false }) {
-  const cardBg = dark ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-slate-200/80';
-  const innerBg = dark ? 'bg-zinc-950/60 border-zinc-800/80' : 'bg-slate-50/70 border-slate-100';
+  const cardBg = dark ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800';
+  const innerBg = dark ? 'bg-zinc-950/60 border-zinc-800/80' : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-100 dark:border-slate-700/50';
 
   return (
     <div className="space-y-4 w-full animate-in fade-in duration-200">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={`rounded-2xl border ${cardBg} p-4 sm:p-5 space-y-4 shadow-xs`}>
+        <div key={i} className={`rounded-2xl border ${cardBg} p-4 sm:p-5 space-y-4 shadow-xs transition-colors`}>
           {/* User Profile Header */}
-          <div className={`flex items-center justify-between border-b ${dark ? 'border-zinc-800' : 'border-slate-100'} pb-3`}>
+          <div className={`flex items-center justify-between border-b ${dark ? 'border-zinc-800' : 'border-slate-100 dark:border-slate-800'} pb-3`}>
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 shrink-0 rounded-xl" dark={dark} />
               <div className="space-y-1.5">
@@ -183,7 +183,7 @@ export function ReportsSkeleton({ count = 2, dark = false }) {
           </div>
 
           {/* Incident item skeleton */}
-          <div className={`rounded-xl border ${innerBg} p-4 space-y-3`}>
+          <div className={`rounded-xl border ${innerBg} p-4 space-y-3 transition-colors`}>
             <div className="flex items-start justify-between gap-2">
               <div className="space-y-1">
                 <Skeleton className="h-5 w-40" dark={dark} />
@@ -225,16 +225,16 @@ export function ScannerSkeleton() {
  * Shimmer skeleton for Data Tables (Resident Master Records, Admin tables, etc.)
  */
 export function TableSkeleton({ rows = 6, cols = 7, dark = true }) {
-  const containerBg = dark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white border-slate-200';
+  const containerBg = dark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
   return (
-    <div className={`w-full rounded-2xl border ${containerBg} overflow-hidden shadow-sm animate-in fade-in duration-200`}>
+    <div className={`w-full rounded-2xl border ${containerBg} overflow-hidden shadow-sm animate-in fade-in duration-200 transition-colors`}>
       <div className="p-4 border-b border-zinc-800 flex justify-between gap-4">
         <Skeleton className="h-10 w-full max-w-sm rounded-xl" dark={dark} />
         <Skeleton className="h-10 w-28 rounded-xl shrink-0" dark={dark} />
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className={dark ? 'bg-zinc-950 border-b border-zinc-800' : 'bg-slate-100 border-b border-slate-200'}>
+          <thead className={dark ? 'bg-zinc-950 border-b border-zinc-800' : 'bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700'}>
             <tr>
               {Array.from({ length: cols }).map((_, i) => (
                 <th key={i} className="p-3.5">
@@ -245,7 +245,7 @@ export function TableSkeleton({ rows = 6, cols = 7, dark = true }) {
           </thead>
           <tbody>
             {Array.from({ length: rows }).map((_, rIdx) => (
-              <tr key={rIdx} className={dark ? 'border-b border-zinc-800/60' : 'border-b border-slate-100'}>
+              <tr key={rIdx} className={dark ? 'border-b border-zinc-800/60' : 'border-b border-slate-100 dark:border-slate-800/60'}>
                 {Array.from({ length: cols }).map((_, cIdx) => (
                   <td key={cIdx} className="p-3.5">
                     <Skeleton className={`h-4 ${cIdx === 0 ? 'w-28' : 'w-16'}`} dark={dark} />
@@ -265,9 +265,9 @@ export function TableSkeleton({ rows = 6, cols = 7, dark = true }) {
  */
 export function AppShellSkeleton() {
   return (
-    <div className="flex h-screen w-full flex-col bg-gray-50 overflow-hidden animate-in fade-in duration-150">
+    <div className="flex h-screen w-full flex-col bg-gray-50 dark:bg-slate-950 overflow-hidden animate-in fade-in duration-150 transition-colors">
       {/* Header Bar Skeleton */}
-      <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+      <div className="flex h-14 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 transition-colors">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-8 w-8 rounded-full" />
       </div>
@@ -280,7 +280,7 @@ export function AppShellSkeleton() {
       </div>
 
       {/* Bottom Nav Skeleton */}
-      <div className="flex h-16 items-center justify-around border-t border-slate-200 bg-white px-4">
+      <div className="flex h-16 items-center justify-around border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 transition-colors">
         <Skeleton className="h-8 w-12 rounded-xl" />
         <Skeleton className="h-8 w-12 rounded-xl" />
         <Skeleton className="h-8 w-12 rounded-xl" />
