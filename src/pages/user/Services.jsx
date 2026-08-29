@@ -27,6 +27,7 @@ import { ServicesSkeleton } from '../../components/ui/Skeleton.jsx';
 import { userNav } from '../../config/navigation.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
+import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 import * as serviceApi from '../../api/serviceApi.js';
 import servicesBannerImg from '../../assets/banners/services-banner.jpg';
 
@@ -34,6 +35,14 @@ export default function Services() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { socket } = useEmergency();
+  const { featureSettings } = useFeatureSettings() || {};
+  const appearance = featureSettings?.appearance || {};
+  const accentColor = appearance.accentColor || '#0284C7';
+  const accentSec = appearance.accentSecondary || '#38BDF8';
+  const glowColor = appearance.glowColor || 'rgba(2, 132, 199, 0.35)';
+  const cardsComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'cards') : null;
+  const cardRadius = appearance.cardRadius || cardsComp?.style || 'rounded-2xl';
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -213,11 +222,15 @@ export default function Services() {
             <button
               key={cat.id}
               onClick={() => handleCategoryChange(cat.id)}
-              className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              className={`shrink-0 ${cardRadius} px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 selectedCategory === cat.id
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25 scale-[1.02]'
+                  ? 'text-white shadow-md scale-[1.02]'
                   : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
+              style={{
+                backgroundColor: selectedCategory === cat.id ? accentColor : undefined,
+                boxShadow: selectedCategory === cat.id ? `0 4px 14px ${glowColor}` : undefined,
+              }}
             >
               {cat.label}
             </button>
@@ -245,7 +258,7 @@ export default function Services() {
                 return (
                   <div
                     key={item._id}
-                    className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all hover:border-orange-300 hover:shadow-md"
+                    className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all hover:shadow-md"
                   >
                     <div>
                       {/* Top: Auto Photo / Avatar */}
@@ -270,7 +283,14 @@ export default function Services() {
                       </h3>
 
                       <div className="mt-1 flex items-center justify-between gap-1">
-                        <span className="rounded bg-orange-50 px-1.5 py-0.5 font-mono text-[10.5px] font-extrabold text-orange-700 uppercase border border-orange-100">
+                        <span
+                          className="rounded px-1.5 py-0.5 font-mono text-[10.5px] font-extrabold uppercase border"
+                          style={{
+                            backgroundColor: `${accentColor}12`,
+                            color: accentColor,
+                            borderColor: `${accentColor}30`,
+                          }}
+                        >
                           {item.transportDetails?.vehicleNumber || 'KL-13-AUTO'}
                         </span>
                         <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-600">
@@ -291,7 +311,11 @@ export default function Services() {
                       <a
                         href={`tel:${String(item.phone || '').replace(/[^\d+]/g, '')}`}
                         onClick={(e) => handleMakeCall(item, e)}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-orange-500 py-2 text-xs font-bold text-white shadow-sm shadow-orange-500/20 hover:bg-orange-600 active:scale-98 transition-all cursor-pointer"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold text-white shadow-sm hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+                        style={{
+                          backgroundColor: accentColor,
+                          boxShadow: `0 4px 14px ${glowColor}`,
+                        }}
                       >
                         <Phone className="h-3.5 w-3.5" />
                         <span>Call ({item.phone})</span>
@@ -310,7 +334,7 @@ export default function Services() {
                       setSelectedRestaurant(item);
                       setSelectedFoodCategory('ALL');
                     }}
-                    className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all hover:border-orange-300 hover:shadow-md cursor-pointer"
+                    className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all hover:shadow-md cursor-pointer"
                   >
                     <div>
                       {/* Restaurant Cover */}
@@ -348,7 +372,7 @@ export default function Services() {
                       </div>
 
                       {/* Name & Cuisines */}
-                      <h3 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-orange-600 transition-colors truncate">
+                      <h3 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:opacity-80 transition-opacity truncate">
                         {item.name}
                       </h3>
                       <p className="mt-0.5 text-[10.5px] text-gray-500 truncate">
@@ -361,7 +385,10 @@ export default function Services() {
                     </div>
 
                     {/* View Menu Action */}
-                    <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-orange-600">
+                    <div
+                      className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-bold"
+                      style={{ color: accentColor }}
+                    >
                       <span>View Food Menu</span>
                       <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </div>
@@ -481,18 +508,25 @@ export default function Services() {
             </div>
 
             {/* Quick Call & Hours Banner */}
-            <div className="my-3 flex items-center justify-between rounded-2xl bg-orange-50 border border-orange-100 p-3 text-xs">
+            <div
+              className="my-3 flex items-center justify-between rounded-2xl border p-3 text-xs"
+              style={{
+                backgroundColor: `${accentColor}0D`,
+                borderColor: `${accentColor}25`,
+              }}
+            >
               <div>
-                <p className="font-bold text-orange-950 flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5 text-orange-600" />
+                <p className="font-bold flex items-center gap-1" style={{ color: accentColor }}>
+                  <Clock className="h-3.5 w-3.5" />
                   {selectedRestaurant.restaurantDetails?.openingHours || '11:00 AM - 11:00 PM'}
                 </p>
-                <p className="text-[11px] text-orange-700 mt-0.5">Call to order food or table reservation</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">Call to order food or table reservation</p>
               </div>
               <a
                 href={`tel:${String(selectedRestaurant.phone || '').replace(/[^\d+]/g, '')}`}
                 onClick={(e) => handleMakeCall(selectedRestaurant, e)}
-                className="flex items-center gap-1.5 rounded-xl bg-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition-colors shrink-0 cursor-pointer"
+                className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:brightness-110 transition-colors shrink-0 cursor-pointer"
+                style={{ backgroundColor: accentColor }}
               >
                 <PhoneCall className="h-3.5 w-3.5" />
                 <span>Call Now</span>
@@ -503,7 +537,7 @@ export default function Services() {
             <div className="mb-2.5">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1">
-                  <Flame className="h-3.5 w-3.5 text-orange-500" /> Available Foods Menu
+                  <Flame className="h-3.5 w-3.5" style={{ color: accentColor }} /> Available Foods Menu
                 </span>
                 <span className="text-[11px] text-gray-400 font-medium">
                   {currentDishes.length} Dishes
@@ -517,9 +551,12 @@ export default function Services() {
                     onClick={() => setSelectedFoodCategory(cat)}
                     className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${
                       selectedFoodCategory === cat
-                        ? 'bg-orange-500 text-white shadow-sm'
+                        ? 'text-white shadow-sm'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
+                    style={{
+                      backgroundColor: selectedFoodCategory === cat ? accentColor : undefined,
+                    }}
                   >
                     {cat}
                   </button>
@@ -595,7 +632,11 @@ export default function Services() {
               <a
                 href={`tel:${String(selectedRestaurant.phone || '').replace(/[^\d+]/g, '')}`}
                 onClick={(e) => handleMakeCall(selectedRestaurant, e)}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 transition-colors cursor-pointer"
+                style={{
+                  backgroundColor: accentColor,
+                  boxShadow: `0 4px 14px ${glowColor}`,
+                }}
               >
                 <PhoneCall className="h-4 w-4" />
                 <span>Call to Order ({selectedRestaurant.phone})</span>
