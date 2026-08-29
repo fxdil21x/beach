@@ -108,22 +108,22 @@ export default function MasterReports() {
 
       {/* Shadcn UI Tabs Bar: User Reports vs Anonymous Reports */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto shrink-0">
-        <TabsList className="h-10 w-auto bg-zinc-900 border border-zinc-800 p-1">
-          <TabsTrigger value="user" className="h-8 gap-2 px-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-zinc-800 data-[state=active]:text-orange-400">
-            <User className="h-4 w-4" />
+        <TabsList className="h-10 w-auto bg-zinc-900 border border-zinc-800 p-1 rounded-xl gap-1">
+          <TabsTrigger value="user" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
+            <User className="h-3.5 w-3.5" />
             <span>User Reports</span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-              activeTab === 'user' ? 'bg-orange-500/20 text-orange-400' : 'bg-zinc-800 text-zinc-400'
+            <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
+              activeTab === 'user' ? 'bg-white/28 text-white' : 'bg-zinc-800 text-zinc-400'
             }`}>
               {userReports.length}
             </span>
           </TabsTrigger>
 
-          <TabsTrigger value="anonymous" className="h-8 gap-2 px-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-zinc-800 data-[state=active]:text-orange-400">
-            <EyeOff className="h-4 w-4" />
+          <TabsTrigger value="anonymous" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
+            <EyeOff className="h-3.5 w-3.5" />
             <span>Anonymous Reports</span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-              activeTab === 'anonymous' ? 'bg-orange-500/20 text-orange-400' : 'bg-zinc-800 text-zinc-400'
+            <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
+              activeTab === 'anonymous' ? 'bg-white/28 text-white' : 'bg-zinc-800 text-zinc-400'
             }`}>
               {anonymousReports.length}
             </span>

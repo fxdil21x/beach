@@ -28,7 +28,8 @@ export function Tabs({ defaultValue, value, onValueChange, children, className =
 export function TabsList({ children, className = '' }) {
   return (
     <div
-      className={`inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 p-1 text-slate-500 shadow-inner ${className}`}
+      role="tablist"
+      className={`inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/80 p-1 text-slate-500 shadow-inner ${className}`}
     >
       {children}
     </div>
@@ -52,7 +53,7 @@ export function TabsTrigger({ value, children, className = '', disabled = false,
       className={`relative inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-colors duration-150 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer ${
         isActive
           ? 'text-white font-bold'
-          : 'text-slate-600 hover:text-slate-900'
+          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
       } ${className}`}
     >
       {isActive && (
