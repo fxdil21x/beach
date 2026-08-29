@@ -42,19 +42,24 @@ export default function AdminProfile() {
   const accentColor = appearance.accentColor || '#0284C7';
   const glowColor = appearance.glowColor || 'rgba(2, 132, 199, 0.35)';
 
+  const [googleEmail, setGoogleEmail] = useState(() => {
+    return localStorage.getItem('beach_admin_google_email') || user?.email || (user?.username ? `${user.username}@gmail.com` : 'admin@gmail.com');
+  });
   const [connected, setConnected] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [connectMessage, setConnectMessage] = useState('');
 
-  const adminEmail = user?.email || (user?.username ? `${user.username}@gmail.com` : 'admin@gmail.com');
-
   const handleConnectGoogle = () => {
     setConnecting(true);
+    // Open Google Account Authentication & Chooser
+    const googleAuthUrl = 'https://accounts.google.com/signin/v2/identifier?flowName=GlifWebSignIn&flowEntry=ServiceLogin';
+    window.open(googleAuthUrl, '_blank', 'noopener,noreferrer');
+
     setTimeout(() => {
       setConnecting(false);
       setConnected(true);
-      setConnectMessage('Google Account Connected Successfully!');
-      setTimeout(() => setConnectMessage(''), 3000);
+      setConnectMessage('Google Account Linked Successfully!');
+      setTimeout(() => setConnectMessage(''), 4000);
     }, 800);
   };
 
@@ -109,10 +114,16 @@ export default function AdminProfile() {
         {/* 2. Connect Google Account Card */}
         <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-gray-100 dark:border-slate-800 space-y-3.5 transition-colors">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <a
+              href="https://myaccount.google.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+              title="Open Google Account"
+            >
               <GoogleIcon className="h-4.5 w-4.5 shrink-0" />
               <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-slate-300">Google Account</span>
-            </div>
+            </a>
             {connected ? (
               <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -126,10 +137,15 @@ export default function AdminProfile() {
           </div>
 
           <div className="flex items-center justify-between gap-3 pt-1">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-gray-900 dark:text-white">{adminEmail}</p>
+            <a
+              href="https://myaccount.google.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-w-0 flex-1 group cursor-pointer"
+            >
+              <p className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-sky-500 transition-colors">{googleEmail}</p>
               <p className="text-[11px] text-gray-500 dark:text-slate-400">Synced for Google verification & notifications</p>
-            </div>
+            </a>
 
             <button
               type="button"
