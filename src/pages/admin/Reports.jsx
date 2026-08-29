@@ -122,7 +122,7 @@ export default function AdminReports() {
   };
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('admin.reportsTitle')} showLanguage targetRole="admin" />
 
       {/* Real-time Alert Banner */}
@@ -174,7 +174,7 @@ export default function AdminReports() {
                 </PaginationItem>
 
                 <PaginationItem>
-                  <span className="text-[11px] font-bold text-slate-600 px-1.5 whitespace-nowrap">
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
                     {currentPage} / {totalPages}
                   </span>
                 </PaginationItem>
@@ -197,28 +197,28 @@ export default function AdminReports() {
         {loading ? (
           <ReportsSkeleton count={3} />
         ) : paginatedList.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-gray-500">
-            <p className="font-semibold text-gray-700">No {activeTab === 'anonymous' ? 'anonymous' : 'user'} reports found</p>
-            <p className="mt-1 text-xs text-gray-400">Reports submitted under this category will appear here in real time.</p>
+          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-gray-500 dark:text-slate-400">
+            <p className="font-semibold text-gray-700 dark:text-slate-200">No {activeTab === 'anonymous' ? 'anonymous' : 'user'} reports found</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Reports submitted under this category will appear here in real time.</p>
           </div>
         ) : activeTab === 'user' ? (
           /* User Reports: Grouped into 1 Card per User */
           paginatedList.map((group) => (
-            <div key={group.userId} className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200/80 space-y-4">
+            <div key={group.userId} className="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-4 transition-colors">
               {/* User Profile Banner Header */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 font-bold shrink-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold shrink-0">
                     <User className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-base">{group.userInfo.name}</h3>
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{group.userInfo.name}</h3>
                     {group.userInfo.username && (
-                      <p className="text-xs font-semibold text-blue-600">@{group.userInfo.username}</p>
+                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">@{group.userInfo.username}</p>
                     )}
                   </div>
                 </div>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-100">
+                <span className="rounded-full bg-blue-50 dark:bg-blue-950/60 px-3 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/60">
                   {group.reports.length} {group.reports.length === 1 ? 'Report' : 'Reports'}
                 </span>
               </div>
@@ -226,22 +226,22 @@ export default function AdminReports() {
               {/* List of Reports submitted by this specific User */}
               <div className="space-y-3">
                 {group.reports.map((r, index) => (
-                  <div key={r._id} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 space-y-3">
+                  <div key={r._id} className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 p-3.5 space-y-3 transition-colors">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-slate-400">#{index + 1}</span>
-                          <p className="font-extrabold text-slate-900 text-sm sm:text-base">{r.category}</p>
+                          <p className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">{r.category}</p>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{new Date(r.createdAt).toLocaleString()}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{new Date(r.createdAt).toLocaleString()}</p>
                       </div>
                       <StatusBadge status={r.status} label={t(`report.status.${r.status}`, r.status)} />
                     </div>
 
                     {r.description ? (
-                      <p className="text-sm text-slate-700 leading-relaxed">{r.description}</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{r.description}</p>
                     ) : (
-                      <p className="text-xs italic text-slate-400">No text description provided</p>
+                      <p className="text-xs italic text-slate-400 dark:text-slate-500">No text description provided</p>
                     )}
 
                     {r.photoUrl && (
@@ -261,15 +261,15 @@ export default function AdminReports() {
 
                     {/* Location & Device Info Snippets */}
                     {(r.location?.latitude != null || r.deviceInfo?.platform) && (
-                      <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 pt-1">
+                      <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                         {r.location?.latitude != null && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-200/60 px-2 py-1">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-white dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 px-2 py-1">
                             <MapPin className="h-3 w-3 text-blue-500" />
                             {r.location.latitude.toFixed(4)}, {r.location.longitude.toFixed(4)}
                           </span>
                         )}
                         {r.deviceInfo?.platform && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-200/60 px-2 py-1">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-white dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 px-2 py-1">
                             <Monitor className="h-3 w-3 text-slate-400" />
                             {r.deviceInfo.platform}
                           </span>
@@ -278,7 +278,7 @@ export default function AdminReports() {
                     )}
 
                     {/* Status Change Buttons */}
-                    <div className="pt-2 border-t border-slate-200/50">
+                    <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/60">
                       <span className="block text-[11px] font-semibold text-slate-400 mb-1.5">Update Status:</span>
                       <div className="flex gap-2">
                         {['OPEN', 'IN_PROGRESS', 'RESOLVED'].map((s) => (
@@ -293,7 +293,7 @@ export default function AdminReports() {
                                   : s === 'IN_PROGRESS'
                                   ? 'bg-blue-600 text-white shadow-sm'
                                   : 'bg-amber-600 text-white shadow-sm'
-                                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                             }`}
                           >
                             {s.replace('_', ' ')}
@@ -309,19 +309,19 @@ export default function AdminReports() {
         ) : (
           /* Anonymous Reports: Individual Incident Cards */
           paginatedList.map((r) => (
-            <div key={r._id} className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200/80 space-y-3">
+            <div key={r._id} className="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-3 transition-colors">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-bold text-slate-900 text-base">{r.category}</p>
-                  <p className="text-xs text-slate-400">{new Date(r.createdAt).toLocaleString()}</p>
+                  <p className="font-bold text-slate-900 dark:text-white text-base">{r.category}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(r.createdAt).toLocaleString()}</p>
                 </div>
                 <StatusBadge status={r.status} label={t(`report.status.${r.status}`, r.status)} />
               </div>
 
               {r.description ? (
-                <p className="text-sm text-slate-700 leading-relaxed">{r.description}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{r.description}</p>
               ) : (
-                <p className="text-xs italic text-slate-400">No text description provided</p>
+                <p className="text-xs italic text-slate-400 dark:text-slate-500">No text description provided</p>
               )}
 
               {r.photoUrl && (
@@ -341,15 +341,15 @@ export default function AdminReports() {
 
               {/* Location & Device Info Snippets */}
               {(r.location?.latitude != null || r.deviceInfo?.platform) && (
-                <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 pt-1">
+                <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                   {r.location?.latitude != null && (
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1">
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 border dark:border-slate-700 px-2 py-1">
                       <MapPin className="h-3 w-3 text-blue-500" />
                       {r.location.latitude.toFixed(4)}, {r.location.longitude.toFixed(4)}
                     </span>
                   )}
                   {r.deviceInfo?.platform && (
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1">
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 border dark:border-slate-700 px-2 py-1">
                       <Monitor className="h-3 w-3 text-slate-400" />
                       {r.deviceInfo.platform}
                     </span>
@@ -373,7 +373,7 @@ export default function AdminReports() {
                             : s === 'IN_PROGRESS'
                             ? 'bg-blue-600 text-white shadow-sm'
                             : 'bg-amber-600 text-white shadow-sm'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {s.replace('_', ' ')}
