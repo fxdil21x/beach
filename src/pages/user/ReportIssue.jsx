@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs.jsx';
 import { userNav } from '../../config/navigation.js';
 import { createReport, getMyReports, getUserReportEventsUrl } from '../../api/reportApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 import reportsBannerImg from '../../assets/banners/reports-banner.jpg';
 
 const CATEGORIES = ['Garbage', 'Overflowing Bin', 'Unsafe Driving', 'Damaged Facility', 'Noise Problem', 'Safety Issue', 'Other'];
@@ -23,6 +24,10 @@ const ITEMS_PER_PAGE = 5;
 export default function UserReportIssue() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { featureSettings } = useFeatureSettings() || {};
+  const appearance = featureSettings?.appearance || {};
+  const accentColor = appearance.accentColor || '#0284C7';
+
   const [activeTab, setActiveTab] = useState(user ? 'my-reports' : 'submit');
   const [currentPage, setCurrentPage] = useState(1)
   const [form, setForm] = useState({ category: 'Garbage', description: '' });
@@ -137,9 +142,13 @@ export default function UserReportIssue() {
                   <FileText className="h-3.5 w-3.5 shrink-0" />
                   <span>My Reports</span>
                   {myReports.length > 0 && (
-                    <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold ${
-                      activeTab === 'my-reports' ? 'bg-blue-100 text-blue-700 shadow-xs' : 'bg-slate-200/80 text-slate-600'
-                    }`}>
+                    <span
+                      className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors"
+                      style={{
+                        backgroundColor: activeTab === 'my-reports' ? `${accentColor}18` : 'rgba(226, 232, 240, 0.8)',
+                        color: activeTab === 'my-reports' ? accentColor : '#475569',
+                      }}
+                    >
                       {myReports.length}
                     </span>
                   )}

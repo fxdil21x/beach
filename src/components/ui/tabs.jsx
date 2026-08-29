@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 
 const TabsContext = createContext(null);
 
@@ -34,8 +35,11 @@ export function TabsList({ children, className = '' }) {
   );
 }
 
-export function TabsTrigger({ value, children, className = '', disabled = false }) {
+export function TabsTrigger({ value, children, className = '', disabled = false, activeColor }) {
   const { activeTab, handleTabChange } = useContext(TabsContext);
+  const { featureSettings } = useFeatureSettings() || {};
+  const appearance = featureSettings?.appearance || {};
+  const accentColor = activeColor || appearance.accentColor || '#0284C7';
   const isActive = activeTab === value;
 
   return (
@@ -45,11 +49,14 @@ export function TabsTrigger({ value, children, className = '', disabled = false 
       aria-selected={isActive}
       disabled={disabled}
       onClick={() => handleTabChange(value)}
-      className={`relative inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer ${
+      className={`relative inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-colors duration-150 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer ${
         isActive
-          ? 'text-blue-700 font-bold'
+          ? 'font-bold'
           : 'text-slate-600 hover:text-slate-900'
       } ${className}`}
+      style={{
+        color: isActive ? accentColor : undefined,
+      }}
     >
       {isActive && (
         <motion.div
