@@ -23,9 +23,9 @@ export default function LanguageSwitcher({ className = '' }) {
 
   return (
     <Select value={current} onValueChange={(val) => changeLanguage(val)}>
-      <SelectTrigger className={`h-10 w-[94px] shrink-0 rounded-xl bg-slate-50 border-slate-200/90 px-3 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs ${className}`}>
+      <SelectTrigger className={`!h-9 w-[86px] shrink-0 !rounded-xl bg-white border-slate-200/80 px-2.5 text-xs font-semibold text-slate-700 shadow-2xs hover:border-slate-300 hover:bg-slate-50 ${className}`}>
         <div className="flex items-center gap-1.5 truncate">
-          <Globe className="h-4 w-4 text-slate-500 shrink-0" />
+          <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0" />
           <SelectValue>{currentLang.short}</SelectValue>
         </div>
       </SelectTrigger>

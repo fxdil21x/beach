@@ -36,6 +36,7 @@ import MasterTrackUser from './pages/master/TrackUser.jsx';
 import MasterActivityLogs from './pages/master/AuditLogs.jsx';
 import ServicesManagement from './pages/master/ServicesManagement.jsx';
 import TabMaintenance from './pages/master/TabMaintenance.jsx';
+import Appearance from './pages/master/Appearance.jsx';
 
 import VisitorEntry from './pages/public/VisitorEntry.jsx';
 import EntrySuccess from './pages/public/EntrySuccess.jsx';
@@ -92,6 +93,7 @@ export default function App() {
                 <Route path="/master" element={<MasterLayout />}>
                   <Route index element={<Navigate to="dashboard" replace />} />
                   <Route path="dashboard" element={<MasterDashboard />} />
+                  <Route path="appearance" element={<Appearance />} />
                   <Route path="tab-maintenance" element={<TabMaintenance />} />
                   <Route path="services" element={<ServicesManagement />} />
                   <Route path="features" element={<MasterFeatureSettings />} />

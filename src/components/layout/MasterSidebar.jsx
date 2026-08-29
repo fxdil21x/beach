@@ -20,12 +20,14 @@ import {
   History,
   X,
   Wrench,
+  Palette,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 
 const links = [
   { to: '/master/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { to: '/master/appearance', labelKey: 'Appearance & Themes', icon: Palette },
   { to: '/master/tab-maintenance', labelKey: 'Tab Maintenance', icon: Wrench },
   { to: '/master/services', labelKey: 'Services & Directory', icon: UtensilsCrossed },
   { to: '/master/activity-logs', labelKey: 'Activity Logs', icon: History },

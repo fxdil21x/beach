@@ -7,3 +7,4 @@ export const registerResidentPass = (formData) =>
   api.post('/public/resident-register', formData);
 
 export const loginResident = (data) => api.post('/public/resident-login', data);
+export const getPublicAppearance = () => api.get('/public/appearance');

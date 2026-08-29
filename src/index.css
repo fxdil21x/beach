@@ -73,14 +73,14 @@ html.device-frame-active body {
   width: 100%;
   align-items: center;
   justify-content: center;
-  background: #FAF9F6;
-  padding: 24px;
+  background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+  padding: 20px;
 }
 
 .device-frame-scale {
-  --frame-w: 626px;
-  --frame-h: 948px;
-  --scale: min(1, (100vw - 48px) / 626px, (100dvh - 48px) / 948px);
+  --frame-w: 420px;
+  --frame-h: 880px;
+  --scale: min(1, (100vw - 32px) / var(--frame-w), (100dvh - 32px) / var(--frame-h));
   width: calc(var(--frame-w) * var(--scale));
   height: calc(var(--frame-h) * var(--scale));
   flex-shrink: 0;
@@ -93,7 +93,7 @@ html.device-frame-active body {
   align-items: center;
   justify-content: center;
   transform: scale(var(--scale));
-  transform-origin: top left;
+  transform-origin: center center;
 }
 
 .device-app-root {
@@ -103,7 +103,34 @@ html.device-frame-active body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: #f3f4f6;
+  background: #f8fafc;
+}
+
+/* Completely hide scrollbars inside device frame stage & root for seamless native mobile look */
+.device-frame-stage *,
+.device-frame-scale *,
+.device-app-root,
+.device-app-root *,
+.iphone-chassis,
+.iphone-chassis *,
+.no-scrollbar,
+.scrollbar-none {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.device-frame-stage *::-webkit-scrollbar,
+.device-frame-scale *::-webkit-scrollbar,
+.device-app-root::-webkit-scrollbar,
+.device-app-root *::-webkit-scrollbar,
+.iphone-chassis::-webkit-scrollbar,
+.iphone-chassis *::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
 /* Modal portal layer — sits above app content, but inside device screen */

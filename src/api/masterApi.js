@@ -24,3 +24,5 @@ export const getAdmins = () => api.get('/master/admins');
 export const getAuditLogs = (params) => api.get('/master/audit-logs', { params });
 export const getReports = (params) => api.get('/master/beach-reports', { params });
 export const togglePassStatus = (id, isActive) => api.patch(`/master/passes/${id}`, { isActive });
+export const getAppearanceSettings = () => api.get('/master/appearance');
+export const updateAppearanceSettings = (data) => api.put('/master/appearance', data);

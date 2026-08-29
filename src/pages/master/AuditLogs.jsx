@@ -103,47 +103,92 @@ function getRoleBadge(role) {
 
 // Extract human-readable device and OS details
 function getDeviceDetails(metadata) {
-  if (!metadata) return { icon: '💻', name: 'Web Browser', ip: '—', isMobile: false };
+  if (!metadata) return { icon: '💻', name: 'Web Browser', ip: '—', isMobile: false, deviceType: 'Desktop' };
 
-  const ip = metadata.ip || '—';
+  let rawIp = metadata.ip || '—';
+  if (typeof rawIp === 'string') {
+    if (rawIp.startsWith('::ffff:')) rawIp = rawIp.replace('::ffff:', '');
+    if (rawIp === '::1' || rawIp === '127.0.0.1' || rawIp.toLowerCase() === 'localhost') {
+      rawIp = '127.0.0.1 (Localhost)';
+    }
+  }
 
-  if (metadata.device) {
-    const isMobile = /📱|mobile|android|iphone|ipad/iu.test(metadata.device);
+  // If already parsed nicely on backend
+  if (metadata.device && metadata.device !== '💻 Desktop' && metadata.device !== 'Web Browser') {
+    const isTablet = /📟|tablet|ipad/iu.test(metadata.device);
+    const isMobile = !isTablet && /📱|mobile|android|iphone|phone/iu.test(metadata.device);
+    const icon = isTablet ? '📟' : isMobile ? '📱' : '💻';
     return {
-      icon: isMobile ? '📱' : '💻',
-      name: metadata.device.replace(/^[📱💻\s]+/u, ''),
-      ip,
+      icon,
+      name: metadata.device.replace(/^[📱💻📟\s]+/u, ''),
+      ip: rawIp,
       isMobile,
+      isTablet,
+      deviceType: isTablet ? 'Tablet' : isMobile ? 'Mobile' : 'Desktop',
     };
   }
 
   const ua = metadata.userAgent || '';
   if (ua) {
-    let os = 'Desktop';
-    if (/windows nt 10/i.test(ua)) os = 'Windows 10/11';
+    let os = 'Unknown OS';
+    if (/windows nt 10\.0/i.test(ua)) os = 'Windows 10/11';
+    else if (/windows nt 6\.3/i.test(ua)) os = 'Windows 8.1';
+    else if (/windows nt 6\.2/i.test(ua)) os = 'Windows 8';
+    else if (/windows nt 6\.1/i.test(ua)) os = 'Windows 7';
     else if (/windows/i.test(ua)) os = 'Windows';
-    else if (/android/i.test(ua)) os = 'Android';
-    else if (/iphone/i.test(ua)) os = 'iPhone';
-    else if (/ipad/i.test(ua)) os = 'iPad';
-    else if (/macintosh|mac os x/i.test(ua)) os = 'macOS';
+    else if (/android\s*([0-9\.]+)?/i.test(ua)) {
+      const match = ua.match(/android\s*([0-9\.]+)/i);
+      os = match ? `Android ${match[1]}` : 'Android';
+    } else if (/iphone/i.test(ua)) {
+      const match = ua.match(/os\s*([0-9\_]+)/i);
+      os = match ? `iOS ${match[1].replace(/_/g, '.')}` : 'iOS (iPhone)';
+    } else if (/ipad/i.test(ua)) {
+      const match = ua.match(/os\s*([0-9\_]+)/i);
+      os = match ? `iPadOS ${match[1].replace(/_/g, '.')}` : 'iPadOS';
+    } else if (/macintosh|mac os x/i.test(ua)) {
+      const match = ua.match(/mac os x\s*([0-9\_\.]+)/i);
+      os = match ? `macOS ${match[1].replace(/_/g, '.')}` : 'macOS';
+    } else if (/cros/i.test(ua)) os = 'ChromeOS';
     else if (/linux/i.test(ua)) os = 'Linux';
 
+    // Brand detection
+    let brand = '';
+    if (/samsung|sm-[a-z0-9]+/i.test(ua)) brand = 'Samsung';
+    else if (/redmi|xiaomi|poco/i.test(ua)) brand = 'Xiaomi/Redmi';
+    else if (/oneplus/i.test(ua)) brand = 'OnePlus';
+    else if (/pixel/i.test(ua)) brand = 'Google Pixel';
+    else if (/vivo/i.test(ua)) brand = 'Vivo';
+    else if (/oppo/i.test(ua)) brand = 'Oppo';
+    else if (/realme/i.test(ua)) brand = 'Realme';
+    else if (/huawei|honor/i.test(ua)) brand = 'Huawei';
+    else if (/iphone/i.test(ua)) brand = 'Apple iPhone';
+    else if (/ipad/i.test(ua)) brand = 'Apple iPad';
+
     let browser = 'Browser';
-    if (/edg/i.test(ua)) browser = 'Edge';
+    if (/edg\/([0-9\.]+)/i.test(ua)) browser = 'Edge';
+    else if (/samsungbrowser\/([0-9\.]+)/i.test(ua)) browser = 'Samsung Internet';
+    else if (/brave/i.test(ua)) browser = 'Brave';
     else if (/chrome|crios/i.test(ua)) browser = 'Chrome';
     else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
-    else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
+    else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = 'Safari';
+    else if (/opera|opr/i.test(ua)) browser = 'Opera';
 
-    const isMobile = /mobile|android|iphone|ipad|phone/i.test(ua);
+    const isTablet = /ipad|tablet/i.test(ua);
+    const isMobile = !isTablet && /mobile|android|iphone|phone/i.test(ua);
+    const icon = isTablet ? '📟' : isMobile ? '📱' : '💻';
+    const brandText = brand ? ` (${brand})` : '';
+
     return {
-      icon: isMobile ? '📱' : '💻',
-      name: `${os} • ${browser}`,
-      ip,
+      icon,
+      name: `${os}${brandText} • ${browser}`,
+      ip: rawIp,
       isMobile,
+      isTablet,
+      deviceType: isTablet ? 'Tablet' : isMobile ? 'Mobile' : 'Desktop',
     };
   }
 
-  return { icon: '🌐', name: 'Web Session', ip, isMobile: false };
+  return { icon: '💻', name: 'Web Client', ip: rawIp, isMobile: false, deviceType: 'Desktop' };
 }
 
 const TABS = [
@@ -479,14 +524,14 @@ export default function MasterActivityLogs() {
 
                       {/* Device & IP Details */}
                       <td className="p-3.5 pr-5 whitespace-nowrap text-zinc-400">
-                        <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
-                            <span className="text-sm">{device.icon}</span>
-                            <span>{device.name}</span>
+                            <span className="text-base leading-none">{device.icon}</span>
+                            <span className="truncate max-w-[240px] font-semibold text-white">{device.name}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-mono">
-                            <Globe className="h-3 w-3 text-zinc-600 shrink-0" />
-                            <span>{device.ip}</span>
+                          <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-mono">
+                            <Globe className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                            <span className="bg-zinc-800/80 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-700/50">{device.ip}</span>
                           </div>
                         </div>
                       </td>
