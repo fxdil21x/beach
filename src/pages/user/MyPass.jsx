@@ -57,7 +57,7 @@ export default function MyPass() {
     <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
       <TabMaintenanceOverlay tabId="my-pass" fallbackTitle="Pass System Under Maintenance" />
       <MobileHeader title={t('pass.title')} showLanguage />
-      <main className="relative flex-1 min-h-0 overflow-y-auto px-4 py-5 space-y-4">
+      <main className="relative flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-32 space-y-4">
 
         <BeachBanner
           badge="Digital Gate Clearance"
