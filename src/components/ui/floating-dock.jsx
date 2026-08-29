@@ -34,6 +34,7 @@ function FloatingDockCore({ items, className }) {
   const navComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'nav') : null;
   const isFlush = (appearance.dockStyle || navComp?.style) === 'flush';
   const accentColor = appearance.accentColor || '#0284C7';
+  const glowColor = appearance.glowColor || 'rgba(2, 132, 199, 0.35)';
 
   return (
     <motion.div
@@ -48,13 +49,13 @@ function FloatingDockCore({ items, className }) {
       )}
     >
       {items.map((item) => (
-        <DockIcon key={item.to || item.title} mouseX={mouseX} item={item} accentColor={accentColor} />
+        <DockIcon key={item.to || item.title} mouseX={mouseX} item={item} accentColor={accentColor} glowColor={glowColor} />
       ))}
     </motion.div>
   );
 }
 
-function DockIcon({ mouseX, item, accentColor = '#0284C7' }) {
+function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 132, 199, 0.35)' }) {
   const ref = useRef(null);
   const [hovered, setHovered] = useState(false);
   const [actionPulse, setActionPulse] = useState(0);
@@ -119,10 +120,11 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7' }) {
             <motion.div
               layoutId="activeDockPill"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              className="absolute inset-0 rounded-full shadow-sm ring-1.5"
+              className="absolute inset-0 rounded-full ring-1.5"
               style={{
                 backgroundColor: `${accentColor}25`,
                 borderColor: `${accentColor}60`,
+                boxShadow: `0 0 14px ${glowColor}`,
               }}
             />
           )}
@@ -181,7 +183,10 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7' }) {
               layoutId="activeDockDot"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               className="absolute bottom-0 h-1.5 w-1.5 rounded-full z-10"
-              style={{ backgroundColor: accentColor }}
+              style={{
+                backgroundColor: accentColor,
+                boxShadow: `0 0 8px ${accentColor}`,
+              }}
             />
           )}
         </motion.div>
