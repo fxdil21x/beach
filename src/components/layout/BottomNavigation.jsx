@@ -5,11 +5,16 @@ import { ScanLine, Search } from 'lucide-react';
 import AdminPendingVisitorAlert from './AdminPendingVisitorAlert.jsx';
 import { FloatingDock } from '../ui/floating-dock.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 
 export default function BottomNavigation({ items }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
+  const { featureSettings } = useFeatureSettings() || {};
+  const appearance = featureSettings?.appearance || {};
+  const navComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'nav') : null;
+  const isFlush = (appearance.dockStyle || navComp?.style) === 'flush';
 
   const formattedItems = useMemo(() => {
     return items.map((item) => ({
@@ -28,7 +33,13 @@ export default function BottomNavigation({ items }) {
   const hasFloatingButtons = showScanFab || showSearchFab;
 
   return (
-    <nav className="absolute bottom-0 inset-x-0 z-50 w-full  flex flex-col items-center justify-end px-3 pt-1 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+6px)] sm:pb-4 pointer-events-none select-none">
+    <nav
+      className={`absolute bottom-0 inset-x-0 z-50 w-full flex flex-col items-center justify-end pointer-events-none select-none ${
+        isFlush
+          ? 'px-0 pt-0 pb-0'
+          : 'px-3 pt-1 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+6px)] sm:pb-4'
+      }`}
+    >
       {isAdminNavigation && <AdminPendingVisitorAlert />}
 
       {/* Floating Action Buttons Stack (Independent Absolute Positioning so dock hover never shifts it) */}
