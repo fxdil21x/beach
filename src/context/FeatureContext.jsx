@@ -230,6 +230,16 @@ export function FeatureProvider({ children }) {
     [featureSettings.tabMaintenance]
   );
 
+  const toggleThemeMode = useCallback(() => {
+    const currentAppearance = featureSettings.appearance || DEFAULT_APPEARANCE;
+    const nextMode = currentAppearance.themeMode === 'dark' ? 'light' : 'dark';
+    const updated = {
+      ...currentAppearance,
+      themeMode: nextMode,
+    };
+    applyAppearance(updated);
+  }, [featureSettings.appearance, applyAppearance]);
+
   return (
     <FeatureContext.Provider
       value={{
@@ -239,6 +249,7 @@ export function FeatureProvider({ children }) {
         fetchFeatures,
         updateFeatures,
         applyAppearance,
+        toggleThemeMode,
         getTabMaintenance,
       }}
     >
