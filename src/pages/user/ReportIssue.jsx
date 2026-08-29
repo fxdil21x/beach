@@ -290,8 +290,16 @@ export default function UserReportIssue() {
                   </div>
                 )}
 
-                <Button type="submit" disabled={loading} className="w-full py-4 text-base">
-                  {loading ? t('common.loading') : t('report.submitButton')}
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 text-base shadow-md hover:brightness-110 transition-all cursor-pointer text-white"
+                  style={{
+                    backgroundColor: accentColor,
+                    boxShadow: `0 4px 14px ${appearance.glowColor || 'rgba(2, 132, 199, 0.35)'}`,
+                  }}
+                >
+                  {loading ? t('common.loading', 'Submitting...') : t('report.submit', 'Submit Report')}
                 </Button>
               </form>
             )}

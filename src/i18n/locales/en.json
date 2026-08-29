@@ -230,6 +230,7 @@
     "retakePhoto": "Retake Photo",
     "photoOrDescription": "Please add a photo or description",
     "submit": "Submit Report",
+    "submitButton": "Submit Report",
     "submitSuccess": "Report submitted successfully. Thank you!",
     "location": "Location",
     "locationCaptured": "Location captured with this report",
