@@ -318,7 +318,7 @@ export default function Services() {
                         }}
                       >
                         <Phone className="h-3.5 w-3.5" />
-                        <span>Call ({item.phone})</span>
+                        <span>{item.phone}</span>
                       </a>
                     </div>
                   </div>
