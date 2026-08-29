@@ -132,9 +132,83 @@ export default function ThemeColorCustomizer({
   };
 
   const handleColorChange = (key, value) => {
+    let components = Array.isArray(themeSettings.components)
+      ? [...themeSettings.components]
+      : [
+          {
+            id: 'nav',
+            name: 'Bottom Menu Bar',
+            type: 'navigation',
+            style: themeSettings.dockStyle || 'floating',
+            options: ['floating', 'flush'],
+            active: true,
+          },
+          {
+            id: 'header',
+            name: 'Top Header Bar',
+            type: 'header',
+            style: themeSettings.headerStyle || 'glass',
+            options: ['glass', 'minimal', 'solid'],
+            active: true,
+          },
+          {
+            id: 'cards',
+            name: 'Card & Surface Containers',
+            type: 'surface',
+            style: themeSettings.cardRadius || 'rounded-2xl',
+            options: ['rounded-xl', 'rounded-2xl', 'rounded-3xl'],
+            active: true,
+          },
+        ];
+
+    if (key === 'dockStyle') {
+      const idx = components.findIndex((c) => c.id === 'nav');
+      if (idx !== -1) {
+        components[idx] = { ...components[idx], style: value };
+      } else {
+        components.push({
+          id: 'nav',
+          name: 'Bottom Menu Bar',
+          type: 'navigation',
+          style: value,
+          options: ['floating', 'flush'],
+          active: true,
+        });
+      }
+    } else if (key === 'cardRadius') {
+      const idx = components.findIndex((c) => c.id === 'cards');
+      if (idx !== -1) {
+        components[idx] = { ...components[idx], style: value };
+      } else {
+        components.push({
+          id: 'cards',
+          name: 'Card & Surface Containers',
+          type: 'surface',
+          style: value,
+          options: ['rounded-xl', 'rounded-2xl', 'rounded-3xl'],
+          active: true,
+        });
+      }
+    } else if (key === 'headerStyle') {
+      const idx = components.findIndex((c) => c.id === 'header');
+      if (idx !== -1) {
+        components[idx] = { ...components[idx], style: value };
+      } else {
+        components.push({
+          id: 'header',
+          name: 'Top Header Bar',
+          type: 'header',
+          style: value,
+          options: ['glass', 'minimal', 'solid'],
+          active: true,
+        });
+      }
+    }
+
     onChangeTheme({
       ...themeSettings,
       [key]: value,
+      components,
     });
   };
 

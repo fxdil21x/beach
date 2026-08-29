@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import axios from '../api/axios.js';
 
 const FeatureContext = createContext(null);
@@ -16,6 +15,32 @@ const DEFAULT_APPEARANCE = {
   dockStyle: 'floating',
   headerStyle: 'glass',
   glowMode: 'vibrant',
+  components: [
+    {
+      id: 'nav',
+      name: 'Bottom Menu Bar',
+      type: 'navigation',
+      style: 'floating',
+      options: ['floating', 'flush'],
+      active: true,
+    },
+    {
+      id: 'header',
+      name: 'Top Header Bar',
+      type: 'header',
+      style: 'glass',
+      options: ['glass', 'minimal', 'solid'],
+      active: true,
+    },
+    {
+      id: 'cards',
+      name: 'Card & Surface Containers',
+      type: 'surface',
+      style: 'rounded-2xl',
+      options: ['rounded-xl', 'rounded-2xl', 'rounded-3xl'],
+      active: true,
+    },
+  ],
 };
 
 export function applyGlobalTheme(appearance) {
@@ -23,19 +48,29 @@ export function applyGlobalTheme(appearance) {
   const root = document.documentElement;
   const current = appearance || DEFAULT_APPEARANCE;
 
+  // Extract from components array if available with flat fallbacks
+  const components = Array.isArray(current.components) ? current.components : [];
+  const navComp = components.find((c) => c.id === 'nav');
+  const cardsComp = components.find((c) => c.id === 'cards');
+  const headerComp = components.find((c) => c.id === 'header');
+
+  const cardRadiusSetting = current.cardRadius || cardsComp?.style || 'rounded-2xl';
+  const dockStyleSetting = current.dockStyle || navComp?.style || 'floating';
+  const headerStyleSetting = current.headerStyle || headerComp?.style || 'glass';
+
   const accent = current.accentColor || '#0284C7';
   const accentSec = current.accentSecondary || '#38BDF8';
   const glow = current.glowColor || 'rgba(2, 132, 199, 0.35)';
   const radius =
-    current.cardRadius === 'rounded-3xl'
+    cardRadiusSetting === 'rounded-3xl'
       ? '24px'
-      : current.cardRadius === 'rounded-xl'
+      : cardRadiusSetting === 'rounded-xl'
       ? '12px'
       : '16px';
   const btnRadius =
-    current.cardRadius === 'rounded-3xl'
+    cardRadiusSetting === 'rounded-3xl'
       ? '16px'
-      : current.cardRadius === 'rounded-xl'
+      : cardRadiusSetting === 'rounded-xl'
       ? '8px'
       : '12px';
 
@@ -51,8 +86,8 @@ export function applyGlobalTheme(appearance) {
 
   root.style.setProperty('--theme-bg', bg);
   root.style.setProperty('--theme-card-bg', cardBg);
-  root.style.setProperty('--theme-dock-style', current.dockStyle || 'floating');
-  root.style.setProperty('--theme-header-style', current.headerStyle || 'glass');
+  root.style.setProperty('--theme-dock-style', dockStyleSetting);
+  root.style.setProperty('--theme-header-style', headerStyleSetting);
 
   if (isDark) {
     root.classList.add('dark');
@@ -126,34 +161,8 @@ export function FeatureProvider({ children }) {
     fetchFeatures();
   }, [fetchFeatures]);
 
-  // Listen for real-time socket feature & appearance updates and storage events
+  // Listen for local appearance change & storage events
   useEffect(() => {
-    let socketInstance = null;
-
-    const handleFeaturesUpdated = (payload) => {
-      if (payload?.settings) {
-        setFeatureSettings((prev) => ({
-          ...prev,
-          ...payload.settings,
-        }));
-        if (payload.settings.appearance) {
-          applyGlobalTheme(payload.settings.appearance);
-          localStorage.setItem('beach_app_theme_settings', JSON.stringify(payload.settings.appearance));
-        }
-      }
-    };
-
-    const handleAppearanceUpdated = (payload) => {
-      if (payload?.appearance) {
-        setFeatureSettings((prev) => ({
-          ...prev,
-          appearance: payload.appearance,
-        }));
-        applyGlobalTheme(payload.appearance);
-        localStorage.setItem('beach_app_theme_settings', JSON.stringify(payload.appearance));
-      }
-    };
-
     const handleDirectThemeChange = (e) => {
       const customAppearance = e?.detail;
       if (customAppearance) {
@@ -185,28 +194,9 @@ export function FeatureProvider({ children }) {
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('beach:appearance-changed', handleDirectThemeChange);
 
-    const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL
-      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-      : 'https://beach-verification-backend.onrender.com';
-
-    try {
-      socketInstance = io(SOCKET_SERVER_URL, {
-        path: '/api/socket.io',
-        withCredentials: true,
-        transports: ['websocket'],
-      });
-      socketInstance.on('features:updated', handleFeaturesUpdated);
-      socketInstance.on('appearance:updated', handleAppearanceUpdated);
-    } catch (e) {
-      console.error('FeatureContext socket error:', e);
-    }
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('beach:appearance-changed', handleDirectThemeChange);
-      if (socketInstance) {
-        socketInstance.disconnect();
-      }
     };
   }, []);
 

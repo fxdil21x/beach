@@ -41,7 +41,13 @@ export default function IphoneScreenMockup({
 }) {
   const isLight = themeSettings.themeMode === 'light';
   const accent = themeSettings.accentColor || '#0284C7';
-  const dockStyle = themeSettings.dockStyle || 'floating';
+  const accentSec = themeSettings.accentSecondary || '#38BDF8';
+  const components = Array.isArray(themeSettings.components) ? themeSettings.components : [];
+  const navComp = components.find((c) => c.id === 'nav');
+  const cardsComp = components.find((c) => c.id === 'cards');
+
+  const dockStyle = themeSettings.dockStyle || navComp?.style || 'floating';
+  const rawCardRadius = themeSettings.cardRadius || cardsComp?.style || 'rounded-2xl';
 
   // Dynamic Theme Colors based directly on isLight mode
   const bg = isLight ? '#F8FAFC' : (themeSettings.bgColor || '#090A0F');
@@ -53,15 +59,15 @@ export default function IphoneScreenMockup({
   const glow = themeSettings.glowColor || 'rgba(2, 132, 199, 0.35)';
 
   // Exact Card Radius Mapping
-  const cardRadius = themeSettings.cardRadius === 'rounded-3xl'
+  const cardRadius = rawCardRadius === 'rounded-3xl'
     ? 'rounded-3xl'
-    : themeSettings.cardRadius === 'rounded-xl'
+    : rawCardRadius === 'rounded-xl'
     ? 'rounded-xl'
     : 'rounded-2xl';
 
-  const btnRadius = themeSettings.cardRadius === 'rounded-3xl'
+  const btnRadius = rawCardRadius === 'rounded-3xl'
     ? 'rounded-2xl'
-    : themeSettings.cardRadius === 'rounded-xl'
+    : rawCardRadius === 'rounded-xl'
     ? 'rounded-md'
     : 'rounded-xl';
 

@@ -36,6 +36,32 @@ const DEFAULT_THEME = {
   dockStyle: 'floating',
   headerStyle: 'glass',
   glowMode: 'vibrant',
+  components: [
+    {
+      id: 'nav',
+      name: 'Bottom Menu Bar',
+      type: 'navigation',
+      style: 'floating',
+      options: ['floating', 'flush'],
+      active: true,
+    },
+    {
+      id: 'header',
+      name: 'Top Header Bar',
+      type: 'header',
+      style: 'glass',
+      options: ['glass', 'minimal', 'solid'],
+      active: true,
+    },
+    {
+      id: 'cards',
+      name: 'Card & Surface Containers',
+      type: 'surface',
+      style: 'rounded-2xl',
+      options: ['rounded-xl', 'rounded-2xl', 'rounded-3xl'],
+      active: true,
+    },
+  ],
 };
 
 const USER_SCREENS = [
