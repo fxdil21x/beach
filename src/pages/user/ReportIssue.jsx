@@ -347,13 +347,16 @@ export default function UserReportIssue() {
                   <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-3 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-gray-700">Official Admin Response Status:</span>
-                      <span className={`font-bold px-2 py-0.5 rounded-md ${
-                        r.status === 'RESOLVED'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : r.status === 'IN_PROGRESS'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}>
+                      <span
+                        className="font-bold px-2 py-0.5 rounded-md transition-colors"
+                        style={
+                          r.status === 'RESOLVED'
+                            ? { backgroundColor: '#d1fae5', color: '#065f46' }
+                            : r.status === 'IN_PROGRESS'
+                            ? { backgroundColor: `${accentColor}20`, color: accentColor }
+                            : { backgroundColor: '#fef3c7', color: '#92400e' }
+                        }
+                      >
                         {r.status === 'OPEN' && '⏳ PENDING REVIEW'}
                         {r.status === 'IN_PROGRESS' && '🚨 IN PROGRESS'}
                         {r.status === 'RESOLVED' && '✅ RESOLVED'}
