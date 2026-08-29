@@ -338,7 +338,13 @@ export default function Services() {
                   >
                     <div>
                       {/* Restaurant Cover */}
-                      <div className="relative mb-2.5 overflow-hidden rounded-xl bg-orange-50 aspect-video flex items-center justify-center border border-orange-100">
+                      <div
+                        className="relative mb-2.5 overflow-hidden rounded-xl aspect-video flex items-center justify-center border"
+                        style={{
+                          backgroundColor: `${accentColor}10`,
+                          borderColor: `${accentColor}25`,
+                        }}
+                      >
                         {item.image ? (
                           <img
                             src={item.image}
@@ -346,7 +352,7 @@ export default function Services() {
                             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <Utensils className="h-7 w-7 text-orange-500" />
+                          <Utensils className="h-7 w-7" style={{ color: accentColor }} />
                         )}
                         {item.restaurantDetails?.dietaryType === 'veg' || item.restaurantDetails?.isPureVeg ? (
                           <span className="absolute top-1.5 left-1.5 rounded-md bg-green-600 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
