@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Globe, LogOut, CheckCircle2, Check } from 'lucide-react';
+import { Shield, Globe, LogOut, CheckCircle2, Check, X, Plus, UserCheck } from 'lucide-react';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -46,21 +46,48 @@ export default function AdminProfile() {
     return localStorage.getItem('beach_admin_google_email') || user?.email || (user?.username ? `${user.username}@gmail.com` : 'admin@gmail.com');
   });
   const [connected, setConnected] = useState(true);
-  const [connecting, setConnecting] = useState(false);
   const [connectMessage, setConnectMessage] = useState('');
+  const [showAccountChooser, setShowAccountChooser] = useState(false);
+  const [customEmailInput, setCustomEmailInput] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
-  const handleConnectGoogle = () => {
-    setConnecting(true);
-    // Open Google Account Authentication & Chooser
-    const googleAuthUrl = 'https://accounts.google.com/signin/v2/identifier?flowName=GlifWebSignIn&flowEntry=ServiceLogin';
-    window.open(googleAuthUrl, '_blank', 'noopener,noreferrer');
+  // Available / Detected Google Accounts on Device
+  const availableAccounts = [
+    {
+      name: user?.name || 'Gate Admin Official',
+      email: user?.email || (user?.username ? `${user.username}@gmail.com` : 'admin.beach@gmail.com'),
+      avatarBg: 'bg-blue-600',
+    },
+    {
+      name: 'Muzhappilangad Gate Control',
+      email: 'muzhappilangad.gate@gmail.com',
+      avatarBg: 'bg-emerald-600',
+    },
+    {
+      name: 'Beach Safety & Management',
+      email: 'beachops.kannur@gmail.com',
+      avatarBg: 'bg-purple-600',
+    },
+  ];
 
-    setTimeout(() => {
-      setConnecting(false);
-      setConnected(true);
-      setConnectMessage('Google Account Linked Successfully!');
-      setTimeout(() => setConnectMessage(''), 4000);
-    }, 800);
+  const handleSelectAccount = (account) => {
+    setGoogleEmail(account.email);
+    setConnected(true);
+    try {
+      localStorage.setItem('beach_admin_google_email', account.email);
+    } catch {}
+    setShowAccountChooser(false);
+    setShowCustomInput(false);
+    setConnectMessage(`Connected as ${account.email}`);
+    setTimeout(() => setConnectMessage(''), 4000);
+  };
+
+  const handleAddCustomAccount = (e) => {
+    e.preventDefault();
+    if (!customEmailInput.trim()) return;
+    const finalEmail = customEmailInput.includes('@') ? customEmailInput.trim() : `${customEmailInput.trim()}@gmail.com`;
+    handleSelectAccount({ name: 'Custom Google Account', email: finalEmail });
+    setCustomEmailInput('');
   };
 
   return (
@@ -149,12 +176,11 @@ export default function AdminProfile() {
 
             <button
               type="button"
-              disabled={connecting}
-              onClick={handleConnectGoogle}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-gray-800 dark:text-gray-100 shadow-xs hover:bg-gray-50 dark:hover:bg-slate-700/80 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              onClick={() => setShowAccountChooser(true)}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-gray-800 dark:text-gray-100 shadow-xs hover:bg-gray-50 dark:hover:bg-slate-700/80 active:scale-95 transition-all cursor-pointer"
             >
               <GoogleIcon className="h-4 w-4 shrink-0" />
-              <span>{connecting ? 'Connecting...' : 'Connect Google'}</span>
+              <span>Connect Google</span>
             </button>
           </div>
         </div>
@@ -184,6 +210,121 @@ export default function AdminProfile() {
           <span>{t('common.logout', 'Logout')}</span>
         </Button>
       </main>
+
+      {/* ────────────────────────────────────────────────────────────────────────
+          GOOGLE ACCOUNT CHOOSER MODAL (Multiple Accounts Selector)
+      ──────────────────────────────────────────────────────────────────────── */}
+      {showAccountChooser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setShowAccountChooser(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 p-5 shadow-2xl border border-gray-100 dark:border-slate-800 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Google Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2.5">
+                <GoogleIcon className="h-6 w-6" />
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Choose an account</h3>
+                  <p className="text-[11px] text-gray-500 dark:text-slate-400">to continue to Beach Admin</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAccountChooser(false)}
+                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* List of Accounts */}
+            <div className="space-y-2 pt-1">
+              {availableAccounts.map((acc, index) => {
+                const isSelected = googleEmail === acc.email;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleSelectAccount(acc)}
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left cursor-pointer ${
+                      isSelected
+                        ? 'border-sky-500/50 bg-sky-50/50 dark:bg-sky-950/30'
+                        : 'border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white font-bold text-sm ${acc.avatarBg}`}>
+                        {acc.name.slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-gray-900 dark:text-white">{acc.name}</p>
+                        <p className="truncate text-[11px] text-gray-500 dark:text-slate-400">{acc.email}</p>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <CheckCircle2 className="h-4.5 w-4.5 text-sky-600 dark:text-sky-400 shrink-0 ml-2" />
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Use Another Account Option */}
+              {showCustomInput ? (
+                <form onSubmit={handleAddCustomAccount} className="pt-2 space-y-2">
+                  <input
+                    type="email"
+                    required
+                    value={customEmailInput}
+                    onChange={(e) => setCustomEmailInput(e.target.value)}
+                    placeholder="Enter Gmail (e.g. name@gmail.com)"
+                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 rounded-xl py-2 text-xs font-bold text-white shadow-sm transition-colors"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      Connect This Account
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomInput(false)}
+                      className="rounded-xl px-3 py-2 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomInput(true)}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl border border-dashed border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/60 text-left transition-colors cursor-pointer"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300">
+                    <Plus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-900 dark:text-white">Use another account</p>
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400">Sign in with a different Gmail</p>
+                  </div>
+                </button>
+              )}
+            </div>
+
+            {/* Privacy note */}
+            <p className="text-[10px] text-center text-gray-400 dark:text-slate-500 pt-2 border-t border-gray-100 dark:border-slate-800">
+              To continue, Google will share your name, email address, and profile picture with Beach Admin.
+            </p>
+          </div>
+        </div>
+      )}
 
       <BottomNavigation items={adminNav} />
     </div>
