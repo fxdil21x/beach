@@ -84,13 +84,13 @@ export default function IphoneScreenMockup({
 
           {/* Screen Viewport */}
           <div
-            className="relative flex h-[650px] flex-col overflow-hidden rounded-[42px] transition-colors duration-300"
+            className={`relative flex h-[650px] flex-col overflow-hidden rounded-[42px] transition-colors duration-300 ${!isLight ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}
             style={{ backgroundColor: bg }}
           >
             {/* Top iOS Status Bar & Dynamic Island */}
             <div
               className={`relative z-30 flex items-center justify-between px-6 pt-3 text-[11px] font-semibold transition-colors duration-300 ${
-                isLight ? 'bg-white/95 text-slate-800' : 'bg-[#090A0F] text-zinc-200'
+                isLight ? 'bg-white/95 text-slate-800' : 'bg-slate-950 text-zinc-200'
               }`}
             >
               <span>9:41</span>
@@ -110,7 +110,7 @@ export default function IphoneScreenMockup({
               className={`relative z-20 flex items-center justify-between border-b px-3.5 py-2 backdrop-blur-md shadow-2xs transition-colors duration-300 ${
                 isLight
                   ? 'border-slate-200/90 bg-white/95 text-slate-900'
-                  : 'border-zinc-800/80 bg-[#121214]/95 text-white'
+                  : 'border-slate-800/80 bg-slate-900/95 text-white'
               }`}
             >
               <div className="min-w-0 flex-1 text-left">
