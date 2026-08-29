@@ -145,8 +145,8 @@ export default function UserReportIssue() {
                     <span
                       className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors"
                       style={{
-                        backgroundColor: activeTab === 'my-reports' ? `${accentColor}18` : 'rgba(226, 232, 240, 0.8)',
-                        color: activeTab === 'my-reports' ? accentColor : '#475569',
+                        backgroundColor: activeTab === 'my-reports' ? 'rgba(255, 255, 255, 0.28)' : 'rgba(226, 232, 240, 0.8)',
+                        color: activeTab === 'my-reports' ? '#ffffff' : '#475569',
                       }}
                     >
                       {myReports.length}

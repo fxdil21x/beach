@@ -51,18 +51,19 @@ export function TabsTrigger({ value, children, className = '', disabled = false,
       onClick={() => handleTabChange(value)}
       className={`relative inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-colors duration-150 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer ${
         isActive
-          ? 'font-bold'
+          ? 'text-white font-bold'
           : 'text-slate-600 hover:text-slate-900'
       } ${className}`}
-      style={{
-        color: isActive ? accentColor : undefined,
-      }}
     >
       {isActive && (
         <motion.div
           layoutId="activeTabPill"
           transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-          className="absolute inset-0 rounded-lg bg-white shadow-sm"
+          className="absolute inset-0 rounded-lg shadow-sm"
+          style={{
+            backgroundColor: accentColor,
+            boxShadow: `0 3px 12px ${appearance.glowColor || 'rgba(2, 132, 199, 0.35)'}`,
+          }}
         />
       )}
       <motion.span
