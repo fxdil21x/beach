@@ -41,10 +41,10 @@ export default function RecentEntries() {
   }, [visitorEntries]);
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('admin.recentTitle')} targetRole="admin" />
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6 pb-28">
-        <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white sm:p-6">
+        <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white sm:p-6 shadow-sm">
           <h2 className="text-xl font-bold leading-snug sm:text-2xl">{t('admin.recentTitle')}</h2>
           <p className="mt-2 text-sm opacity-90 sm:text-base">{t('admin.visitorSummary')}</p>
         </div>
@@ -53,24 +53,24 @@ export default function RecentEntries() {
           <RecentEntriesSkeleton />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-sm transition-colors">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-700">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/40">
                   <CheckCircle2 className="h-6 w-6" strokeWidth={2} />
                 </div>
-                <p className="text-sm font-semibold text-gray-700">{t('admin.approvedCount')}</p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">{t('admin.approvedCount')}</p>
               </div>
-              <p className="mt-4 text-4xl font-bold text-gray-900">{counts.approved}</p>
+              <p className="mt-4 text-4xl font-bold text-gray-900 dark:text-white">{counts.approved}</p>
             </div>
 
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-sm transition-colors">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-700">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/40">
                   <XCircle className="h-6 w-6" strokeWidth={2} />
                 </div>
-                <p className="text-sm font-semibold text-gray-700">{t('admin.rejectedCount')}</p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">{t('admin.rejectedCount')}</p>
               </div>
-              <p className="mt-4 text-4xl font-bold text-gray-900">{counts.rejected}</p>
+              <p className="mt-4 text-4xl font-bold text-gray-900 dark:text-white">{counts.rejected}</p>
             </div>
           </div>
         )}
