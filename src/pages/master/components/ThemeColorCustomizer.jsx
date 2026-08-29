@@ -9,6 +9,11 @@ import {
   RotateCcw,
   Save,
   Sliders,
+  Navigation,
+  RectangleHorizontal,
+  Square,
+  Sparkle,
+  Box,
 } from 'lucide-react';
 
 export const THEME_PRESETS = [
@@ -327,6 +332,144 @@ export default function ThemeColorCustomizer({
             className="h-6 w-6 rounded-md shadow-xs shrink-0 border border-white/10"
             style={{ backgroundColor: themeSettings.accentColor || '#7C3AED' }}
           />
+        </div>
+      </div>
+
+      {/* 5. Menu Bar & Navigation Style */}
+      <div className="rounded-2xl border border-zinc-800/80 bg-[#121214] p-5 shadow-xl space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Navigation className="h-4 w-4 text-sky-400" />
+            <h3 className="text-sm font-bold text-white">Menu Bar Navigation Design</h3>
+          </div>
+          <span className="text-xs font-medium text-zinc-400">
+            {themeSettings.dockStyle === 'flush' ? 'Square Edge-to-Edge' : 'Rounded Floating Capsule'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleColorChange('dockStyle', 'floating')}
+            className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all cursor-pointer ${
+              (themeSettings.dockStyle || 'floating') === 'floating'
+                ? 'border-blue-500 bg-zinc-800/90 shadow-md ring-2 ring-blue-500/20'
+                : 'border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800/60'
+            }`}
+          >
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <Sparkle className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-white">Rounded Floating Capsule</p>
+                {(themeSettings.dockStyle || 'floating') === 'floating' && (
+                  <Check className="h-4 w-4 text-blue-400 shrink-0 ml-1" />
+                )}
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                Floating island pill with rounded borders, backdrop glass blur & elevated depth.
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleColorChange('dockStyle', 'flush')}
+            className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all cursor-pointer ${
+              themeSettings.dockStyle === 'flush'
+                ? 'border-blue-500 bg-zinc-800/90 shadow-md ring-2 ring-blue-500/20'
+                : 'border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800/60'
+            }`}
+          >
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/20">
+              <RectangleHorizontal className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-white">Square Edge-to-Edge Bar</p>
+                {themeSettings.dockStyle === 'flush' && (
+                  <Check className="h-4 w-4 text-blue-400 shrink-0 ml-1" />
+                )}
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                Full-width squared bottom dock firmly aligned against the bottom edge.
+              </p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* 6. Component & Card Corner Radius */}
+      <div className="rounded-2xl border border-zinc-800/80 bg-[#121214] p-5 shadow-xl space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Box className="h-4 w-4 text-emerald-400" />
+            <h3 className="text-sm font-bold text-white">Corner Roundness (Cards & Buttons)</h3>
+          </div>
+          <span className="text-xs font-medium text-zinc-400">
+            {themeSettings.cardRadius === 'rounded-xl'
+              ? 'Sharp (12px)'
+              : themeSettings.cardRadius === 'rounded-3xl'
+              ? 'Pill (24px)'
+              : 'Smooth (16px - Default)'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            {
+              id: 'rounded-xl',
+              name: 'Sharp / Subtle',
+              radius: '12px',
+              desc: 'Crisp, structured modern corners',
+            },
+            {
+              id: 'rounded-2xl',
+              name: 'Smooth Rounded',
+              radius: '16px',
+              tag: 'Default',
+              desc: 'Balanced natural curves',
+            },
+            {
+              id: 'rounded-3xl',
+              name: 'Ultra Curved',
+              radius: '24px',
+              desc: 'Soft pill-like aesthetics',
+            },
+          ].map((item) => {
+            const isSelected = (themeSettings.cardRadius || 'rounded-2xl') === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleColorChange('cardRadius', item.id)}
+                className={`flex flex-col justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                  isSelected
+                    ? 'border-blue-500 bg-zinc-800/90 shadow-md ring-2 ring-blue-500/20'
+                    : 'border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800/60'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div
+                    className={`h-5 w-8 border border-white/30 ${item.id} bg-white/10`}
+                  />
+                  {isSelected && <Check className="h-3.5 w-3.5 text-blue-400" />}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-white">{item.name}</p>
+                    {item.tag && (
+                      <span className="rounded bg-blue-500/20 px-1 py-0.2 text-[9px] font-semibold text-blue-400">
+                        {item.tag}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">{item.desc}</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
