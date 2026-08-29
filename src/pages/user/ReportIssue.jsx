@@ -123,15 +123,15 @@ export default function UserReportIssue() {
   const paginatedMyReports = myReports.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <TabMaintenanceOverlay tabId="report" fallbackTitle="Issue Reporting Under Maintenance" />
       <MobileHeader title={t('report.title')} showLanguage />
 
       {/* Top Header Tabs & Justified Pagination Bar */}
-      <div className="border-b border-slate-200 bg-white px-3.5 py-2 shrink-0">
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 shrink-0 transition-colors">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }} className="w-auto">
-            <TabsList className="h-10 w-auto bg-slate-100 p-1 rounded-xl gap-1">
+            <TabsList className="h-10 w-auto bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl gap-1">
               <TabsTrigger value="submit" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
                 <PlusCircle className="h-3.5 w-3.5 shrink-0" />
                 <span>{t('report.submit')}</span>
@@ -171,7 +171,7 @@ export default function UserReportIssue() {
                 Prev
               </Button>
 
-              <span className="text-[11px] font-bold text-slate-600 px-1.5 whitespace-nowrap">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 px-1.5 whitespace-nowrap">
                 {currentPage} / {totalPages}
               </span>
 
@@ -211,10 +211,10 @@ export default function UserReportIssue() {
         {activeTab === 'submit' && (
           <div>
             {success ? (
-              <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-6 text-center shadow-sm">
                 <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-emerald-500" />
-                <h3 className="text-lg font-bold text-gray-900">{t('report.successTitle')}</h3>
-                <p className="mt-1 text-sm text-gray-600">{t('report.successHint')}</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('report.successTitle')}</h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">{t('report.successHint')}</p>
                 <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
                   <Button onClick={() => setSuccess(false)}>{t('report.submitAnother')}</Button>
                   {user && (
@@ -225,9 +225,9 @@ export default function UserReportIssue() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
+              <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-sm">
                 <div className="w-full space-y-1.5">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                     {t('report.category')}
                   </label>
                   <Select value={form.category} onValueChange={(val) => setForm({ ...form, category: val })}>
@@ -252,7 +252,7 @@ export default function UserReportIssue() {
                 />
 
                 <div>
-                  <span className="block text-sm font-medium text-gray-700 mb-1">Add Photo (Optional)</span>
+                  <span className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Add Photo (Optional)</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -265,17 +265,16 @@ export default function UserReportIssue() {
                         setPhotoPreview(null);
                       }
                     }}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:rounded-xl file:border-0 file:bg-orange-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-orange-700 hover:file:bg-orange-100"
+                    className="block w-full text-xs text-gray-500 dark:text-slate-400 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 dark:file:bg-slate-800 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 cursor-pointer"
                   />
 
                   {photoPreview && (
-                    <div className="relative mt-3 block overflow-hidden rounded-xl border border-slate-200">
-                      <img src={photoPreview} alt="Upload preview" className="h-44 w-full object-cover" />
+                    <div className="relative mt-2 inline-block">
+                      <img src={photoPreview} alt="Preview" className="h-24 w-24 rounded-xl object-cover border border-gray-200 dark:border-slate-700 shadow-sm" />
                       <button
                         type="button"
                         onClick={() => { setPhoto(null); setPhotoPreview(null); }}
-                        className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white transition-transform hover:scale-110 active:scale-95"
-                        title="Remove photo"
+                        className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm hover:bg-red-600"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -284,7 +283,7 @@ export default function UserReportIssue() {
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-600">
+                  <div className="flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/60">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <p>{error}</p>
                   </div>
@@ -312,10 +311,10 @@ export default function UserReportIssue() {
             {reportsLoading ? (
               <ReportsSkeleton count={2} />
             ) : myReports.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
-                <FileText className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-                <p className="font-semibold text-gray-700">No reported issues yet</p>
-                <p className="mt-1 text-xs text-gray-500">Reports submitted while logged in will appear here with live updates from gate admins.</p>
+              <div className="rounded-2xl border border-dashed border-gray-300 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-gray-500 dark:text-slate-400">
+                <FileText className="mx-auto mb-2 h-8 w-8 text-gray-400 dark:text-slate-500" />
+                <p className="font-semibold text-gray-700 dark:text-slate-200">No reported issues yet</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Reports submitted while logged in will appear here with live updates from gate admins.</p>
                 <Button
                   type="button"
                   onClick={() => setActiveTab('submit')}
@@ -326,16 +325,16 @@ export default function UserReportIssue() {
               </div>
             ) : (
               paginatedMyReports.map((r) => (
-                <div key={r._id} className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 space-y-3">
+                <div key={r._id} className="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-gray-100 dark:border-slate-800 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-gray-900">{r.category}</p>
-                      <p className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleString()}</p>
+                      <p className="font-bold text-gray-900 dark:text-white">{r.category}</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{new Date(r.createdAt).toLocaleString()}</p>
                     </div>
                     <StatusBadge status={r.status} label={t(`report.status.${r.status}`, r.status)} />
                   </div>
 
-                  {r.description && <p className="text-sm text-gray-700">{r.description}</p>}
+                  {r.description && <p className="text-sm text-gray-700 dark:text-slate-300">{r.description}</p>}
 
                   {r.photoUrl && (
                     <button
@@ -352,9 +351,9 @@ export default function UserReportIssue() {
                     </button>
                   )}
 
-                  <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-3 space-y-2 text-xs">
+                  <div className="rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50/80 dark:bg-slate-800/50 p-3 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-700">Official Admin Response Status:</span>
+                      <span className="font-semibold text-gray-700 dark:text-slate-300">Official Admin Response Status:</span>
                       <span
                         className="font-bold px-2 py-0.5 rounded-md transition-colors"
                         style={
@@ -371,13 +370,13 @@ export default function UserReportIssue() {
                       </span>
                     </div>
 
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-gray-600 dark:text-slate-400 leading-relaxed">
                       {r.status === 'OPEN' && 'Your report has been received by Gate Officers and is currently pending review.'}
                       {r.status === 'IN_PROGRESS' && 'Gate security officers are actively investigating and resolving this issue on site.'}
                       {r.status === 'RESOLVED' && 'This issue has been inspected, addressed, and officially resolved by beach management. Thank you!'}
                     </p>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-gray-200/60 text-[11px] text-gray-400">
+                    <div className="flex items-center justify-between pt-1 border-t border-gray-200/60 dark:border-slate-700 text-[11px] text-gray-400 dark:text-slate-500">
                       <span>Report ID: #{r._id?.slice(-6).toUpperCase()}</span>
                       <span>Last Updated: {new Date(r.updatedAt || r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>

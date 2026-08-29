@@ -182,7 +182,7 @@ export default function Services() {
   };
 
   return (
-    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-slate-50">
+    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors">
       <TabMaintenanceOverlay tabId="services" fallbackTitle="Services & Rides Under Maintenance" />
       <MobileHeader title={t('nav.services', 'Services')} showLanguage />
 
@@ -198,18 +198,18 @@ export default function Services() {
 
         {/* Search Input */}
         <div className="relative mb-3.5">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search auto, driver, restaurant, food..."
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-4 text-xs sm:text-sm font-medium text-gray-800 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+            className="w-full rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-4 text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition-all placeholder:text-gray-400 dark:placeholder:text-slate-500"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -225,7 +225,7 @@ export default function Services() {
               className={`shrink-0 ${cardRadius} px-3.5 py-1.5 text-xs font-semibold transition-all select-none ${
                 selectedCategory === cat.id
                   ? 'text-white font-bold'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800'
               }`}
               style={{
                 backgroundColor: selectedCategory === cat.id ? accentColor : undefined,
@@ -240,10 +240,10 @@ export default function Services() {
         {loading ? (
           <ServicesSkeleton count={4} />
         ) : filteredServices.length === 0 ? (
-          <div className="my-8 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center">
-            <Search className="mx-auto h-8 w-8 text-gray-400" />
-            <p className="mt-2 text-xs font-bold text-gray-700">No listings found</p>
-            <p className="mt-0.5 text-[11px] text-gray-500">
+          <div className="my-8 rounded-2xl border border-dashed border-gray-300 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center">
+            <Search className="mx-auto h-8 w-8 text-gray-400 dark:text-slate-500" />
+            <p className="mt-2 text-xs font-bold text-gray-700 dark:text-slate-200">No listings found</p>
+            <p className="mt-0.5 text-[11px] text-gray-500 dark:text-slate-400">
               {searchQuery
                 ? 'Try adjusting your search keywords.'
                 : 'No services have been added in this category by Master Admin yet.'}
@@ -257,11 +257,11 @@ export default function Services() {
                 return (
                   <div
                     key={item._id}
-                    className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all hover:shadow-md"
+                    className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm transition-all hover:shadow-md"
                   >
                     <div>
                       {/* Top: Auto Photo / Avatar */}
-                      <div className="relative mb-2.5 overflow-hidden rounded-xl bg-amber-50 aspect-video flex items-center justify-center border border-amber-100">
+                      <div className="relative mb-2.5 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/80 aspect-video flex items-center justify-center border border-slate-200 dark:border-slate-700/80">
                         {item.image ? (
                           <img
                             src={item.image}
@@ -271,13 +271,13 @@ export default function Services() {
                         ) : (
                           <span className="text-3xl">🛺</span>
                         )}
-                        <span className="absolute top-1.5 right-1.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold text-gray-700 shadow-xs border border-gray-200 capitalize">
+                        <span className="absolute top-1.5 right-1.5 rounded-md bg-white/95 dark:bg-slate-900/95 px-1.5 py-0.5 text-[9px] font-bold text-gray-700 dark:text-slate-300 shadow-xs border border-gray-200 dark:border-slate-700 capitalize">
                           {item.transportDetails?.vehicleType?.replace('_', ' ') || 'Auto'}
                         </span>
                       </div>
 
                       {/* Driver Name & Reg No */}
-                      <h3 className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                      <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
                         {item.transportDetails?.driverName || item.name}
                       </h3>
 
@@ -292,21 +292,21 @@ export default function Services() {
                         >
                           {item.transportDetails?.vehicleNumber || 'KL-13-AUTO'}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-600">
+                        <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           Live
                         </span>
                       </div>
 
                       {/* Stand Location */}
-                      <p className="mt-1.5 text-[10px] text-gray-500 truncate flex items-center gap-1">
-                        <MapPin className="h-3 w-3 text-gray-400 shrink-0" />
+                      <p className="mt-1.5 text-[10px] text-gray-500 dark:text-slate-400 truncate flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-gray-400 dark:text-slate-500 shrink-0" />
                         <span className="truncate">{item.transportDetails?.standLocation || item.location}</span>
                       </p>
                     </div>
 
                     {/* Direct Call Button */}
-                    <div className="mt-3 pt-2 border-t border-gray-100">
+                    <div className="mt-3 pt-2 border-t border-gray-100 dark:border-slate-800">
                       <a
                         href={`tel:${String(item.phone || '').replace(/[^\d+]/g, '')}`}
                         onClick={(e) => handleMakeCall(item, e)}
@@ -333,7 +333,7 @@ export default function Services() {
                       setSelectedRestaurant(item);
                       setSelectedFoodCategory('ALL');
                     }}
-                    className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all hover:shadow-md cursor-pointer"
+                    className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm transition-all hover:shadow-md cursor-pointer"
                   >
                     <div>
                       {/* Restaurant Cover */}
@@ -377,21 +377,21 @@ export default function Services() {
                       </div>
 
                       {/* Name & Cuisines */}
-                      <h3 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:opacity-80 transition-opacity truncate">
+                      <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white group-hover:opacity-80 transition-opacity truncate">
                         {item.name}
                       </h3>
-                      <p className="mt-0.5 text-[10.5px] text-gray-500 truncate">
+                      <p className="mt-0.5 text-[10.5px] text-gray-500 dark:text-slate-400 truncate">
                         {item.restaurantDetails?.cuisineTypes?.join(', ') || 'Malabar, Seafood'}
                       </p>
-                      <p className="mt-1 text-[10px] text-gray-400 truncate flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-gray-400 shrink-0" />
+                      <p className="mt-1 text-[10px] text-gray-400 dark:text-slate-500 truncate flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-gray-400 dark:text-slate-500 shrink-0" />
                         <span className="truncate">{item.restaurantDetails?.openingHours || '11 AM - 11 PM'}</span>
                       </p>
                     </div>
 
                     {/* View Menu Action */}
                     <div
-                      className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-bold"
+                      className="mt-3 pt-2 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold"
                       style={{ color: accentColor }}
                     >
                       <span>View Food Menu</span>
@@ -406,11 +406,11 @@ export default function Services() {
                 <div
                   key={item._id}
                   onClick={() => setSelectedResort(item)}
-                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all hover:border-orange-300 hover:shadow-md cursor-pointer"
+                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm transition-all hover:shadow-md cursor-pointer"
                 >
                   <div>
                     {/* Cover */}
-                    <div className="relative mb-2.5 overflow-hidden rounded-xl bg-purple-50 aspect-video flex items-center justify-center border border-purple-100">
+                    <div className="relative mb-2.5 overflow-hidden rounded-xl bg-purple-50 dark:bg-purple-950/40 aspect-video flex items-center justify-center border border-purple-100 dark:border-purple-900/60">
                       {item.image ? (
                         <img
                           src={item.image}
@@ -418,24 +418,24 @@ export default function Services() {
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <Hotel className="h-7 w-7 text-purple-600" />
+                        <Hotel className="h-7 w-7 text-purple-600 dark:text-purple-400" />
                       )}
                       <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/70 backdrop-blur-xs px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-300">
                         ₹{item.stayDetails?.pricePerNight || 2500}/nt
                       </span>
                     </div>
 
-                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                    <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
                       {item.name}
                     </h3>
-                    <p className="mt-0.5 text-[10.5px] text-gray-500 truncate flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-gray-400 shrink-0" />
+                    <p className="mt-0.5 text-[10.5px] text-gray-500 dark:text-slate-400 truncate flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-gray-400 dark:text-slate-500 shrink-0" />
                       <span className="truncate">{item.location}</span>
                     </p>
                   </div>
 
                   {/* Direct Call */}
-                  <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-purple-600">
+                  <div className="mt-3 pt-2 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-purple-600 dark:text-purple-400">
                     <span>View Details</span>
                     <span className="group-hover:translate-x-1 transition-transform">→</span>
                   </div>
