@@ -4,13 +4,13 @@ import React from 'react';
  * Base Skeleton component with animated shimmer background.
  */
 export function Skeleton({ className = '', dark = false, circle = false, ...props }) {
-  const baseBg = dark ? 'bg-zinc-800/80' : 'bg-slate-200/80';
+  const baseBg = dark ? 'bg-zinc-800/80' : 'bg-slate-200/80 dark:bg-slate-800/90';
   const shimmerClass = dark ? 'shimmer-wave-dark' : 'shimmer-wave';
   const shapeClass = circle ? 'rounded-full' : 'rounded-xl';
 
   return (
     <div
-      className={`${baseBg} ${shimmerClass} ${shapeClass} ${className}`}
+      className={`${baseBg} ${shimmerClass} ${shapeClass} ${className} transition-colors`}
       {...props}
     />
   );
@@ -21,7 +21,7 @@ export function Skeleton({ className = '', dark = false, circle = false, ...prop
  */
 export function MyPassSkeleton() {
   return (
-    <div className="w-full rounded-2xl bg-white p-5 shadow-sm border border-slate-100/80 space-y-5 animate-in fade-in duration-200">
+    <div className="w-full rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-slate-100/80 dark:border-slate-800 space-y-5 animate-in fade-in duration-200 transition-colors">
       {/* Show QR instruction header skeleton */}
       <Skeleton className="h-4 w-48 mx-auto" />
 
@@ -31,7 +31,7 @@ export function MyPassSkeleton() {
       </div>
 
       {/* Resident Name & House Details Card skeleton */}
-      <div className="rounded-xl bg-slate-50 p-4 text-center space-y-2 border border-slate-100">
+      <div className="rounded-xl bg-slate-50 dark:bg-slate-800/70 p-4 text-center space-y-2 border border-slate-100 dark:border-slate-700/60 transition-colors">
         <Skeleton className="h-6 w-40 mx-auto" />
         <Skeleton className="h-4 w-32 mx-auto" />
       </div>
@@ -48,7 +48,7 @@ export function MyPassSkeleton() {
  * Shimmer skeleton matching exact design of ResidentSearchCard component
  */
 export function ResidentCardSkeleton({ dark = false }) {
-  const cardBg = dark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white border-slate-100/80 shadow-xs';
+  const cardBg = dark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white dark:bg-slate-900/90 border-slate-100/80 dark:border-slate-800 shadow-xs';
   return (
     <div className={`rounded-2xl border ${cardBg} p-4 sm:p-5 transition-all`}>
       <div className="flex gap-4">
@@ -296,18 +296,18 @@ export function VisitsSkeleton() {
   return (
     <div className="space-y-4 w-full animate-in fade-in duration-200">
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-white p-4 shadow-sm space-y-2 border border-slate-100/80">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm space-y-2 border border-slate-100/80 dark:border-slate-800 transition-colors">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-6 w-28" />
         </div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm space-y-2 border border-slate-100/80">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm space-y-2 border border-slate-100/80 dark:border-slate-800 transition-colors">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-6 w-16" />
         </div>
       </div>
       <div className="space-y-2.5">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100/80 space-y-2">
+          <div key={i} className="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-slate-100/80 dark:border-slate-800 space-y-2 transition-colors">
             <Skeleton className="h-4 w-44" />
           </div>
         ))}
@@ -325,7 +325,7 @@ export function ServicesSkeleton({ count = 4 }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm space-y-3"
+          className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm space-y-3 transition-colors"
         >
           <Skeleton className="aspect-video w-full rounded-xl" />
           <div className="space-y-1.5">
@@ -345,12 +345,12 @@ export function ServicesSkeleton({ count = 4 }) {
 export function ProfileSkeleton() {
   return (
     <div className="space-y-4 w-full animate-in fade-in duration-200">
-      <div className="rounded-2xl bg-white p-5 shadow-sm space-y-3 border border-slate-100/80">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm space-y-3 border border-slate-100/80 dark:border-slate-800 transition-colors">
         <Skeleton className="h-6 w-40" />
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-3 w-20" />
       </div>
-      <div className="rounded-2xl bg-white p-5 shadow-sm space-y-4 border border-slate-100/80">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4 border border-slate-100/80 dark:border-slate-800 transition-colors">
         <div className="flex items-center gap-4">
           <Skeleton className="h-16 w-16 rounded-full" />
           <div className="space-y-2 flex-1">
@@ -370,14 +370,14 @@ export function RecentEntriesSkeleton() {
   return (
     <div className="space-y-4 w-full animate-in fade-in duration-200">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-white p-5 shadow-sm space-y-3 border border-slate-100/80">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm space-y-3 border border-slate-100/80 dark:border-slate-800 transition-colors">
           <div className="flex items-center gap-3">
             <Skeleton className="h-11 w-11 rounded-xl" />
             <Skeleton className="h-4 w-28" />
           </div>
           <Skeleton className="h-8 w-16" />
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm space-y-3 border border-slate-100/80">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm space-y-3 border border-slate-100/80 dark:border-slate-800 transition-colors">
           <div className="flex items-center gap-3">
             <Skeleton className="h-11 w-11 rounded-xl" />
             <Skeleton className="h-4 w-28" />
