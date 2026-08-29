@@ -103,7 +103,7 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
           'relative flex-1 min-w-0 flex flex-col items-center justify-center rounded-full py-0.5 transition-colors duration-150',
           isActive
             ? 'text-white'
-            : 'text-gray-500 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-white'
+            : 'text-neutral-400 hover:text-neutral-200'
         )
       }
     >
@@ -127,11 +127,6 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
                 boxShadow: `0 0 14px ${glowColor}`,
               }}
             />
-          )}
-
-          {/* Inactive Hover / Tap Feedback */}
-          {!isActive && (
-            <div className="absolute inset-0 rounded-full hover:bg-gray-100/80 dark:hover:bg-neutral-800/80 active:scale-90 transition-colors" />
           )}
 
           {/* Animated Tooltip on Desktop Hover */}
