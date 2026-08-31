@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
-import axios from '../api/axios.js';
+import axios, { getSocketServerUrl } from '../api/axios.js';
 import { useAuth } from './AuthContext.jsx';
 import {
   createEmergencyAlarmSound,
@@ -27,8 +27,7 @@ function createPeerConnection(onIceCandidate, onRemoteStream) {
 
 const EmergencyContext = createContext(null);
 
-const rawApiUrl = import.meta.env.VITE_API_URL || 'https://beach-verification-backend.onrender.com';
-const SOCKET_SERVER_URL = rawApiUrl.replace(/\/api\/?$/i, '').replace(/\/+$/, '');
+const SOCKET_SERVER_URL = getSocketServerUrl();
 
 export function EmergencyProvider({ children }) {
   const { user } = useAuth();

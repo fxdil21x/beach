@@ -1,21 +1,36 @@
 import axios from 'axios';
 
-let rawUrl = import.meta.env.VITE_API_URL || 'https://beach-verification-backend.onrender.com/api';
+export const getCleanApiUrl = () => {
+  let raw = import.meta.env.VITE_API_URL || 'https://beach-verification-backend.onrender.com/api';
 
-// Strip accidental environment variable name prefixes (e.g., PUBLIC_API_URL=https://...)
-if (typeof rawUrl === 'string' && rawUrl.includes('=')) {
-  rawUrl = rawUrl.split('=').pop().trim();
-}
+  // Strip accidental environment variable name prefixes or key-value assignments (e.g., PUBLIC_API_URL=https://...)
+  if (typeof raw === 'string' && raw.includes('=')) {
+    raw = raw.split('=').pop().trim();
+  }
+  if (typeof raw === 'string') {
+    raw = raw.replace(/^['"]+|['"]+$/g, '').trim();
+  }
+  if (!/^https?:\/\//i.test(raw)) {
+    raw = raw.includes('localhost') || raw.includes('127.0.0.1')
+      ? `http://${raw}`
+      : `https://${raw}`;
+  }
+  return raw;
+};
 
-if (!/^https?:\/\//i.test(rawUrl)) {
-  rawUrl = rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1')
-    ? `http://${rawUrl}`
-    : `https://${rawUrl}`;
-}
-// Automatically ensure /api prefix is present
-const baseURL = rawUrl.replace(/\/+$/, '').endsWith('/api')
-  ? rawUrl.replace(/\/+$/, '')
-  : `${rawUrl.replace(/\/+$/, '')}/api`;
+export const getBaseApiUrl = () => {
+  const clean = getCleanApiUrl();
+  return clean.replace(/\/+$/, '').endsWith('/api')
+    ? clean.replace(/\/+$/, '')
+    : `${clean.replace(/\/+$/, '')}/api`;
+};
+
+export const getSocketServerUrl = () => {
+  const base = getBaseApiUrl();
+  return base.replace(/\/api\/?$/i, '').replace(/\/+$/, '');
+};
+
+const baseURL = getBaseApiUrl();
 
 const api = axios.create({
   baseURL,
