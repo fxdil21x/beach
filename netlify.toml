@@ -5,3 +5,9 @@
 [build.environment]
   VITE_API_URL = "https://beach-verification-backend.vercel.app/api"
   NPM_FLAGS = "--legacy-peer-deps"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
