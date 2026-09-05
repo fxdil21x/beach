@@ -195,17 +195,17 @@ export default function AdminProfile() {
         </div>
 
         {/* 4. Logout Action */}
-        <Button
-          variant="secondary"
+        <button
+          type="button"
           onClick={() => {
             logout();
             navigate('/login', { replace: true });
           }}
-          className="w-full py-4 text-sm font-bold gap-2 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-950/60 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-sm font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 hover:bg-rose-500/20 dark:hover:bg-rose-900/40 active:scale-[0.98] transition-all cursor-pointer shadow-xs"
         >
           <LogOut className="h-4 w-4" />
           <span>{t('common.logout', 'Logout')}</span>
-        </Button>
+        </button>
       </main>
 
       {/* ────────────────────────────────────────────────────────────────────────
