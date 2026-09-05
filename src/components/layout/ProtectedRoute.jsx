@@ -39,14 +39,7 @@ export function ProtectedRoute({ roles, redirectTo }) {
 }
 
 export function GuestRoute() {
-  const { user, loading } = useAuth();
-  const hasToken = typeof window !== 'undefined' && Boolean(
-    localStorage.getItem('beach_app_token') || localStorage.getItem('beach_app_refresh_token')
-  );
-
-  if (loading && hasToken) {
-    return <AppShellSkeleton />;
-  }
+  const { user } = useAuth();
 
   if (user) {
     if (user.role === 'ADMIN') return <Navigate to="/admin/search" replace />;

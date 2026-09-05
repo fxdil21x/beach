@@ -5,8 +5,7 @@ import { ProtectedRoute, GuestRoute, RoleRedirect } from './components/layout/Pr
 import DeviceFrameLayout from './components/layout/DeviceFrameLayout.jsx';
 import { AppShellSkeleton } from './components/ui/Skeleton.jsx';
 
-// ── Lazy-loaded Auth Pages ──
-const Login = lazy(() => import('./pages/auth/Login.jsx'));
+import Login from './pages/auth/Login.jsx';
 const Register = lazy(() => import('./pages/auth/Register.jsx'));
 
 // ── Lazy-loaded User Pages ──
