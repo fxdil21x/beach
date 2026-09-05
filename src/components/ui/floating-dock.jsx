@@ -21,7 +21,7 @@ export function FloatingDock({
   const navComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'nav') : null;
   const isAdminNavigation = items.some((item) => item.to?.startsWith('/admin'));
   const dockStyle = isAdminNavigation
-    ? appearance.adminDockStyle || 'flush'
+    ? appearance.adminDockStyle || 'floating'
     : appearance.userDockStyle || appearance.dockStyle || navComp?.style || 'floating';
   const isFlush = isFlushProp !== undefined ? isFlushProp : dockStyle === 'flush';
 
@@ -46,7 +46,7 @@ function FloatingDockCore({ items, className, isFlush }) {
       className={cn(
         'pointer-events-auto w-full flex items-center justify-around backdrop-blur-2xl transition-all duration-300',
         isFlush
-          ? 'rounded-none border-x-0 border-b-0 border-t border-neutral-800/90 bg-neutral-900/95 dark:bg-neutral-900/95 px-2 py-1.5 shadow-none'
+          ? 'rounded-none border-x-0 border-b-0 border-t border-neutral-800/90 bg-neutral-900/95 dark:bg-neutral-900/95 px-2 pt-1.5 pb-[calc(max(0.6rem,env(safe-area-inset-bottom))+2px)] shadow-none'
           : 'rounded-full bg-neutral-900/95 dark:bg-neutral-900/95 border border-neutral-800/90 px-2 sm:px-4 py-2 sm:py-2.5 shadow-[0_14px_40px_rgba(0,0,0,0.32)]',
         className
       )}

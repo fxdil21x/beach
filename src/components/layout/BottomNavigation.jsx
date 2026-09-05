@@ -16,7 +16,7 @@ export default function BottomNavigation({ items }) {
   const navComp = Array.isArray(appearance.components) ? appearance.components.find((c) => c.id === 'nav') : null;
   const isAdminNavigation = items.some((item) => item.to?.startsWith('/admin'));
   const dockStyle = isAdminNavigation
-    ? appearance.adminDockStyle || 'flush'
+    ? appearance.adminDockStyle || 'floating'
     : appearance.userDockStyle || appearance.dockStyle || navComp?.style || 'floating';
   const isFlush = dockStyle === 'flush';
 
@@ -37,7 +37,7 @@ export default function BottomNavigation({ items }) {
 
   return (
     <nav
-      className={`absolute bottom-0 inset-x-0 z-50 w-full flex flex-col items-center justify-end pointer-events-none select-none ${
+      className={`fixed sm:absolute bottom-0 inset-x-0 z-50 w-full flex flex-col items-center justify-end pointer-events-none select-none ${
         isFlush
           ? 'px-0 pt-0 pb-0'
           : 'px-3 pt-1 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+6px)] sm:pb-4'
@@ -47,7 +47,7 @@ export default function BottomNavigation({ items }) {
 
       {/* Floating Action Buttons Stack (Independent Absolute Positioning so dock hover never shifts it) */}
       {hasFloatingButtons && (
-        <div className="w-full max-w-lg mx-auto absolute bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+96px)] sm:bottom-28 inset-x-0 flex flex-col items-end gap-2.5 px-3 pointer-events-none">
+        <div className="w-full max-w-lg mx-auto absolute bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+72px)] sm:bottom-28 inset-x-0 flex flex-col items-end gap-2.5 px-3 pointer-events-none">
           {/* Top Search Button */}
           {showSearchFab && (
             <Link

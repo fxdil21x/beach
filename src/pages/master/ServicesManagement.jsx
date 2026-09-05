@@ -83,6 +83,7 @@ export default function ServicesManagement() {
     type: 'non-veg',
     price: '',
     description: '',
+    image: '',
     isSpecial: false,
   });
   const [selectedFoodCategoryFilter, setSelectedFoodCategoryFilter] = useState('ALL');
@@ -102,6 +103,20 @@ export default function ServicesManagement() {
     const reader = new FileReader();
     reader.onloadend = () => {
       setServiceForm((prev) => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFoodImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      showToast('Image file size must be under 8MB', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFoodForm((prev) => ({ ...prev, image: reader.result }));
     };
     reader.readAsDataURL(file);
   };
@@ -347,6 +362,7 @@ export default function ServicesManagement() {
         type: foodForm.type,
         price: Number(foodForm.price),
         description: foodForm.description,
+        image: foodForm.image || '',
         isSpecial: Boolean(foodForm.isSpecial),
         isAvailable: true,
       });
@@ -363,6 +379,7 @@ export default function ServicesManagement() {
           type: foodForm.type,
           price: '',
           description: '',
+          image: '',
           isSpecial: false,
         });
       }
@@ -1303,16 +1320,50 @@ export default function ServicesManagement() {
                     </div>
                   </div>
 
-                  {/* Description Input */}
-                  <div>
-                    <label className="block text-[11px] font-semibold text-zinc-300 mb-1">Description / Ingredients (Optional)</label>
-                    <input
-                      type="text"
-                      value={foodForm.description}
-                      onChange={(e) => setFoodForm({ ...foodForm, description: e.target.value })}
-                      placeholder="e.g. Authentic Malabar Biriyani with tender meat cooked in fragrant kaima rice, raita & pickle"
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
-                    />
+                  {/* Description & Photo Input Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div className="sm:col-span-8">
+                      <label className="block text-[11px] font-semibold text-zinc-300 mb-1">Description / Ingredients (Optional)</label>
+                      <input
+                        type="text"
+                        value={foodForm.description}
+                        onChange={(e) => setFoodForm({ ...foodForm, description: e.target.value })}
+                        placeholder="e.g. Authentic Malabar Biriyani with tender meat cooked in fragrant kaima rice, raita & pickle"
+                        className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-4">
+                      <label className="block text-[11px] font-semibold text-zinc-300 mb-1">Dish Photo (Optional)</label>
+                      {foodForm.image ? (
+                        <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 p-1.5">
+                          <img
+                            src={foodForm.image}
+                            alt="Dish Preview"
+                            className="h-7 w-7 rounded-lg object-cover border border-zinc-700 shrink-0"
+                          />
+                          <span className="text-[10px] text-emerald-400 font-medium truncate flex-1">Photo Added</span>
+                          <button
+                            type="button"
+                            onClick={() => setFoodForm((prev) => ({ ...prev, image: '' }))}
+                            className="p-1 text-zinc-400 hover:text-rose-400"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-zinc-700 bg-zinc-950 px-3 py-2 hover:border-orange-500 cursor-pointer transition-all">
+                          <Upload className="h-3.5 w-3.5 text-orange-400" />
+                          <span className="text-[11px] text-zinc-300">Upload Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFoodImageFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
                   </div>
 
                   {/* Description & Today's Special Toggle */}
@@ -1375,22 +1426,29 @@ export default function ServicesManagement() {
                           : 'border-zinc-800/40 bg-zinc-950/30 opacity-60'
                       }`}
                     >
-                      {/* Left: Type badge & Name */}
+                      {/* Left: Type badge & Name & Photo */}
                       <div className="flex items-center gap-2.5 min-w-0">
-                        {/* Veg / Non-Veg / Seafood Indicator */}
-                        <div
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-[10px] ${
-                            item.type === 'veg'
-                              ? 'border-green-500/40 bg-green-500/10 text-green-400'
-                              : item.type === 'seafood'
-                              ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-400'
-                              : item.type === 'egg'
-                              ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-400'
-                              : 'border-rose-500/40 bg-rose-500/10 text-rose-400'
-                          }`}
-                        >
-                          {item.type === 'veg' ? '●' : item.type === 'seafood' ? '🦐' : item.type === 'egg' ? '🍳' : '▲'}
-                        </div>
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-10 w-10 rounded-lg object-cover border border-zinc-700 shrink-0"
+                          />
+                        ) : (
+                          <div
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-[11px] ${
+                              item.type === 'veg'
+                                ? 'border-green-500/40 bg-green-500/10 text-green-400'
+                                : item.type === 'seafood'
+                                ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-400'
+                                : item.type === 'egg'
+                                ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-400'
+                                : 'border-rose-500/40 bg-rose-500/10 text-rose-400'
+                            }`}
+                          >
+                            {item.type === 'veg' ? '●' : item.type === 'seafood' ? '🦐' : item.type === 'egg' ? '🍳' : '▲'}
+                          </div>
+                        )}
 
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
@@ -1421,16 +1479,15 @@ export default function ServicesManagement() {
                               ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/30'
                               : 'bg-rose-500/15 text-rose-400 border-rose-500/30 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30'
                           }`}
-                          title="Click to toggle Stock Status"
                         >
                           <span className={`h-1.5 w-1.5 rounded-full ${item.isAvailable ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                          {item.isAvailable ? 'In Stock' : 'Sold Out'}
+                          <span>{item.isAvailable ? 'In Stock' : 'Sold Out'}</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => handleDeleteFoodItem(item._id, item.name)}
-                          className="rounded-lg p-1.5 text-zinc-500 hover:bg-rose-950/40 hover:text-rose-400 transition-colors"
+                          className="rounded-lg p-1.5 text-zinc-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors"
                           title="Delete Dish"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
