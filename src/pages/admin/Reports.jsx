@@ -138,8 +138,8 @@ export default function AdminReports() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabSelect} className="w-full sm:w-auto">
-            <TabsList className="h-10 w-full sm:w-auto flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl gap-1">
-              <TabsTrigger value="user" className="h-8 flex-1 sm:flex-initial gap-2 px-3 text-xs font-semibold rounded-lg transition-all">
+            <TabsList className="h-10.5 w-full sm:w-96 grid grid-cols-2 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl gap-1">
+              <TabsTrigger value="user" className="h-full w-full gap-2 px-2.5 text-xs font-semibold rounded-lg transition-all">
                 <User className="h-3.5 w-3.5 shrink-0" />
                 <span>User Reports</span>
                 <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
@@ -149,7 +149,7 @@ export default function AdminReports() {
                 </span>
               </TabsTrigger>
 
-              <TabsTrigger value="anonymous" className="h-8 flex-1 sm:flex-initial gap-2 px-3 text-xs font-semibold rounded-lg transition-all">
+              <TabsTrigger value="anonymous" className="h-full w-full gap-2 px-2.5 text-xs font-semibold rounded-lg transition-all">
                 <EyeOff className="h-3.5 w-3.5 shrink-0" />
                 <span>Anonymous Reports</span>
                 <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
