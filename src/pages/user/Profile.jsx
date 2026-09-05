@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
 import MobileHeader from '../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../components/layout/BottomNavigation.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -91,14 +90,7 @@ export default function UserProfile() {
                 />
               </div>
             )}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-sm font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 hover:bg-rose-500/20 dark:hover:bg-rose-900/40 active:scale-[0.98] transition-all cursor-pointer shadow-xs"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>{t('common.logout', 'Logout')}</span>
-            </button>
+            <Button variant="secondary" onClick={handleLogout} className="w-full py-4">{t('common.logout')}</Button>
           </>
         )}
       </main>
