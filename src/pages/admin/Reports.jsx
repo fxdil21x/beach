@@ -134,25 +134,25 @@ export default function AdminReports() {
       )}
 
       {/* Top Header Tabs & Justified Pagination Bar */}
-      <div className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 shrink-0 transition-colors">
+      <div className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 shrink-0 transition-colors">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabSelect} className="w-full sm:w-auto">
-            <TabsList className="h-9 w-full sm:w-auto grid grid-cols-2 sm:flex bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl gap-1">
-              <TabsTrigger value="user" className="h-8 gap-1.5 px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
+            <TabsList className="h-10 w-full sm:w-auto flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl gap-1">
+              <TabsTrigger value="user" className="h-8 flex-1 sm:flex-initial gap-2 px-3 text-xs font-semibold rounded-lg transition-all">
                 <User className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">User Reports</span>
-                <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 rounded-full px-1 text-[10px] font-bold transition-colors ${
+                <span>User Reports</span>
+                <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
                   activeTab === 'user' ? 'bg-white/28 text-white' : 'bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}>
                   {userReports.length}
                 </span>
               </TabsTrigger>
 
-              <TabsTrigger value="anonymous" className="h-8 gap-1.5 px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
+              <TabsTrigger value="anonymous" className="h-8 flex-1 sm:flex-initial gap-2 px-3 text-xs font-semibold rounded-lg transition-all">
                 <EyeOff className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Anonymous</span>
-                <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 rounded-full px-1 text-[10px] font-bold transition-colors ${
+                <span>Anonymous Reports</span>
+                <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
                   activeTab === 'anonymous' ? 'bg-white/28 text-white' : 'bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}>
                   {anonymousReports.length}
