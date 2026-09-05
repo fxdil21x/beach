@@ -68,17 +68,36 @@ function getDishImage(dish) {
   return CULINARY_FALLBACKS.default;
 }
 
-const FOOD_CATEGORIES = [
-  { id: 'ALL', label: 'All', icon: '🍽️' },
-  { id: 'Burgers & Snacks', label: 'Burger', icon: '🍔' },
-  { id: 'Seafood Specials', label: 'Seafood', icon: '🦐' },
-  { id: 'Main Course', label: 'Main Course', icon: '🍛' },
-  { id: 'Starters', label: 'Starters', icon: '🥟' },
-  { id: 'Breads & Rice', label: 'Rice & Breads', icon: '🍚' },
-  { id: 'Snacks & Quick Bites', label: 'Snacks', icon: '🍟' },
-  { id: 'Desserts', label: 'Dessert', icon: '🍰' },
-  { id: 'Beverages', label: 'Drinks', icon: '🥤' },
+const DEFAULT_FOOD_CATEGORIES = [
+  'Main Course',
+  'Starters',
+  'Seafood Specials',
+  'Breads & Rice',
+  'Snacks & Quick Bites',
+  'Desserts',
+  'Beverages',
 ];
+
+function getCategoryIcon(catName) {
+  const name = (catName || '').toLowerCase();
+  if (name === 'all') return '🍽️';
+  if (name.includes('burger')) return '🍔';
+  if (name.includes('seafood') || name.includes('fish') || name.includes('prawn') || name.includes('crab') || name.includes('squid') || name.includes('chemmeen') || name.includes('mussel')) return '🦐';
+  if (name.includes('main course') || name.includes('curry') || name.includes('meal') || name.includes('thali')) return '🍛';
+  if (name.includes('starter') || name.includes('appetizer') || name.includes('momos') || name.includes('roll')) return '🥟';
+  if (name.includes('rice') || name.includes('bread') || name.includes('biryani') || name.includes('roti') || name.includes('naan') || name.includes('porotta') || name.includes('paratha')) return '🍚';
+  if (name.includes('snack') || name.includes('quick bite') || name.includes('fry') || name.includes('chaat') || name.includes('samosa')) return '🍟';
+  if (name.includes('dessert') || name.includes('sweet') || name.includes('ice cream') || name.includes('cake') || name.includes('pudding')) return '🍰';
+  if (name.includes('juice') || name.includes('shake') || name.includes('smoothie')) return '🧃';
+  if (name.includes('beverage') || name.includes('drink') || name.includes('tea') || name.includes('coffee') || name.includes('mojito') || name.includes('soda')) return '🥤';
+  if (name.includes('pizza')) return '🍕';
+  if (name.includes('pasta') || name.includes('noodle')) return '🍝';
+  if (name.includes('soup')) return '🥣';
+  if (name.includes('salad') || name.includes('veg')) return '🥗';
+  if (name.includes('grill') || name.includes('bbq') || name.includes('tandoor') || name.includes('kebab') || name.includes('alfaham') || name.includes('shawarma')) return '🍢';
+  if (name.includes('breakfast')) return '🍳';
+  return '🍽️';
+}
 
 export default function Services() {
   const { t } = useTranslation();
@@ -215,10 +234,34 @@ export default function Services() {
 
   // Food items of selected restaurant
   const currentDishes = selectedRestaurant?.restaurantDetails?.menuItems || [];
+
+  // Dynamic category list for the chosen restaurant (ONLY categories with added/saved food items)
+  const restaurantCategories = useMemo(() => {
+    if (!selectedRestaurant) return [];
+    const items = selectedRestaurant.restaurantDetails?.menuItems || [];
+    const itemCats = Array.from(
+      new Set(items.map((item) => item.category?.trim()).filter(Boolean))
+    );
+
+    if (itemCats.length === 0) {
+      return [{ id: 'ALL', label: 'All', icon: '🍽️' }];
+    }
+
+    return [
+      { id: 'ALL', label: 'All', icon: '🍽️' },
+      ...itemCats.map((catName) => ({
+        id: catName,
+        label: catName,
+        icon: getCategoryIcon(catName),
+      })),
+    ];
+  }, [selectedRestaurant]);
+
   const filteredDishes = useMemo(() => {
-    if (selectedFoodCategory === 'ALL') return currentDishes;
+    if (!selectedFoodCategory || selectedFoodCategory === 'ALL') return currentDishes;
     return currentDishes.filter((d) => {
       if (d.category === selectedFoodCategory) return true;
+      if (d.category?.trim().toLowerCase() === selectedFoodCategory.trim().toLowerCase()) return true;
       if (selectedFoodCategory === 'Burgers & Snacks' && (d.category === 'Snacks & Quick Bites' || d.name?.toLowerCase().includes('burger'))) return true;
       return false;
     });
@@ -657,7 +700,7 @@ export default function Services() {
               </div>
 
               <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 text-xs">
-                {FOOD_CATEGORIES.map((cat) => {
+                {restaurantCategories.map((cat) => {
                   const isActive = selectedFoodCategory === cat.id;
                   return (
                     <button

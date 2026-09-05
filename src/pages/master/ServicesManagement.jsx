@@ -30,15 +30,6 @@ import {
 } from 'lucide-react';
 import * as serviceApi from '../../api/serviceApi.js';
 
-const DEFAULT_FOOD_CATEGORIES = [
-  'Main Course',
-  'Starters',
-  'Seafood Specials',
-  'Breads & Rice',
-  'Snacks & Quick Bites',
-  'Desserts',
-  'Beverages',
-];
 
 export default function ServicesManagement() {
   const { t } = useTranslation();
@@ -177,12 +168,12 @@ export default function ServicesManagement() {
     }
   }, [restaurantIdFromUrl, services, loading]);
 
-  // Available categories for current restaurant
+  // Available categories for current restaurant (clean, restaurant-specific)
   const availableCategories = useMemo(() => {
-    if (!managingMenuRestaurant) return DEFAULT_FOOD_CATEGORIES;
+    if (!managingMenuRestaurant) return [];
     const custom = managingMenuRestaurant.restaurantDetails?.categories || [];
     const itemCats = (managingMenuRestaurant.restaurantDetails?.menuItems || []).map((i) => i.category).filter(Boolean);
-    const combined = Array.from(new Set([...DEFAULT_FOOD_CATEGORIES, ...custom, ...itemCats]));
+    const combined = Array.from(new Set([...custom, ...itemCats]));
     return combined;
   }, [managingMenuRestaurant]);
 
@@ -342,7 +333,7 @@ export default function ServicesManagement() {
           openingHours: serviceForm.openingHours,
           isPureVeg: serviceForm.dietaryType === 'veg' || Boolean(serviceForm.isPureVeg),
           dietaryType: serviceForm.dietaryType || 'all',
-          categories: editingService?.restaurantDetails?.categories || DEFAULT_FOOD_CATEGORIES,
+          categories: editingService?.restaurantDetails?.categories || [],
         };
       } else if (serviceForm.category === 'transport') {
         payload.transportDetails = {
@@ -470,6 +461,43 @@ export default function ServicesManagement() {
     }
   };
 
+  const handleDeleteCategory = async (catToDelete, e) => {
+    if (e) e.stopPropagation();
+    const count = categoryCounts[catToDelete] || 0;
+    if (count > 0) {
+      if (!window.confirm(`Category "${catToDelete}" has ${count} dish(es). Removing this category will remove it from the tabs bar. Continue?`)) {
+        return;
+      }
+    }
+    try {
+      setCategoryLoading(true);
+      const currentList = managingMenuRestaurant?.restaurantDetails?.categories || [];
+      const updatedCategories = currentList.filter((c) => c.toLowerCase() !== catToDelete.toLowerCase());
+      const res = await serviceApi.updateService(managingMenuRestaurant._id, {
+        restaurantDetails: {
+          ...managingMenuRestaurant.restaurantDetails,
+          categories: updatedCategories,
+        },
+      });
+
+      if (res && res.data) {
+        setManagingMenuRestaurant(res.data);
+        setServices((prev) =>
+          prev.map((s) => (s._id === res.data._id ? res.data : s))
+        );
+        if (selectedFoodCategoryFilter === catToDelete) {
+          setSelectedFoodCategoryFilter('ALL');
+        }
+        showToast(`Category "${catToDelete}" removed`);
+      }
+    } catch (err) {
+      console.error('Failed to remove category:', err);
+      showToast('Failed to remove category', 'error');
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
+
   // ── Food Item Management Handlers ──────────────────────────────────────────
   const handleOpenAddFoodModal = (preselectedCategory = null) => {
     setEditingFoodItem(null);
@@ -485,7 +513,7 @@ export default function ServicesManagement() {
 
     let defaultCat = preselectedCategory;
     if (!defaultCat || defaultCat === 'ALL') {
-      defaultCat = selectedFoodCategoryFilter !== 'ALL' ? selectedFoodCategoryFilter : availableCategories[0] || 'Main Course';
+      defaultCat = selectedFoodCategoryFilter !== 'ALL' ? selectedFoodCategoryFilter : (availableCategories[0] || '');
     }
 
     setFoodForm({
@@ -505,7 +533,7 @@ export default function ServicesManagement() {
     setEditingFoodItem(item);
     setFoodForm({
       name: item.name || '',
-      category: item.category || availableCategories[0] || 'Main Course',
+      category: item.category || availableCategories[0] || '',
       type: item.type || 'non-veg',
       price: item.price !== undefined ? String(item.price) : '',
       description: item.description || '',
@@ -520,6 +548,10 @@ export default function ServicesManagement() {
     e.preventDefault();
     if (!foodForm.name.trim() || !foodForm.price) {
       showToast('Food name and price are required', 'error');
+      return;
+    }
+    if (!foodForm.category?.trim()) {
+      showToast('Please select or add a category first', 'error');
       return;
     }
 
@@ -919,16 +951,21 @@ export default function ServicesManagement() {
               {availableCategories.map((cat) => {
                 const count = categoryCounts[cat] || 0;
                 return (
-                  <button
+                  <div
                     key={cat}
-                    onClick={() => setSelectedFoodCategoryFilter(cat)}
-                    className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-semibold transition-all shrink-0 cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 rounded-xl pl-3 pr-2 py-1.5 font-semibold transition-all shrink-0 select-none ${
                       selectedFoodCategoryFilter === cat
                         ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                        : 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border border-zinc-800'
+                        : 'bg-zinc-950 text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200 border border-zinc-800'
                     }`}
                   >
-                    <span>{cat}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFoodCategoryFilter(cat)}
+                      className="cursor-pointer"
+                    >
+                      {cat}
+                    </button>
                     <span
                       className={`inline-flex items-center justify-center min-w-[18px] h-4.5 rounded-full px-1.5 text-[10px] font-bold ${
                         selectedFoodCategoryFilter === cat ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-400'
@@ -936,7 +973,15 @@ export default function ServicesManagement() {
                     >
                       {count}
                     </span>
-                  </button>
+                    <button
+                      type="button"
+                      title={`Remove "${cat}" category`}
+                      onClick={(e) => handleDeleteCategory(cat, e)}
+                      className="ml-0.5 rounded-md p-0.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
                 );
               })}
 
@@ -1614,29 +1659,59 @@ export default function ServicesManagement() {
                     <Plus className="h-3 w-3" /> Add New Category
                   </button>
                 </div>
-                <select
-                  value={foodForm.category}
-                  onChange={(e) => setFoodForm({ ...foodForm, category: e.target.value })}
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-zinc-100 focus:border-orange-500 focus:outline-none"
-                >
-                  {availableCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                {availableCategories.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-orange-500/40 bg-orange-500/5 p-3 text-center">
+                    <p className="text-xs text-zinc-300 font-medium mb-2">No category added for this restaurant yet.</p>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddCategoryModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-600 cursor-pointer"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Create Category First</span>
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={foodForm.category}
+                    onChange={(e) => setFoodForm({ ...foodForm, category: e.target.value })}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-zinc-100 focus:border-orange-500 focus:outline-none"
+                  >
+                    <option value="" disabled>-- Select Category --</option>
+                    {availableCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
-              {/* Dietary Type Radio Buttons */}
+              {/* Dietary Type Radio Buttons (Filtered by Restaurant Dietary Classification) */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Dietary Classification</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-zinc-300">Dietary Classification</label>
+                  {managingMenuRestaurant?.restaurantDetails?.isPureVeg && (
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/30 rounded-md px-1.5 py-0.5">
+                      Pure Veg Restaurant
+                    </span>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    { id: 'non-veg', label: 'Non-Veg', icon: '🔴', sub: 'Chicken / Meat' },
-                    { id: 'seafood', label: 'Seafood', icon: '🦐', sub: 'Fish / Prawn' },
-                    { id: 'veg', label: 'Pure Veg', icon: '🟢', sub: 'Vegetarian' },
-                    { id: 'egg', label: 'Egg', icon: '🟡', sub: 'Egg Dish' },
-                  ].map((d) => (
+                  {(managingMenuRestaurant?.restaurantDetails?.isPureVeg || managingMenuRestaurant?.restaurantDetails?.dietaryType === 'veg'
+                    ? [{ id: 'veg', label: 'Pure Veg', icon: '🟢', sub: 'Vegetarian Only' }]
+                    : managingMenuRestaurant?.restaurantDetails?.dietaryType === 'seafood'
+                    ? [
+                        { id: 'seafood', label: 'Seafood', icon: '🦐', sub: 'Fish / Prawn' },
+                        { id: 'veg', label: 'Pure Veg', icon: '🟢', sub: 'Vegetarian' },
+                      ]
+                    : [
+                        { id: 'non-veg', label: 'Non-Veg', icon: '🔴', sub: 'Chicken / Meat' },
+                        { id: 'seafood', label: 'Seafood', icon: '🦐', sub: 'Fish / Prawn' },
+                        { id: 'veg', label: 'Pure Veg', icon: '🟢', sub: 'Vegetarian' },
+                        { id: 'egg', label: 'Egg', icon: '🟡', sub: 'Egg Dish' },
+                      ]
+                  ).map((d) => (
                     <button
                       key={d.id}
                       type="button"
