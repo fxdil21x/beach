@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Wifi, Battery } from 'lucide-react';
+import { AppShellSkeleton } from '../ui/Skeleton.jsx';
 
 const DESKTOP_QUERY = '(min-width: 768px)';
 
@@ -56,15 +57,19 @@ export default function DeviceFrameLayout() {
 
   if (!isDesktop) {
     return (
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="w-full min-h-screen flex flex-col relative bg-slate-50"
-      >
-        <Outlet />
-      </motion.div>
+      <div className="w-full min-h-screen flex flex-col relative bg-slate-50 dark:bg-slate-950 transition-colors">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          className="w-full min-h-screen flex flex-col relative"
+        >
+          <Suspense fallback={<AppShellSkeleton />}>
+            <Outlet />
+          </Suspense>
+        </motion.div>
+      </div>
     );
   }
 
@@ -84,7 +89,7 @@ export default function DeviceFrameLayout() {
             {/* Device Screen Bezel */}
             <div className="relative flex h-[852px] w-[393px] flex-col overflow-hidden rounded-[54px] border-[11px] border-[#18181b] bg-[#09090b] shadow-[0_25px_70px_rgba(0,0,0,0.45)] ring-1 ring-white/15">
               {/* Top iOS Status Bar with Dynamic Island */}
-              <div className="relative z-50 flex shrink-0 items-center justify-between px-7 pt-3.5 pb-1 text-[12px] font-semibold bg-white/95 text-slate-900 backdrop-blur-md select-none">
+              <div className="relative z-50 flex shrink-0 items-center justify-between px-7 pt-3.5 pb-1 text-[12px] font-semibold bg-white/95 dark:bg-[#090A0F]/95 text-slate-900 dark:text-zinc-100 backdrop-blur-md select-none transition-colors">
                 <span className="font-bold tracking-tight">9:41</span>
 
                 {/* Dynamic Island Capsule */}
@@ -94,14 +99,14 @@ export default function DeviceFrameLayout() {
                 </div>
 
                 {/* Right Status Icons */}
-                <div className="flex items-center gap-1.5 text-slate-800">
+                <div className="flex items-center gap-1.5 text-slate-800 dark:text-zinc-200">
                   <Wifi className="h-3.5 w-3.5 stroke-[2.3]" />
                   <Battery className="h-4 w-4 stroke-[2.3]" />
                 </div>
               </div>
 
               {/* Inner Screen Viewport & App Router Content */}
-              <div className="device-app-root relative flex-1 min-h-0 overflow-hidden bg-slate-50 text-slate-900">
+              <div className="device-app-root relative flex-1 min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
                 {/* Portal layer: modals render here to stay inside device screen */}
                 <div ref={modalLayerRef} className="device-modal-layer" />
 
@@ -112,13 +117,15 @@ export default function DeviceFrameLayout() {
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                   className="w-full h-full flex flex-col min-h-0 relative"
                 >
-                  <Outlet />
+                  <Suspense fallback={<AppShellSkeleton />}>
+                    <Outlet />
+                  </Suspense>
                 </motion.div>
               </div>
 
               {/* Bottom iOS Home Indicator */}
-              <div className="relative z-50 flex shrink-0 justify-center py-1.5 bg-white/95 backdrop-blur-md select-none">
-                <div className="h-1 w-32 rounded-full bg-slate-400/80" />
+              <div className="relative z-50 flex shrink-0 justify-center py-1.5 bg-white/95 dark:bg-[#090A0F]/95 backdrop-blur-md select-none transition-colors">
+                <div className="h-1 w-32 rounded-full bg-slate-400/80 dark:bg-zinc-600/80" />
               </div>
             </div>
           </div>

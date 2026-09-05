@@ -7,7 +7,7 @@
   font-family: 'Manrope', system-ui, -apple-system, "Segoe UI", "Noto Sans Malayalam", "Noto Sans Devanagari", sans-serif;
   line-height: 1.5;
   color: #1a1a1a;
-  background-color: #f3f4f6;
+  background-color: var(--theme-bg, #f8fafc);
   overflow-wrap: anywhere;
   word-break: break-word;
 
@@ -16,6 +16,16 @@
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
+}
+
+html.dark,
+html.dark body,
+html.dark #root,
+[data-theme="dark"],
+[data-theme="dark"] body,
+[data-theme="dark"] #root {
+  background-color: var(--theme-bg, #090A0F) !important;
+  color: #f8fafc;
 }
 
 /* Safe Area Inset utilities */
@@ -37,6 +47,7 @@ body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
+  background-color: var(--theme-bg, #f8fafc);
 }
 
 button,
@@ -105,7 +116,14 @@ html.device-frame-active body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: #f8fafc;
+  background: var(--theme-bg, #f8fafc);
+}
+
+.dark .device-app-root,
+[data-theme="dark"] .device-app-root,
+:where(.dark, .dark *) .device-app-root {
+  background: var(--theme-bg, #090A0F) !important;
+  color: #f8fafc;
 }
 
 /* Completely hide scrollbars inside device frame stage & root for seamless native mobile look */
