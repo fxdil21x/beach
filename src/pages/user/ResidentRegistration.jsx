@@ -43,12 +43,12 @@ export default function ResidentRegistration() {
   };
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('resident.registrationTitle')} showLanguage />
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
-        <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 shadow-sm transition-colors">
           <h2 className="text-xl font-bold">{resident.name}</h2>
-          <p className="text-gray-600">{resident.houseName} · {resident.ward}</p>
+          <p className="text-gray-600 dark:text-slate-400">{resident.houseName} · {resident.ward}</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input label={t('resident.phone')} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
@@ -59,7 +59,6 @@ export default function ResidentRegistration() {
           </Button>
         </form>
       </main>
-      <BottomNavigation items={userNav} />
     </div>
   );
 }

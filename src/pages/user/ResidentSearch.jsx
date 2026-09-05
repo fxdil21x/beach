@@ -37,7 +37,7 @@ export default function ResidentSearch() {
   };
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('resident.searchTitle')} showLanguage />
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6">
         <p className="text-sm text-gray-600">{t('resident.searchHint')}</p>
@@ -52,7 +52,6 @@ export default function ResidentSearch() {
           ))}
         </div>
       </main>
-      <BottomNavigation items={userNav} />
     </div>
   );
 }

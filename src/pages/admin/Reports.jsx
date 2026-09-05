@@ -122,7 +122,7 @@ export default function AdminReports() {
   };
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('admin.reportsTitle')} showLanguage targetRole="admin" />
 
       {/* Real-time Alert Banner */}
@@ -402,7 +402,6 @@ export default function AdminReports() {
         )}
       </main>
 
-      <BottomNavigation items={adminNav} />
       <ImageModal src={selectedImage} onClose={() => setSelectedImage(null)} />
     </div>
   );

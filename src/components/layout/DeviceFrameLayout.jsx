@@ -58,17 +58,9 @@ export default function DeviceFrameLayout() {
   if (!isDesktop) {
     return (
       <div className="w-full min-h-screen flex flex-col relative bg-slate-50 dark:bg-slate-950 transition-colors">
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: 'easeOut' }}
-          className="w-full min-h-screen flex flex-col relative"
-        >
-          <Suspense fallback={<AppShellSkeleton />}>
-            <Outlet />
-          </Suspense>
-        </motion.div>
+        <div className="w-full min-h-screen flex flex-col relative flex-1 min-h-0">
+          <Outlet />
+        </div>
       </div>
     );
   }
@@ -110,17 +102,9 @@ export default function DeviceFrameLayout() {
                 {/* Portal layer: modals render here to stay inside device screen */}
                 <div ref={modalLayerRef} className="device-modal-layer" />
 
-                <motion.div
-                  key={location.pathname}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                  className="w-full h-full flex flex-col min-h-0 relative"
-                >
-                  <Suspense fallback={<AppShellSkeleton />}>
-                    <Outlet />
-                  </Suspense>
-                </motion.div>
+                <div className="w-full h-full flex flex-col min-h-0 relative">
+                  <Outlet />
+                </div>
               </div>
 
               {/* Bottom iOS Home Indicator */}

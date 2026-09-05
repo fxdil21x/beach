@@ -41,7 +41,7 @@ export default function RecentEntries() {
   }, [visitorEntries]);
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader title={t('admin.recentTitle')} targetRole="admin" />
       <main className="flex-1 min-h-0 overflow-y-auto space-y-4 px-4 py-6 pb-28">
         <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white sm:p-6 shadow-sm">
@@ -75,7 +75,6 @@ export default function RecentEntries() {
           </div>
         )}
       </main>
-      <BottomNavigation items={adminNav} />
     </div>
   );
 }

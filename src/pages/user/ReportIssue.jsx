@@ -123,7 +123,7 @@ export default function UserReportIssue() {
   const paginatedMyReports = myReports.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <TabMaintenanceOverlay tabId="report" fallbackTitle="Issue Reporting Under Maintenance" />
       <MobileHeader title={t('report.title')} showLanguage />
 
@@ -388,7 +388,6 @@ export default function UserReportIssue() {
           </div>
         )}
       </main>
-      <BottomNavigation items={userNav} />
       <ImageModal src={selectedImage} onClose={() => setSelectedImage(null)} />
     </div>
   );

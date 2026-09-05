@@ -317,7 +317,7 @@ export default function Services() {
   };
 
   return (
-    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors">
       <TabMaintenanceOverlay tabId="services" fallbackTitle="Services & Rides Under Maintenance" />
       <MobileHeader title={t('nav.services', 'Services')} showLanguage />
 
@@ -1114,8 +1114,6 @@ export default function Services() {
         </div>,
         portalTarget
       )}
-
-      <BottomNavigation items={userNav} />
     </div>
   );
 }

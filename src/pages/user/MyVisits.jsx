@@ -24,7 +24,7 @@ export default function MyVisits() {
   }, []);
 
   return (
-    <div className="relative flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <TabMaintenanceOverlay tabId="my-visits" fallbackTitle="Visits Log Under Maintenance" />
       <MobileHeader title={t('visits.title')} showLanguage />
       <main className="relative flex-1 min-h-0 overflow-y-auto space-y-4 px-4 pt-4 pb-32">
@@ -63,7 +63,6 @@ export default function MyVisits() {
           </>
         )}
       </main>
-      <BottomNavigation items={userNav} />
     </div>
   );
 }

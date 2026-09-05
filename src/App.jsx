@@ -53,6 +53,9 @@ import AdminEmergencyOverlay from './components/notifications/AdminEmergencyOver
 import VoiceCallOverlay from './components/notifications/VoiceCallOverlay.jsx';
 import UserLocationTracker from './components/user/UserLocationTracker.jsx';
 
+import UserLayout from './pages/user/UserLayout.jsx';
+import AdminLayout from './pages/admin/AdminLayout.jsx';
+
 export default function App() {
   return (
     <AuthProvider>
@@ -72,26 +75,33 @@ export default function App() {
                 <Route path="/entry" element={<VisitorEntry />} />
                 <Route path="/entry/success" element={<EntrySuccess />} />
                 <Route path="/report" element={<PublicIssueReport />} />
-                <Route path="/user/home" element={<UserDashboard />} />
-                <Route path="/user/search" element={<Navigate to="/user/home" replace />} />
-                <Route path="/user/beach-rules" element={<BeachRules />} />
-                <Route path="/user/report" element={<UserReportIssue />} />
 
-                <Route element={<ProtectedRoute roles={['USER']} />}>
-                  <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
-                  <Route path="/user/my-pass" element={<Navigate to="/user/home" replace />} />
-                  <Route path="/user/my-visits" element={<MyVisits />} />
-                  <Route path="/user/services" element={<UserServices />} />
-                  <Route path="/user/profile" element={<UserProfile />} />
+                {/* User Portal Layout with persistent BottomNavigation */}
+                <Route element={<UserLayout />}>
+                  <Route path="/user/home" element={<UserDashboard />} />
+                  <Route path="/user/search" element={<Navigate to="/user/home" replace />} />
+                  <Route path="/user/beach-rules" element={<BeachRules />} />
+                  <Route path="/user/report" element={<UserReportIssue />} />
+
+                  <Route element={<ProtectedRoute roles={['USER']} />}>
+                    <Route path="/user/register" element={<Navigate to="/user/home" replace />} />
+                    <Route path="/user/my-pass" element={<Navigate to="/user/home" replace />} />
+                    <Route path="/user/my-visits" element={<MyVisits />} />
+                    <Route path="/user/services" element={<UserServices />} />
+                    <Route path="/user/profile" element={<UserProfile />} />
+                  </Route>
                 </Route>
 
+                {/* Admin Portal Layout with persistent BottomNavigation */}
                 <Route element={<ProtectedRoute roles={['ADMIN']} />}>
-                  <Route path="/admin/scan" element={<Scanner />} />
-                  <Route path="/admin/search" element={<AdminResidentSearch />} />
-                  <Route path="/admin/recent" element={<RecentEntries />} />
-                  <Route path="/admin/reports" element={<AdminReports />} />
-                  <Route path="/admin/profile" element={<AdminProfile />} />
-                  <Route path="/admin" element={<Navigate to="/admin/search" replace />} />
+                  <Route element={<AdminLayout />}>
+                    <Route path="/admin/scan" element={<Scanner />} />
+                    <Route path="/admin/search" element={<AdminResidentSearch />} />
+                    <Route path="/admin/recent" element={<RecentEntries />} />
+                    <Route path="/admin/reports" element={<AdminReports />} />
+                    <Route path="/admin/profile" element={<AdminProfile />} />
+                    <Route path="/admin" element={<Navigate to="/admin/search" replace />} />
+                  </Route>
                 </Route>
               </Route>
 

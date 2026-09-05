@@ -211,7 +211,7 @@ export default function UserHome() {
   const showPass = isResident && Boolean(pass);
 
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <MobileHeader
         title={t('nav.home')}
         showLanguage
@@ -333,7 +333,6 @@ export default function UserHome() {
           </div>
         )}
       </main>
-      <BottomNavigation items={userNav} />
     </div>
   );
 }
