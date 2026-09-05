@@ -161,36 +161,34 @@ export default function AdminReports() {
             </TabsList>
           </Tabs>
 
-          {/* Pagination Controls */}
-          {currentList.length > 0 && totalPages > 1 && (
-            <div className="flex justify-center sm:justify-end">
-              <Pagination className="w-auto mx-0">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className="h-7 px-2 text-[11px]"
-                    />
-                  </PaginationItem>
+          {/* Pagination Controls - Always Visible with Disabled states */}
+          <div className="flex justify-center sm:justify-end">
+            <Pagination className="w-auto mx-0">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    disabled={currentPage <= 1 || loading}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="h-7 px-2 text-[11px] disabled:opacity-40 disabled:pointer-events-none"
+                  />
+                </PaginationItem>
 
-                  <PaginationItem>
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
-                      {currentPage} / {totalPages}
-                    </span>
-                  </PaginationItem>
+                <PaginationItem>
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 px-2 whitespace-nowrap">
+                    {currentPage} / {Math.max(1, totalPages)}
+                  </span>
+                </PaginationItem>
 
-                  <PaginationItem>
-                    <PaginationNext
-                      disabled={currentPage >= totalPages}
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className="h-7 px-2 text-[11px]"
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+                <PaginationItem>
+                  <PaginationNext
+                    disabled={currentPage >= totalPages || loading}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="h-7 px-2 text-[11px] disabled:opacity-40 disabled:pointer-events-none"
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       </div>
 
