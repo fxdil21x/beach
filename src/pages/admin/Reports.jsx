@@ -138,21 +138,21 @@ export default function AdminReports() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabSelect} className="w-auto">
-            <TabsList className="h-10 w-auto bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl gap-1">
-              <TabsTrigger value="user" className="h-8 gap-2 px-3 text-xs font-semibold rounded-lg transition-all">
+            <TabsList className="h-9 w-fit bg-slate-100 dark:bg-slate-800/80 p-0.5 sm:p-1 rounded-xl gap-1 shrink-0">
+              <TabsTrigger value="user" className="h-7.5 sm:h-8 shrink-0 px-2.5 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
                 <User className="h-3.5 w-3.5 shrink-0" />
                 <span>User Reports</span>
-                <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
+                <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 px-1.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors ${
                   activeTab === 'user' ? 'bg-white/28 text-white' : 'bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}>
                   {userReports.length}
                 </span>
               </TabsTrigger>
 
-              <TabsTrigger value="anonymous" className="h-8 gap-2 px-3 text-xs font-semibold rounded-lg transition-all">
+              <TabsTrigger value="anonymous" className="h-7.5 sm:h-8 shrink-0 px-2.5 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
                 <EyeOff className="h-3.5 w-3.5 shrink-0" />
                 <span>Anonymous Reports</span>
-                <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
+                <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 px-1.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors ${
                   activeTab === 'anonymous' ? 'bg-white/28 text-white' : 'bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}>
                   {anonymousReports.length}

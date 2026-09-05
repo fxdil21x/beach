@@ -131,19 +131,19 @@ export default function UserReportIssue() {
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 shrink-0 transition-colors">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }} className="w-auto">
-            <TabsList className="h-10 w-auto bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl gap-1">
-              <TabsTrigger value="submit" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
+            <TabsList className="h-9 w-fit bg-slate-100 dark:bg-slate-800/80 p-0.5 sm:p-1 rounded-xl gap-1 shrink-0">
+              <TabsTrigger value="submit" className="h-7.5 sm:h-8 shrink-0 px-2.5 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
                 <PlusCircle className="h-3.5 w-3.5 shrink-0" />
                 <span>{t('report.submit')}</span>
               </TabsTrigger>
 
               {user && (
-                <TabsTrigger value="my-reports" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
+                <TabsTrigger value="my-reports" className="h-7.5 sm:h-8 shrink-0 px-2.5 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
                   <FileText className="h-3.5 w-3.5 shrink-0" />
                   <span>My Reports</span>
                   {myReports.length > 0 && (
                     <span
-                      className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors"
+                      className="inline-flex items-center justify-center min-w-[18px] h-4.5 px-1.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors"
                       style={{
                         backgroundColor: activeTab === 'my-reports' ? 'rgba(255, 255, 255, 0.28)' : 'rgba(226, 232, 240, 0.8)',
                         color: activeTab === 'my-reports' ? '#ffffff' : '#475569',

@@ -108,21 +108,21 @@ export default function MasterReports() {
 
       {/* Shadcn UI Tabs Bar: User Reports vs Anonymous Reports */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto shrink-0">
-        <TabsList className="h-10 w-auto bg-zinc-900 border border-zinc-800 p-1 rounded-xl gap-1">
-          <TabsTrigger value="user" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
-            <User className="h-3.5 w-3.5" />
+        <TabsList className="h-9 w-fit bg-zinc-900 border border-zinc-800 p-0.5 sm:p-1 rounded-xl gap-1 shrink-0">
+          <TabsTrigger value="user" className="h-7.5 sm:h-8 shrink-0 px-2.5 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
+            <User className="h-3.5 w-3.5 shrink-0" />
             <span>User Reports</span>
-            <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
+            <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 px-1.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors ${
               activeTab === 'user' ? 'bg-white/28 text-white' : 'bg-zinc-800 text-zinc-400'
             }`}>
               {userReports.length}
             </span>
           </TabsTrigger>
 
-          <TabsTrigger value="anonymous" className="h-8 gap-2 px-3.5 text-xs font-semibold rounded-lg transition-all">
-            <EyeOff className="h-3.5 w-3.5" />
+          <TabsTrigger value="anonymous" className="h-7.5 sm:h-8 shrink-0 px-2.5 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all">
+            <EyeOff className="h-3.5 w-3.5 shrink-0" />
             <span>Anonymous Reports</span>
-            <span className={`inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold transition-colors ${
+            <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 px-1.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors ${
               activeTab === 'anonymous' ? 'bg-white/28 text-white' : 'bg-zinc-800 text-zinc-400'
             }`}>
               {anonymousReports.length}
