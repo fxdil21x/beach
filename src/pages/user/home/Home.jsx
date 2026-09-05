@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { TriangleAlert, Shield, ShieldCheck } from 'lucide-react';
+import { TriangleAlert, ShieldCheck } from 'lucide-react';
 import MobileHeader from '../../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../../components/layout/BottomNavigation.jsx';
 import Button from '../../../components/ui/Button.jsx';
@@ -222,19 +222,11 @@ export default function UserHome() {
                 {t('common.logout')}
               </Button>
             ) : (
-              <>
-                <Link to="/entry" className="shrink-0">
-                  <Button variant="default" size="sm" className="shrink-0 text-xs px-2.5 h-8">
-                    {t('common.guest')}
-                  </Button>
-                </Link>
-                <Link to="/login" className="shrink-0">
-                  <Button variant="outline" size="sm" className="shrink-0 text-xs px-2.5 h-8 flex items-center gap-1 border-slate-300 dark:border-slate-700">
-                    <Shield className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                    <span>Admin</span>
-                  </Button>
-                </Link>
-              </>
+              <Link to="/entry" className="shrink-0">
+                <Button variant="default" size="sm" className="shrink-0 text-xs px-2.5 h-8">
+                  {t('common.guest')}
+                </Button>
+              </Link>
             )}
           </div>
         }
