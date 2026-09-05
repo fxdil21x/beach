@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlert, Shield, ShieldCheck } from 'lucide-react';
 import MobileHeader from '../../../components/layout/MobileHeader.jsx';
 import BottomNavigation from '../../../components/layout/BottomNavigation.jsx';
 import Button from '../../../components/ui/Button.jsx';
