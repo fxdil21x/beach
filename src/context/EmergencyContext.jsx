@@ -343,10 +343,12 @@ export function EmergencyProvider({ children }) {
     if (remoteAudioRef.current) {
       try {
         remoteAudioRef.current.srcObject = null;
+        remoteAudioRef.current.muted = false;
       } catch {}
     }
     remoteSocketIdRef.current = null;
     setRemoteAudioBlocked(false);
+    setIsSpeakerMuted(false);
   }, []);
 
   /** Play incoming remote audio stream through DOM audio element */
@@ -355,6 +357,7 @@ export function EmergencyProvider({ children }) {
     if (remoteAudioRef.current) {
       remoteAudioRef.current.srcObject = stream;
       remoteAudioRef.current.muted = false;
+      setIsSpeakerMuted(false);
       remoteAudioRef.current
         .play()
         .then(() => {
@@ -373,7 +376,6 @@ export function EmergencyProvider({ children }) {
   const unblockRemoteAudio = useCallback(() => {
     resumeAudioContext();
     if (remoteAudioRef.current && remoteAudioRef.current.srcObject) {
-      remoteAudioRef.current.muted = false;
       remoteAudioRef.current
         .play()
         .then(() => {
@@ -386,15 +388,20 @@ export function EmergencyProvider({ children }) {
     }
   }, []);
 
-  /** Toggle speaker mute / output volume */
+  /** Toggle speaker mute / unmuted state */
   const toggleSpeaker = useCallback(() => {
-    unblockRemoteAudio();
-    if (remoteAudioRef.current) {
-      const nextMuted = !remoteAudioRef.current.muted;
-      remoteAudioRef.current.muted = nextMuted;
-      setIsSpeakerMuted(nextMuted);
-    }
-  }, [unblockRemoteAudio]);
+    resumeAudioContext();
+    setIsSpeakerMuted((prevMuted) => {
+      const nextMuted = !prevMuted;
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.muted = nextMuted;
+        if (!nextMuted) {
+          remoteAudioRef.current.play().catch(() => {});
+        }
+      }
+      return nextMuted;
+    });
+  }, []);
 
   /** Admin: initiate WebRTC call to a user */
   const startCall = useCallback(async (emergencyId, userId, peerName = 'User') => {
