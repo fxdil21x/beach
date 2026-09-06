@@ -68,8 +68,9 @@ html {
 
 html.device-frame-active,
 html.device-frame-active body {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Prevent mobile browser auto-zoom when focusing inputs */
@@ -88,6 +89,7 @@ html.device-frame-active body {
   justify-content: center;
   background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
   padding: 20px;
+  overflow: auto;
 }
 
 .device-frame-scale {
@@ -164,29 +166,6 @@ html.device-frame-active body {
 
 .device-modal-layer > * {
   pointer-events: auto !important;
-}
-
-/* Background scroll lock inside device mockup (only affects background elements, NOT modal layer) */
-.device-app-root[data-modal-active="true"] {
-  overflow: hidden !important;
-}
-
-.device-app-root[data-modal-active="true"] > div:not(.device-modal-layer) {
-  overflow: hidden !important;
-  pointer-events: none !important;
-  user-select: none !important;
-}
-
-.device-app-root[data-modal-active="true"] > div:not(.device-modal-layer) main,
-.device-app-root[data-modal-active="true"] > div:not(.device-modal-layer) .overflow-y-auto {
-  overflow: hidden !important;
-  pointer-events: none !important;
-}
-
-/* Guarantee that modal layer and all child buttons are fully clickable */
-.device-modal-layer,
-.device-modal-layer * {
-  pointer-events: auto;
 }
 
 .device-app-root .min-h-screen {
