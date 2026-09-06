@@ -163,10 +163,10 @@ html.device-frame-active body {
 }
 
 .device-modal-layer > * {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
-/* Background scroll lock inside device mockup */
+/* Background scroll lock inside device mockup (only affects background elements, NOT modal layer) */
 .device-app-root[data-modal-active="true"] {
   overflow: hidden !important;
 }
@@ -177,10 +177,16 @@ html.device-frame-active body {
   user-select: none !important;
 }
 
-.device-app-root[data-modal-active="true"] main,
-.device-app-root[data-modal-active="true"] .overflow-y-auto {
+.device-app-root[data-modal-active="true"] > div:not(.device-modal-layer) main,
+.device-app-root[data-modal-active="true"] > div:not(.device-modal-layer) .overflow-y-auto {
   overflow: hidden !important;
   pointer-events: none !important;
+}
+
+/* Guarantee that modal layer and all child buttons are fully clickable */
+.device-modal-layer,
+.device-modal-layer * {
+  pointer-events: auto;
 }
 
 .device-app-root .min-h-screen {
