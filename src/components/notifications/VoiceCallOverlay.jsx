@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Mic, MicOff, PhoneOff, Volume2, Radio, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Volume2, VolumeX, Radio, AlertTriangle, Volume1 } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
 import { useModalScrollLock } from '../../utils/scrollLock.js';
 
@@ -46,7 +46,16 @@ function PulsingRing({ color }) {
 }
 
 export default function VoiceCallOverlay() {
-  const { callState, endCall, toggleMute } = useEmergency();
+  const {
+    callState,
+    endCall,
+    toggleMute,
+    isSpeakerMuted,
+    toggleSpeaker,
+    remoteAudioBlocked,
+    unblockRemoteAudio,
+  } = useEmergency();
+
   const [muted, setMuted] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [portalTarget, setPortalTarget] = useState(null);
@@ -91,12 +100,21 @@ export default function VoiceCallOverlay() {
   const formatTime = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-  const handleMute = () => {
+  const handleMute = (e) => {
+    e.stopPropagation();
     toggleMute();
     setMuted((m) => !m);
   };
 
-  const handleEnd = () => endCall(callState.emergencyId);
+  const handleSpeakerClick = (e) => {
+    e.stopPropagation();
+    toggleSpeaker();
+  };
+
+  const handleEnd = (e) => {
+    e.stopPropagation();
+    endCall(callState.emergencyId);
+  };
 
   const statusLabel = isConnected
     ? formatTime(elapsed)
@@ -129,6 +147,7 @@ export default function VoiceCallOverlay() {
           background: 'linear-gradient(160deg, #020617 0%, #0f172a 60%, #0d1b2a 100%)',
           animation: 'fadeSlideUp 0.35s ease',
         }}
+        onClick={unblockRemoteAudio}
         onWheel={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
@@ -143,7 +162,7 @@ export default function VoiceCallOverlay() {
         {/* SOS badge */}
         <div className="relative mb-8 flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/40 px-3.5 py-1 text-[11px] font-bold tracking-wider text-rose-400 uppercase shadow-xs">
           <Radio className="h-3.5 w-3.5 animate-pulse text-rose-400" />
-          <span>Emergency Call</span>
+          <span>Emergency Live Voice</span>
         </div>
 
         {/* Avatar ring */}
@@ -162,12 +181,12 @@ export default function VoiceCallOverlay() {
 
         {/* Peer name */}
         <h2 className="text-xl sm:text-2xl font-black text-white text-center tracking-tight px-4 truncate max-w-xs">
-          {callState.peerName || 'Unknown'}
+          {callState.peerName || 'Emergency Officer'}
         </h2>
 
         {/* Status / timer */}
         <p
-          className={`mt-1.5 mb-6 text-center tabular-nums transition-colors ${
+          className={`mt-1.5 mb-5 text-center tabular-nums transition-colors ${
             isConnected
               ? 'text-2xl font-black tracking-widest text-emerald-400'
               : 'text-sm font-semibold text-slate-400'
@@ -177,9 +196,21 @@ export default function VoiceCallOverlay() {
         </p>
 
         {/* Sound wave */}
-        <div className="mb-8">
+        <div className="mb-6">
           <SoundWave active={isConnected} />
         </div>
+
+        {/* Autoplay blocked recovery banner */}
+        {remoteAudioBlocked && (
+          <button
+            type="button"
+            onClick={unblockRemoteAudio}
+            className="mb-5 flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-xs font-black text-slate-950 shadow-xl shadow-orange-500/30 animate-bounce cursor-pointer transition-transform active:scale-95"
+          >
+            <Volume2 className="h-4 w-4" />
+            <span>Tap to Enable Audio 🔊</span>
+          </button>
+        )}
 
         {/* Error hint */}
         {callState.error && (
@@ -195,7 +226,7 @@ export default function VoiceCallOverlay() {
 
         {/* Call Controls */}
         <div className="flex items-center gap-5 relative z-10">
-          {/* Mute Button */}
+          {/* Mute Mic Button */}
           <button
             type="button"
             onClick={handleMute}
@@ -219,21 +250,30 @@ export default function VoiceCallOverlay() {
             <PhoneOff className="h-7 w-7" />
           </button>
 
-          {/* Speaker Indicator */}
-          <div
-            className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all ${
-              isConnected
-                ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-400'
-                : 'bg-white/5 border-white/10 text-slate-500'
+          {/* Interactive Speaker Toggle Button */}
+          <button
+            type="button"
+            onClick={handleSpeakerClick}
+            title={isSpeakerMuted ? 'Turn on speaker audio' : 'Mute speaker audio'}
+            className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all active:scale-95 cursor-pointer backdrop-blur-md ${
+              isSpeakerMuted
+                ? 'bg-amber-500/20 border-amber-500 text-amber-400 shadow-lg shadow-amber-500/20'
+                : isConnected
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-lg shadow-emerald-500/20 hover:bg-emerald-500/30'
+                : 'bg-white/10 border-white/20 text-slate-300 hover:bg-white/15'
             }`}
           >
-            <Volume2 className="h-6 w-6" />
-          </div>
+            {isSpeakerMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+          </button>
         </div>
 
         {/* Bottom hint */}
-        <p className="mt-8 text-center text-xs text-slate-400 font-medium tracking-wide">
-          {isConnected ? 'Voice call active — speak normally' : 'Waiting for user to connect…'}
+        <p className="mt-7 text-center text-xs text-slate-400 font-medium tracking-wide">
+          {isConnected
+            ? isSpeakerMuted
+              ? 'Speaker muted — tap volume icon to hear audio'
+              : 'Voice call active — speak normally'
+            : 'Connecting to officer…'}
         </p>
       </div>
     </>

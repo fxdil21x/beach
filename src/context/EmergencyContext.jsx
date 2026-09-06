@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext.jsx';
 import {
   createEmergencyAlarmSound,
   playUserConfirmationSound,
+  resumeAudioContext,
 } from '../utils/soundUtils.js';
 import {
   triggerUserFeedbackVibration,
@@ -16,12 +17,39 @@ import {
 const ICE_SERVERS = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'stun:stun3.l.google.com:19302' },
+  { urls: 'stun:stun4.l.google.com:19302' },
 ];
 
+const AUDIO_CONSTRAINTS = {
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    sampleRate: 48000,
+  },
+  video: false,
+};
+
 function createPeerConnection(onIceCandidate, onRemoteStream) {
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-  pc.onicecandidate = (e) => { if (e.candidate) onIceCandidate(e.candidate); };
-  pc.ontrack = (e) => { if (e.streams[0]) onRemoteStream(e.streams[0]); };
+  const pc = new RTCPeerConnection({
+    iceServers: ICE_SERVERS,
+    iceCandidatePoolSize: 4,
+  });
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      onIceCandidate(e.candidate);
+    }
+  };
+
+  pc.ontrack = (e) => {
+    console.log('[WebRTC] ontrack event fired:', e.track?.kind, 'streams:', e.streams?.length);
+    const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+    onRemoteStream(remoteStream);
+  };
+
   return pc;
 }
 
@@ -39,9 +67,12 @@ export function EmergencyProvider({ children }) {
   // ── Voice call state ──────────────────────────────────────────────────────
   // callState: null | { status: 'calling'|'connected'|'incoming'|'ended', emergencyId, peerName, remoteSocketId }
   const [callState, setCallState] = useState(null);
-  const peerRef        = useRef(null);   // RTCPeerConnection
-  const localStreamRef = useRef(null);   // MediaStream (mic)
-  const remoteAudioRef = useRef(null);   // <audio> element for remote stream
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+  const [remoteAudioBlocked, setRemoteAudioBlocked] = useState(false);
+
+  const peerRef = useRef(null);           // RTCPeerConnection
+  const localStreamRef = useRef(null);    // MediaStream (mic)
+  const remoteAudioRef = useRef(null);    // DOM <audio> element
   const remoteSocketIdRef = useRef(null); // socket id of the other party
 
   // Map to hold audio objects per emergencyId: emergencyId -> audioObject
@@ -55,7 +86,7 @@ export function EmergencyProvider({ children }) {
       path: '/api/socket.io',
       withCredentials: true,
       autoConnect: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       timeout: 10000,
       transports: ['websocket', 'polling'],
     });
@@ -116,7 +147,7 @@ export function EmergencyProvider({ children }) {
           setAutoplayBlocked(false);
         })
         .catch((err) => {
-          console.warn(`[EmergencyContext] Autoplay blocked for ${emergencyId}, will retry:`, err);
+          console.warn(`[EmergencyContext] Autoplay blocked for ${emergencyId}, will show unlock banner:`, err);
           setAutoplayBlocked(true);
         });
     }
@@ -127,7 +158,6 @@ export function EmergencyProvider({ children }) {
     if (alarmAudio) {
       try {
         alarmAudio.pause();
-        alarmAudio.currentTime = 0;
       } catch (e) {
         console.warn('Error pausing audio:', e);
       }
@@ -139,15 +169,12 @@ export function EmergencyProvider({ children }) {
     audioMapRef.current.forEach((alarmAudio) => {
       try {
         alarmAudio.pause();
-        alarmAudio.currentTime = 0;
-      } catch (e) {
-        // ignore
-      }
+      } catch {}
     });
     audioMapRef.current.clear();
   }, []);
 
-  // Admin Polling Fallback (ensures Vercel / serverless deployments fetch & sync active pending emergencies)
+  // Admin Polling Fallback
   const pollActiveEmergencies = useCallback(async () => {
     if (!isAdmin) return;
     try {
@@ -216,7 +243,6 @@ export function EmergencyProvider({ children }) {
 
       setActiveEmergencies((prev) => {
         const next = { ...prev };
-        // Remove any previous emergency from the same user so only 1 appears
         if (userId && userId !== 'ANONYMOUS') {
           for (const [id, emg] of Object.entries(next)) {
             if (emg.userId === userId && id !== emergencyId) {
@@ -239,14 +265,12 @@ export function EmergencyProvider({ children }) {
       console.log('[EmergencyContext] emergency:claimed received:', claimedData);
       const { emergencyId } = claimedData;
 
-      // Stop only the sound related to that specific emergencyId immediately
       stopAlarmSound(emergencyId);
 
       setActiveEmergencies((prev) => {
         const next = { ...prev };
         delete next[emergencyId];
 
-        // If no more active emergencies remain, stop vibration immediately
         if (Object.keys(next).length === 0) {
           stopEmergencyVibration();
         }
@@ -254,7 +278,7 @@ export function EmergencyProvider({ children }) {
       });
     };
 
-    // Receive emergency:status-update (e.g. claimed by officer)
+    // Receive emergency:status-update
     const handleStatusUpdate = ({ emergencyId, status, claimedBy }) => {
       console.log('[EmergencyContext] emergency:status-update:', status, 'by', claimedBy);
       setUserEmergencyState((prev) => {
@@ -305,36 +329,80 @@ export function EmergencyProvider({ children }) {
   /** Tear down the current peer connection cleanly */
   const closePeer = useCallback(() => {
     if (peerRef.current) {
-      peerRef.current.close();
+      try {
+        peerRef.current.close();
+      } catch {}
       peerRef.current = null;
     }
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      try {
+        localStreamRef.current.getTracks().forEach((t) => t.stop());
+      } catch {}
       localStreamRef.current = null;
     }
     if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = null;
+      try {
+        remoteAudioRef.current.srcObject = null;
+      } catch {}
     }
     remoteSocketIdRef.current = null;
+    setRemoteAudioBlocked(false);
   }, []);
 
-  /** Play incoming remote audio stream */
+  /** Play incoming remote audio stream through DOM audio element */
   const attachRemoteStream = useCallback((stream) => {
-    if (!remoteAudioRef.current) {
-      const audio = new Audio();
-      audio.autoplay = true;
-      remoteAudioRef.current = audio;
+    console.log('[WebRTC] Attaching remote stream to DOM audio element:', stream.id);
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = stream;
+      remoteAudioRef.current.muted = false;
+      remoteAudioRef.current
+        .play()
+        .then(() => {
+          console.log('[WebRTC] Remote voice audio playing smoothly!');
+          setRemoteAudioBlocked(false);
+        })
+        .catch((err) => {
+          console.warn('[WebRTC] Remote audio play blocked by browser autoplay policy:', err);
+          setRemoteAudioBlocked(true);
+        });
     }
-    remoteAudioRef.current.srcObject = stream;
-    remoteAudioRef.current.play().catch(() => {});
-    setCallState((prev) => prev ? { ...prev, status: 'connected' } : prev);
+    setCallState((prev) => (prev ? { ...prev, status: 'connected' } : prev));
   }, []);
+
+  /** Manually unblock / resume remote audio upon user interaction */
+  const unblockRemoteAudio = useCallback(() => {
+    resumeAudioContext();
+    if (remoteAudioRef.current && remoteAudioRef.current.srcObject) {
+      remoteAudioRef.current.muted = false;
+      remoteAudioRef.current
+        .play()
+        .then(() => {
+          console.log('[WebRTC] Remote audio unblocked via user click!');
+          setRemoteAudioBlocked(false);
+        })
+        .catch((err) => {
+          console.warn('[WebRTC] Unblock play error:', err);
+        });
+    }
+  }, []);
+
+  /** Toggle speaker mute / output volume */
+  const toggleSpeaker = useCallback(() => {
+    unblockRemoteAudio();
+    if (remoteAudioRef.current) {
+      const nextMuted = !remoteAudioRef.current.muted;
+      remoteAudioRef.current.muted = nextMuted;
+      setIsSpeakerMuted(nextMuted);
+    }
+  }, [unblockRemoteAudio]);
 
   /** Admin: initiate WebRTC call to a user */
   const startCall = useCallback(async (emergencyId, userId, peerName = 'User') => {
     if (!socket || peerRef.current) return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      resumeAudioContext();
+
+      const stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
       localStreamRef.current = stream;
 
       const pc = createPeerConnection(
@@ -353,7 +421,10 @@ export function EmergencyProvider({ children }) {
 
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
 
-      const offer = await pc.createOffer();
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: false,
+      });
       await pc.setLocalDescription(offer);
 
       setCallState({ status: 'calling', emergencyId, peerName, remoteSocketId: null });
@@ -412,7 +483,7 @@ export function EmergencyProvider({ children }) {
       if (!pc) return;
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-        setCallState((prev) => prev ? { ...prev, status: 'connected', remoteSocketId: userSocketId } : prev);
+        setCallState((prev) => (prev ? { ...prev, status: 'connected', remoteSocketId: userSocketId } : prev));
       } catch (err) {
         console.error('[Voice] setRemoteDescription (answer) error:', err);
       }
@@ -424,12 +495,17 @@ export function EmergencyProvider({ children }) {
       if (peerRef.current) return; // already in a call
 
       remoteSocketIdRef.current = adminSocketId;
-      setCallState({ status: 'incoming', emergencyId, peerName: adminName || 'Gate Officer', remoteSocketId: adminSocketId });
+      setCallState({
+        status: 'incoming',
+        emergencyId,
+        peerName: adminName || 'Gate Officer',
+        remoteSocketId: adminSocketId,
+      });
 
       try {
         let stream = null;
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
           localStreamRef.current = stream;
         } catch (mediaErr) {
           console.warn('[Voice] Mic access pending or denied, continuing connection:', mediaErr);
@@ -454,7 +530,10 @@ export function EmergencyProvider({ children }) {
         }
 
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-        const answer = await pc.createAnswer();
+        const answer = await pc.createAnswer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: false,
+        });
         await pc.setLocalDescription(answer);
 
         socket.emit('call:answer', {
@@ -495,16 +574,16 @@ export function EmergencyProvider({ children }) {
       setCallState(null);
     };
 
-    socket.on('call:answered',      handleCallAnswered);
-    socket.on('call:incoming',      handleCallIncoming);
+    socket.on('call:answered', handleCallAnswered);
+    socket.on('call:incoming', handleCallIncoming);
     socket.on('call:ice-candidate', handleIceCandidate);
-    socket.on('call:ended',         handleCallEnded);
+    socket.on('call:ended', handleCallEnded);
 
     return () => {
-      socket.off('call:answered',      handleCallAnswered);
-      socket.off('call:incoming',      handleCallIncoming);
+      socket.off('call:answered', handleCallAnswered);
+      socket.off('call:incoming', handleCallIncoming);
       socket.off('call:ice-candidate', handleIceCandidate);
-      socket.off('call:ended',         handleCallEnded);
+      socket.off('call:ended', handleCallEnded);
     };
   }, [socket, attachRemoteStream, closePeer]);
 
@@ -513,11 +592,17 @@ export function EmergencyProvider({ children }) {
 
   // User Action: Trigger Emergency
   const triggerEmergency = async (locationDetails = '') => {
-    // 1. Give short 200ms vibration feedback
+    // 1. Give short vibration feedback & resume audio context
     triggerUserFeedbackVibration();
+    resumeAudioContext();
 
-    // 2. Play small confirmation sound
+    // 2. Play small confirmation sound & prime DOM audio element
     playUserConfirmationSound();
+    if (remoteAudioRef.current) {
+      try {
+        remoteAudioRef.current.load();
+      } catch {}
+    }
 
     const emergencyId = `emg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const payload = {
@@ -553,10 +638,9 @@ export function EmergencyProvider({ children }) {
 
   // Admin Action: Claim / Connect Emergency
   const claimEmergency = async (emergencyId) => {
-    // Touch feedback vibration for admin
     triggerUserFeedbackVibration();
+    resumeAudioContext();
 
-    // Stop sound & vibration locally for this emergency immediately
     stopAlarmSound(emergencyId);
 
     setActiveEmergencies((prev) => {
@@ -590,18 +674,14 @@ export function EmergencyProvider({ children }) {
   // User Action: Cancel / Clear Emergency
   const cancelUserEmergency = async (emergencyId) => {
     const targetId = emergencyId || userEmergencyState?.emergencyId;
-
-    // Reset user emergency state immediately
     setUserEmergencyState(null);
 
     if (!targetId) return;
 
-    // Emit socket cancel event
     if (socket && socket.connected) {
       socket.emit('emergency:cancel', { emergencyId: targetId });
     }
 
-    // Fallback REST cancel request
     try {
       await axios.post(`/emergency/cancel/${targetId}`);
     } catch {
@@ -611,6 +691,7 @@ export function EmergencyProvider({ children }) {
 
   // Manually unlock audio if autoplay was blocked
   const retryAudioUnlock = () => {
+    resumeAudioContext().then(() => setAutoplayBlocked(false)).catch(() => {});
     audioMapRef.current.forEach((alarmAudio) => {
       alarmAudio.play().then(() => setAutoplayBlocked(false)).catch(() => {});
     });
@@ -634,8 +715,22 @@ export function EmergencyProvider({ children }) {
         endCall,
         toggleMute,
         isMuted,
+        isSpeakerMuted,
+        toggleSpeaker,
+        remoteAudioBlocked,
+        unblockRemoteAudio,
       }}
     >
+      {/* Hidden real DOM audio element for WebRTC remote stream playback */}
+      <audio
+        ref={remoteAudioRef}
+        id="emergency-remote-audio"
+        autoPlay
+        playsInline
+        controls={false}
+        className="hidden pointer-events-none"
+        style={{ display: 'none' }}
+      />
       {children}
     </EmergencyContext.Provider>
   );

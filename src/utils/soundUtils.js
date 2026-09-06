@@ -6,7 +6,7 @@
 
 let globalAudioCtx = null;
 
-function getAudioContext() {
+export function getAudioContext() {
   if (typeof window === 'undefined') return null;
   if (!globalAudioCtx) {
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
@@ -20,22 +20,31 @@ function getAudioContext() {
   return globalAudioCtx;
 }
 
+export async function resumeAudioContext() {
+  const ctx = getAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    try {
+      await ctx.resume();
+    } catch (err) {
+      console.warn('[soundUtils] AudioContext resume error:', err);
+    }
+  }
+  return ctx?.state === 'running';
+}
+
 // Auto-unlock Web Audio context on first user interaction
 if (typeof window !== 'undefined') {
   const unlockAudio = () => {
-    const ctx = getAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+    resumeAudioContext();
     window.removeEventListener('click', unlockAudio);
     window.removeEventListener('touchstart', unlockAudio);
     window.removeEventListener('pointerdown', unlockAudio);
     window.removeEventListener('keydown', unlockAudio);
   };
-  window.addEventListener('click', unlockAudio);
-  window.addEventListener('touchstart', unlockAudio);
-  window.addEventListener('pointerdown', unlockAudio);
-  window.addEventListener('keydown', unlockAudio);
+  window.addEventListener('click', unlockAudio, { passive: true });
+  window.addEventListener('touchstart', unlockAudio, { passive: true });
+  window.addEventListener('pointerdown', unlockAudio, { passive: true });
+  window.addEventListener('keydown', unlockAudio, { passive: true });
 }
 
 /**
@@ -74,7 +83,9 @@ export function createEmergencyAlarmSound() {
         if (!globalAudioCtx || !osc) return;
         const currentNow = globalAudioCtx.currentTime;
         const targetFreq = high ? 1200 : 600;
-        osc.frequency.linearRampToValueAtTime(targetFreq, currentNow + 0.3);
+        try {
+          osc.frequency.linearRampToValueAtTime(targetFreq, currentNow + 0.3);
+        } catch {}
         high = !high;
       }, 350);
     } catch (err) {
@@ -112,6 +123,19 @@ export function createEmergencyAlarmSound() {
     },
 
     play: async () => {
+      const ctx = getAudioContext();
+      if (!ctx) return Promise.reject(new Error('No AudioContext available'));
+
+      if (ctx.state === 'suspended') {
+        try {
+          await ctx.resume();
+        } catch {}
+      }
+
+      if (ctx.state === 'suspended') {
+        return Promise.reject(new Error('AudioContext suspended (Autoplay blocked)'));
+      }
+
       if (playing) return Promise.resolve();
       playing = true;
       startSiren();
@@ -137,6 +161,10 @@ export function playUserConfirmationSound() {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
