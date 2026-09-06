@@ -45,7 +45,7 @@ function createPeerConnection(onIceCandidate, onRemoteStream) {
   };
 
   pc.ontrack = (e) => {
-    console.log('[WebRTC] ontrack event fired:', e.track?.kind, 'streams:', e.streams?.length);
+    console.log('[WebRTC] ontrack event received. Kind:', e.track?.kind, 'streams:', e.streams?.length);
     const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
     onRemoteStream(remoteStream);
   };
@@ -70,10 +70,11 @@ export function EmergencyProvider({ children }) {
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const [remoteAudioBlocked, setRemoteAudioBlocked] = useState(false);
 
-  const peerRef = useRef(null);           // RTCPeerConnection
-  const localStreamRef = useRef(null);    // MediaStream (mic)
-  const remoteAudioRef = useRef(null);    // DOM <audio> element
-  const remoteSocketIdRef = useRef(null); // socket id of the other party
+  const peerRef = useRef(null);              // RTCPeerConnection
+  const localStreamRef = useRef(null);       // MediaStream (mic)
+  const remoteAudioRef = useRef(null);       // DOM <audio> element
+  const remoteSocketIdRef = useRef(null);    // socket id of the other party
+  const pendingCandidatesRef = useRef([]);   // Buffered ICE candidates received before remoteDescription
 
   // Map to hold audio objects per emergencyId: emergencyId -> audioObject
   const audioMapRef = useRef(new Map());
@@ -347,6 +348,7 @@ export function EmergencyProvider({ children }) {
       } catch {}
     }
     remoteSocketIdRef.current = null;
+    pendingCandidatesRef.current = [];
     setRemoteAudioBlocked(false);
     setIsSpeakerMuted(false);
   }, []);
@@ -464,10 +466,13 @@ export function EmergencyProvider({ children }) {
 
   /** Toggle local microphone mute */
   const toggleMute = useCallback(() => {
-    if (!localStreamRef.current) return;
+    if (!localStreamRef.current) return false;
+    let anyEnabled = false;
     localStreamRef.current.getAudioTracks().forEach((t) => {
       t.enabled = !t.enabled;
+      if (t.enabled) anyEnabled = true;
     });
+    return !anyEnabled;
   }, []);
 
   /** Read current mute state */
@@ -491,6 +496,19 @@ export function EmergencyProvider({ children }) {
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
         setCallState((prev) => (prev ? { ...prev, status: 'connected', remoteSocketId: userSocketId } : prev));
+
+        // Drain any buffered ICE candidates that arrived before remoteDescription
+        if (pendingCandidatesRef.current.length > 0) {
+          console.log(`[WebRTC] Processing ${pendingCandidatesRef.current.length} buffered ICE candidates for Admin`);
+          for (const cand of pendingCandidatesRef.current) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(cand));
+            } catch (candErr) {
+              console.warn('[WebRTC] Error adding buffered candidate:', candErr);
+            }
+          }
+          pendingCandidatesRef.current = [];
+        }
       } catch (err) {
         console.error('[Voice] setRemoteDescription (answer) error:', err);
       }
@@ -537,6 +555,20 @@ export function EmergencyProvider({ children }) {
         }
 
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+
+        // Drain any buffered ICE candidates from the Admin that arrived before remoteDescription
+        if (pendingCandidatesRef.current.length > 0) {
+          console.log(`[WebRTC] Processing ${pendingCandidatesRef.current.length} buffered ICE candidates from Admin for User`);
+          for (const cand of pendingCandidatesRef.current) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(cand));
+            } catch (candErr) {
+              console.warn('[WebRTC] Error adding buffered candidate:', candErr);
+            }
+          }
+          pendingCandidatesRef.current = [];
+        }
+
         const answer = await pc.createAnswer({
           offerToReceiveAudio: true,
           offerToReceiveVideo: false,
@@ -564,13 +596,20 @@ export function EmergencyProvider({ children }) {
 
     // ICE candidate received
     const handleIceCandidate = async ({ candidate, fromSocketId }) => {
+      if (!candidate) return;
+      if (!remoteSocketIdRef.current && fromSocketId) {
+        remoteSocketIdRef.current = fromSocketId;
+      }
       const pc = peerRef.current;
-      if (!pc || !candidate) return;
-      if (!remoteSocketIdRef.current && fromSocketId) remoteSocketIdRef.current = fromSocketId;
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (err) {
-        console.warn('[Voice] addIceCandidate error:', err);
+      if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+          console.warn('[WebRTC] addIceCandidate error:', err);
+        }
+      } else {
+        console.log('[WebRTC] Buffering early ICE candidate until remoteDescription is set');
+        pendingCandidatesRef.current.push(candidate);
       }
     };
 
@@ -728,15 +767,22 @@ export function EmergencyProvider({ children }) {
         unblockRemoteAudio,
       }}
     >
-      {/* Hidden real DOM audio element for WebRTC remote stream playback */}
+      {/* Offscreen DOM audio element for WebRTC remote stream playback (not display:none so audio engine renders) */}
       <audio
         ref={remoteAudioRef}
         id="emergency-remote-audio"
         autoPlay
         playsInline
         controls={false}
-        className="hidden pointer-events-none"
-        style={{ display: 'none' }}
+        style={{
+          position: 'fixed',
+          top: '-9999px',
+          left: '-9999px',
+          width: '1px',
+          height: '1px',
+          opacity: '0.001',
+          pointerEvents: 'none',
+        }}
       />
       {children}
     </EmergencyContext.Provider>
