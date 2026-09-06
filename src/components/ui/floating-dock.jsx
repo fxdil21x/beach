@@ -64,6 +64,11 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
   const [actionPulse, setActionPulse] = useState(0);
   const location = useLocation();
 
+  // Reset hover state when location changes or on touch
+  useEffect(() => {
+    setHovered(false);
+  }, [location.pathname]);
+
   // Listen to any page actions, status updates, or refresh events to trigger 2x shake
   useEffect(() => {
     const handleAction = () => {
@@ -114,8 +119,15 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
         <motion.div
           ref={ref}
           style={{ width, height }}
-          onMouseEnter={() => setHovered(true)}
+          onMouseEnter={() => {
+            if (typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches) {
+              setHovered(true);
+            }
+          }}
           onMouseLeave={() => setHovered(false)}
+          onTouchStart={() => setHovered(false)}
+          onTouchEnd={() => setHovered(false)}
+          onClick={() => setHovered(false)}
           className="relative flex aspect-square items-center justify-center rounded-full select-none"
         >
           {/* Smooth Gliding Active Pill Background */}
@@ -132,7 +144,7 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
             />
           )}
 
-          {/* Animated Tooltip on Desktop Hover */}
+          {/* Animated Tooltip on Desktop Pointer Hover Only */}
           <AnimatePresence>
             {hovered && (
               <motion.div
@@ -140,7 +152,7 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
                 animate={{ opacity: 1, y: 0, x: '-50%' }}
                 exit={{ opacity: 0, y: 4, x: '-50%' }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
-                className="pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900/90 px-2 py-0.5 text-[11px] font-semibold text-white shadow-md backdrop-blur-xs dark:bg-white/90 dark:text-gray-900"
+                className="hidden sm:block pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900/90 px-2 py-0.5 text-[11px] font-semibold text-white shadow-md backdrop-blur-xs dark:bg-white/90 dark:text-gray-900"
               >
                 {item.title}
               </motion.div>
