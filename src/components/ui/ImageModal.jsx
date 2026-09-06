@@ -1,10 +1,19 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { lockScroll, unlockScroll } from '../../utils/scrollLock.js';
 
 export default function ImageModal({ src, alt = 'Preview image', onClose }) {
   const [portalTarget, setPortalTarget] = useState(null);
   const resolvedRef = useRef(false);
+
+  useEffect(() => {
+    if (!src) return;
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, [src]);
 
   useEffect(() => {
     if (!src) return;
@@ -29,23 +38,25 @@ export default function ImageModal({ src, alt = 'Preview image', onClose }) {
     };
     if (src) {
       window.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
     };
   }, [src, onClose]);
 
   if (!src || !portalTarget) return null;
 
+  const positionClass = portalTarget === document.body ? 'fixed inset-0' : 'absolute inset-0';
+
   return createPortal(
     <div
-      className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className={`${positionClass} z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 touch-none overscroll-contain animate-in fade-in duration-200`}
       onClick={onClose}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <div
-        className="relative max-h-[90%] max-w-[95%] flex flex-col items-center"
+        className="relative max-h-[90%] max-w-[95%] flex flex-col items-center overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Right Close Button Only */}
@@ -73,4 +84,3 @@ export default function ImageModal({ src, alt = 'Preview image', onClose }) {
     portalTarget
   );
 }
-

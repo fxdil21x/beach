@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { lockScroll, unlockScroll } from '../../../utils/scrollLock.js';
 
 /**
  * CommonModal — shared modal component used by:
  *  - NotificationBell modal  (orange accent, "Close" button)
  *  - Location consent modal  (emerald accent, "Allow / Not Now" buttons)
+ *  - Emergency modal alerts
  *
  * Props:
  *  isOpen          — boolean to show/hide
@@ -40,6 +42,15 @@ export default function CommonModal({
   const [portalTarget, setPortalTarget] = useState(null);
   const resolvedRef = useRef(false);
 
+  // Lock background scroll when open
+  useEffect(() => {
+    if (!isOpen) return;
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, [isOpen]);
+
   // Resolve portal target each time modal opens
   useEffect(() => {
     if (!isOpen) return;
@@ -59,7 +70,22 @@ export default function CommonModal({
     }
   }, [isOpen]);
 
+  // Escape key handler
+  useEffect(() => {
+    if (!isOpen || !onClose) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !portalTarget) return null;
+
+  const isPortalBody = portalTarget === document.body;
+  const positionClass = isPortalBody ? 'fixed inset-0' : 'absolute inset-0';
 
   const footerActions = actions ?? (
     <button
@@ -73,16 +99,18 @@ export default function CommonModal({
 
   const modal = (
     <div
-      className="absolute inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300"
+      className={`${positionClass} z-[9999] flex items-center justify-center p-4 touch-none overscroll-contain animate-in fade-in duration-300`}
       style={{
-        background: 'rgba(2,6,23,0.72)',
+        background: 'rgba(2,6,23,0.78)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
       }}
       onClick={onClose}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <div
-        className={`relative flex max-h-[calc(100%-2rem)] w-full ${maxWidth} flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5 text-slate-900 animate-in zoom-in-95 slide-in-from-bottom-3 duration-300 ease-out`}
+        className={`relative flex max-h-[calc(100%-2rem)] w-full ${maxWidth} flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5 text-slate-900 overscroll-contain animate-in zoom-in-95 slide-in-from-bottom-3 duration-300 ease-out`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
@@ -126,7 +154,7 @@ export default function CommonModal({
         )}
 
         {/* ── Scrollable Body ── */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3.5">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-3.5">
           {children}
         </div>
 

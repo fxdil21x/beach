@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Mic, MicOff, PhoneOff, Volume2, Radio, AlertTriangle } from 'lucide-react';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
+import { useModalScrollLock } from '../../utils/scrollLock.js';
 
 /* Animated sound-wave bars */
 function SoundWave({ active }) {
@@ -52,6 +53,7 @@ export default function VoiceCallOverlay() {
   const resolvedRef = useRef(false);
 
   const isOpen = Boolean(callState && callState.status !== 'ended');
+  useModalScrollLock(isOpen);
 
   // Resolve portal target (inside device mockup if present, else document.body)
   useEffect(() => {
@@ -102,6 +104,8 @@ export default function VoiceCallOverlay() {
     ? 'Calling…'
     : 'Connecting…';
 
+  const positionClass = portalTarget === document.body ? 'fixed inset-0' : 'absolute inset-0';
+
   const content = (
     <>
       <style>{`
@@ -120,11 +124,13 @@ export default function VoiceCallOverlay() {
       `}</style>
 
       <div
-        className="absolute inset-0 z-[100000] flex flex-col items-center justify-center p-6 text-white overflow-hidden animate-in fade-in duration-300"
+        className={`${positionClass} z-[100000] flex flex-col items-center justify-center p-6 text-white overflow-hidden touch-none overscroll-contain animate-in fade-in duration-300`}
         style={{
           background: 'linear-gradient(160deg, #020617 0%, #0f172a 60%, #0d1b2a 100%)',
           animation: 'fadeSlideUp 0.35s ease',
         }}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
       >
         {/* Ambient glow */}
         <div

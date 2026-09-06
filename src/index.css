@@ -166,6 +166,23 @@ html.device-frame-active body {
   pointer-events: auto;
 }
 
+/* Background scroll lock inside device mockup */
+.device-app-root[data-modal-active="true"] {
+  overflow: hidden !important;
+}
+
+.device-app-root[data-modal-active="true"] > div:not(.device-modal-layer) {
+  overflow: hidden !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.device-app-root[data-modal-active="true"] main,
+.device-app-root[data-modal-active="true"] .overflow-y-auto {
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
 .device-app-root .min-h-screen {
   min-height: 100%;
 }

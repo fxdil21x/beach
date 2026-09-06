@@ -37,6 +37,7 @@ import { useEmergency } from '../../context/EmergencyContext.jsx';
 import { useFeatureSettings } from '../../context/FeatureContext.jsx';
 import * as serviceApi from '../../api/serviceApi.js';
 import servicesBannerImg from '../../assets/banners/services-banner.jpg';
+import { useModalScrollLock } from '../../utils/scrollLock.js';
 
 const CULINARY_FALLBACKS = {
   burger: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
@@ -153,6 +154,7 @@ export default function Services() {
   const resolvedRef = useRef(false);
 
   const isModalOpen = Boolean(selectedRestaurant || selectedResort || selectedDish);
+  useModalScrollLock(isModalOpen);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -596,16 +598,18 @@ export default function Services() {
       ──────────────────────────────────────────────────────────────────────── */}
       {selectedRestaurant && portalTarget && createPortal(
         <div
-          className="absolute inset-0 z-[9990] flex items-end sm:items-center justify-center animate-in fade-in duration-200"
+          className={`${portalTarget === document.body ? 'fixed inset-0' : 'absolute inset-0'} z-[9990] flex items-end sm:items-center justify-center touch-none overscroll-contain animate-in fade-in duration-200`}
           style={{
             background: 'rgba(2, 6, 23, 0.75)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
           }}
           onClick={() => setSelectedRestaurant(null)}
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           <div
-            className="w-full max-w-md h-[94%] sm:h-[88%] rounded-t-[32px] sm:rounded-3xl bg-white dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800 shadow-2xl transition-all flex flex-col overflow-hidden"
+            className="w-full max-w-md h-[94%] sm:h-[88%] rounded-t-[32px] sm:rounded-3xl bg-white dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800 shadow-2xl transition-all flex flex-col overflow-hidden overscroll-contain"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top Restaurant Hero Banner with Image from Backend Settings */}
@@ -841,16 +845,18 @@ export default function Services() {
       ──────────────────────────────────────────────────────────────────────── */}
       {selectedDish && portalTarget && createPortal(
         <div
-          className="absolute inset-0 z-[9999] flex items-end sm:items-center justify-center animate-in fade-in duration-200"
+          className={`${portalTarget === document.body ? 'fixed inset-0' : 'absolute inset-0'} z-[9999] flex items-end sm:items-center justify-center touch-none overscroll-contain animate-in fade-in duration-200`}
           style={{
             background: 'rgba(2, 6, 23, 0.85)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
           }}
           onClick={() => setSelectedDish(null)}
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           <div
-            className="w-full max-w-md h-[95%] sm:h-[90%] rounded-t-[36px] sm:rounded-3xl bg-white dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800 shadow-2xl transition-all flex flex-col overflow-hidden"
+            className="w-full max-w-md h-[95%] sm:h-[90%] rounded-t-[36px] sm:rounded-3xl bg-white dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800 shadow-2xl transition-all flex flex-col overflow-hidden overscroll-contain"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Hero Food Image Header */}
@@ -1043,16 +1049,18 @@ export default function Services() {
       ──────────────────────────────────────────────────────────────────────── */}
       {selectedResort && portalTarget && createPortal(
         <div
-          className="absolute inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+          className={`${portalTarget === document.body ? 'fixed inset-0' : 'absolute inset-0'} z-[9999] flex items-center justify-center p-3 sm:p-4 touch-none overscroll-contain animate-in fade-in duration-200`}
           style={{
             background: 'rgba(2, 6, 23, 0.75)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
           }}
           onClick={() => setSelectedResort(null)}
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-2xl transition-all max-h-[90%] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 shadow-2xl transition-all max-h-[90%] overflow-y-auto overscroll-contain"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
