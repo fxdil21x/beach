@@ -38,6 +38,11 @@ function createPeerConnection(onIceCandidate, onRemoteStream) {
     iceCandidatePoolSize: 4,
   });
 
+  // Explicitly ensure bidirectional audio transceiver
+  try {
+    pc.addTransceiver('audio', { direction: 'sendrecv' });
+  } catch {}
+
   pc.onicecandidate = (e) => {
     if (e.candidate) {
       onIceCandidate(e.candidate);
@@ -48,6 +53,10 @@ function createPeerConnection(onIceCandidate, onRemoteStream) {
     console.log('[WebRTC] ontrack event received. Kind:', e.track?.kind, 'streams:', e.streams?.length);
     const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
     onRemoteStream(remoteStream);
+  };
+
+  pc.oniceconnectionstatechange = () => {
+    console.log('[WebRTC] ICE connection state:', pc.iceConnectionState);
   };
 
   return pc;
@@ -65,7 +74,7 @@ export function EmergencyProvider({ children }) {
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
   // ── Voice call state ──────────────────────────────────────────────────────
-  // callState: null | { status: 'calling'|'connected'|'incoming'|'ended', emergencyId, peerName, remoteSocketId }
+  // callState: null | { status: 'calling'|'connected'|'incoming'|'ended', emergencyId, peerName, remoteSocketId, micReady }
   const [callState, setCallState] = useState(null);
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const [remoteAudioBlocked, setRemoteAudioBlocked] = useState(false);
@@ -390,6 +399,35 @@ export function EmergencyProvider({ children }) {
     }
   }, []);
 
+  /** Acquire or re-acquire local microphone and attach to active WebRTC connection */
+  const acquireLocalMicrophone = useCallback(async () => {
+    resumeAudioContext();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
+      localStreamRef.current = stream;
+
+      const pc = peerRef.current;
+      if (pc) {
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+          const senders = pc.getSenders();
+          const audioSender = senders.find((s) => s.track && s.track.kind === 'audio') || senders.find((s) => !s.track);
+          if (audioSender) {
+            await audioSender.replaceTrack(audioTrack);
+          } else {
+            pc.addTrack(audioTrack, stream);
+          }
+        }
+      }
+      setCallState((prev) => (prev ? { ...prev, micReady: true, error: null } : prev));
+      return stream;
+    } catch (err) {
+      console.warn('[Voice] acquireLocalMicrophone error:', err);
+      setCallState((prev) => (prev ? { ...prev, micReady: false, error: 'Microphone permission needed. Tap to allow.' } : prev));
+      return null;
+    }
+  }, []);
+
   /** Toggle speaker mute / unmuted state */
   const toggleSpeaker = useCallback(() => {
     resumeAudioContext();
@@ -410,9 +448,17 @@ export function EmergencyProvider({ children }) {
     if (!socket || peerRef.current) return;
     try {
       resumeAudioContext();
+      if (socket.connected) {
+        socket.emit('join:emergency', emergencyId);
+      }
 
-      const stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
-      localStreamRef.current = stream;
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
+        localStreamRef.current = stream;
+      } catch (e) {
+        console.warn('[Voice] Admin mic acquisition pending:', e);
+      }
 
       const pc = createPeerConnection(
         (candidate) => {
@@ -420,6 +466,7 @@ export function EmergencyProvider({ children }) {
             socket.emit('call:ice-candidate', {
               targetSocketId: remoteSocketIdRef.current,
               emergencyId,
+              userId,
               candidate,
             });
           }
@@ -428,7 +475,9 @@ export function EmergencyProvider({ children }) {
       );
       peerRef.current = pc;
 
-      stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+      if (stream) {
+        stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+      }
 
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
@@ -436,7 +485,7 @@ export function EmergencyProvider({ children }) {
       });
       await pc.setLocalDescription(offer);
 
-      setCallState({ status: 'calling', emergencyId, peerName, remoteSocketId: null });
+      setCallState({ status: 'calling', emergencyId, peerName, remoteSocketId: null, micReady: Boolean(stream) });
 
       socket.emit('call:offer', {
         emergencyId,
@@ -525,6 +574,7 @@ export function EmergencyProvider({ children }) {
         emergencyId,
         peerName: adminName || 'Gate Officer',
         remoteSocketId: adminSocketId,
+        micReady: false,
       });
 
       try {
@@ -533,7 +583,7 @@ export function EmergencyProvider({ children }) {
           stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
           localStreamRef.current = stream;
         } catch (mediaErr) {
-          console.warn('[Voice] Mic access pending or denied, continuing connection:', mediaErr);
+          console.warn('[Voice] User mic auto-access pending user click:', mediaErr);
         }
 
         const pc = createPeerConnection(
@@ -586,6 +636,7 @@ export function EmergencyProvider({ children }) {
           emergencyId,
           peerName: adminName || 'Gate Officer',
           remoteSocketId: adminSocketId,
+          micReady: Boolean(stream),
         });
       } catch (err) {
         console.error('[Voice] auto-answer error:', err);
@@ -765,6 +816,7 @@ export function EmergencyProvider({ children }) {
         toggleSpeaker,
         remoteAudioBlocked,
         unblockRemoteAudio,
+        acquireLocalMicrophone,
       }}
     >
       {/* Offscreen DOM audio element for WebRTC remote stream playback (not display:none so audio engine renders) */}

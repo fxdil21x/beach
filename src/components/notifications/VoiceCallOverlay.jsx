@@ -54,6 +54,7 @@ export default function VoiceCallOverlay() {
     toggleSpeaker,
     remoteAudioBlocked,
     unblockRemoteAudio,
+    acquireLocalMicrophone,
   } = useEmergency();
 
   const [muted, setMuted] = useState(false);
@@ -116,6 +117,13 @@ export default function VoiceCallOverlay() {
     endCall(callState.emergencyId);
   };
 
+  const handleContainerClick = () => {
+    unblockRemoteAudio();
+    if (callState && callState.micReady === false && acquireLocalMicrophone) {
+      acquireLocalMicrophone();
+    }
+  };
+
   const statusLabel = isConnected
     ? formatTime(elapsed)
     : isCalling
@@ -147,7 +155,7 @@ export default function VoiceCallOverlay() {
           background: 'linear-gradient(160deg, #020617 0%, #0f172a 60%, #0d1b2a 100%)',
           animation: 'fadeSlideUp 0.35s ease',
         }}
-        onClick={unblockRemoteAudio}
+        onClick={handleContainerClick}
         onWheel={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
@@ -204,11 +212,29 @@ export default function VoiceCallOverlay() {
         {remoteAudioBlocked && (
           <button
             type="button"
-            onClick={unblockRemoteAudio}
-            className="mb-5 flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-xs font-black text-slate-950 shadow-xl shadow-orange-500/30 animate-bounce cursor-pointer transition-transform active:scale-95"
+            onClick={(e) => {
+              e.stopPropagation();
+              unblockRemoteAudio();
+            }}
+            className="mb-4 flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-xs font-black text-slate-950 shadow-xl shadow-orange-500/30 animate-bounce cursor-pointer transition-transform active:scale-95"
           >
             <Volume2 className="h-4 w-4" />
             <span>Tap to Enable Audio 🔊</span>
+          </button>
+        )}
+
+        {/* Mobile mic activation prompt if mic was not pre-granted */}
+        {callState.micReady === false && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (acquireLocalMicrophone) acquireLocalMicrophone();
+            }}
+            className="mb-4 flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-xs font-black text-slate-950 shadow-xl shadow-emerald-500/30 animate-pulse cursor-pointer transition-transform active:scale-95"
+          >
+            <Mic className="h-4 w-4" />
+            <span>Tap to Enable Mic / Speak 🎙️</span>
           </button>
         )}
 
@@ -218,7 +244,7 @@ export default function VoiceCallOverlay() {
             <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400" />
             <span>
               {callState.error === 'Permission denied'
-                ? 'Microphone access denied. Please allow mic in browser.'
+                ? 'Microphone access denied. Please allow mic in browser settings.'
                 : callState.error}
             </span>
           </div>

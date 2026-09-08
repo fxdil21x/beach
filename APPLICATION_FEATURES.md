@@ -40,11 +40,20 @@ The user interface caters to two types of end users: **Unregistered Public Visit
   * Informational guide detailing speed limits, parking rules, tide safety advisories, and waste disposal regulations.
   * Direct 1-tap navigation button from the Home screen hero banner.
 
-### C. Services & Beach Directory (`/user/services`)
-* **Dynamic 2-Column Responsive Grid (`grid-cols-2`)**:
-  * **Auto & Taxi Rides**: Direct driver cards with vehicle photo/avatar, driver name, vehicle type (*Auto Rickshaw*, *4-Seater Cab*, *SUV Taxi*, *Traveller*), vehicle registration number, stand location, and direct 1-tap **"Call Driver"** action.
-  * **Beach Restaurants & Live Food Menus**: Browse local eateries, cuisines, pure-veg indicators, operating hours, and total dish counts. Clicking opens the **Interactive Food Menu Modal** showing all dishes with prices, dietary badges (*Veg*, *Non-Veg*, *Seafood*), **In-Stock 🟢 / Sold-Out 🔴** live status, and direct **Call to Order**.
-  * **Beachfront Resorts & Stays**: View tariff per night, beach view amenities, and direct reception contact.
+### C. Services & Beach Directory (`/user/services`) — Auto Rides & Food Ordering
+* **Direct Auto Rickshaw & Taxi Calling**:
+  * **Driver Profiles**: Displays verified driver details (Photo, Name, Vehicle category, Registration number e.g., `KL-13-AB-1234`, and stand location).
+  * **1-Tap Direct Phone Call (`tel:`)**: Tapping the call button launches the phone dialer with the driver's contact number.
+  * **Live Socket Telemetry**: Broadcasts real-time ride request telemetry via Socket.IO (`service:call-click`) with driver and vehicle metadata.
+* **Direct Food Ordering & Live Restaurant Menus**:
+  * **Beach Stalls & Restaurants**: Browse seaside food stalls, cafes, and shacks with cuisine types, operating hours, and dish counts.
+  * **Interactive Food Menu Modal**: Filter dishes by category (*Main Course*, *Seafood Specials*, *Snacks & Quick Bites*, *Starters*, *Breads & Rice*, *Beverages*, *Desserts*) with dietary indicators (*Veg 🟢*, *Non-Veg 🔴*, *Seafood 🦐*), live in-stock status, and prices.
+  * **Dedicated Food Detail & Ordering Screen**:
+    * Large dish hero visual, culinary description, prep time, rating, and favorite bookmarking (❤️).
+    * **Quantity Selector (`+` / `-`)**: Live total bill calculation based on selected quantity.
+    * **"Call to Order" Direct Action**: 1-tap **`Call to Order (₹Total)`** button that sends order metadata (`dishName`, `quantity`, `totalPrice`) over Socket.IO and launches the phone dialer to directly call the stall kitchen to place the order.
+    * **"Recommended For You"**: Recommendations carousel featuring other popular dishes from the same stall.
+* **Beachfront Resorts & Stays**: View tariff per night, beach view amenities, and direct reception contact.
 * **Category Filters & Instant Search**: Filter by *All Services*, *Auto & Taxi*, *Restaurants*, or *Resorts* with search by name, vehicle number, driver, dish, or location.
 
 ### D. Logged-In User Features, Session & Emergency Tools
