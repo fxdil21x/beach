@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock, Layers, Globe, Moon, Map as MapIcon, Eye, Compass, ExternalLink, X, Maximize2, Sparkles } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock, Layers, Globe, Moon, Map as MapIcon, Eye, Compass, ExternalLink, X, Maximize2 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
@@ -8,65 +8,6 @@ import axios from '../../api/axios.js';
 
 // Default Muzhappilangad Beach Coordinates
 const DEFAULT_CENTER = [11.7915, 75.4524];
-
-// 5 Demo User Data Items for confirming responsive design, scrolling, and map interaction
-const MOCK_5_USERS = [
-  {
-    userId: 'demo-user-1',
-    userName: 'Rahul Sharma',
-    username: 'rahul_s',
-    userPhone: '+91 98451 22341',
-    latitude: 11.7942,
-    longitude: 75.4510,
-    accuracy: 12,
-    speed: 1.5,
-    timestamp: new Date().toISOString(),
-  },
-  {
-    userId: 'demo-user-2',
-    userName: 'Ananya Verma',
-    username: 'ananya_v',
-    userPhone: '+91 94470 56789',
-    latitude: 11.7915,
-    longitude: 75.4524,
-    accuracy: 8,
-    speed: 0.8,
-    timestamp: new Date(Date.now() - 45000).toISOString(),
-  },
-  {
-    userId: 'demo-user-3',
-    userName: 'Muhammed Nihal',
-    username: 'nihal_k',
-    userPhone: '+91 97451 98765',
-    latitude: 11.7880,
-    longitude: 75.4542,
-    accuracy: 15,
-    speed: 2.1,
-    timestamp: new Date(Date.now() - 90000).toISOString(),
-  },
-  {
-    userId: 'demo-user-4',
-    userName: 'Sneha Patel',
-    username: 'sneha_p',
-    userPhone: '+91 98230 45671',
-    latitude: 11.7960,
-    longitude: 75.4495,
-    accuracy: 9,
-    speed: 0.0,
-    timestamp: new Date(Date.now() - 150000).toISOString(),
-  },
-  {
-    userId: 'demo-user-5',
-    userName: 'Arjun Das',
-    username: 'arjun_d',
-    userPhone: '+91 99612 34512',
-    latitude: 11.7855,
-    longitude: 75.4560,
-    accuracy: 14,
-    speed: 3.4,
-    timestamp: new Date(Date.now() - 210000).toISOString(),
-  },
-];
 
 const TILE_LAYERS = {
   satellite: {
@@ -99,7 +40,6 @@ export default function MasterTrackUser() {
   const { socket } = useEmergency();
   const { featureSettings } = useFeatureSettings();
   const [users, setUsers] = useState(new Map());
-  const [useMockUsers, setUseMockUsers] = useState(true); // Demo state to confirm design with 5 items
   const [mapReady, setMapReady] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -115,16 +55,6 @@ export default function MasterTrackUser() {
   const hasAutoCenteredRef = useRef(false);
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
-
-  // Combine live users with 5 demo users when useMockUsers is enabled
-  const displayUsers = useMemo(() => {
-    if (!useMockUsers) return users;
-    const merged = new Map(users);
-    if (merged.size === 0) {
-      MOCK_5_USERS.forEach((u) => merged.set(u.userId, u));
-    }
-    return merged;
-  }, [users, useMockUsers]);
 
   // Invalidate map size on mobile view switcher tab change
   useEffect(() => {
@@ -284,13 +214,13 @@ export default function MasterTrackUser() {
     };
   }, [socket, isEnabled]);
 
-  // Update map markers whenever displayUsers or mapReady changes
+  // Update map markers whenever users or mapReady changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !mapReady) return;
 
     const currentMarkers = markersRef.current;
-    const activeUserIds = new Set(displayUsers.keys());
+    const activeUserIds = new Set(users.keys());
 
     // Remove obsolete markers & circles
     currentMarkers.forEach((item, userId) => {
@@ -302,7 +232,7 @@ export default function MasterTrackUser() {
     });
 
     // Create / Update markers for active users
-    displayUsers.forEach((user, userId) => {
+    users.forEach((user, userId) => {
       const lat = Number(user.latitude);
       const lng = Number(user.longitude);
       if (isNaN(lat) || isNaN(lng)) return;
@@ -379,21 +309,21 @@ export default function MasterTrackUser() {
         currentMarkers.set(userId, { marker, circle });
       }
     });
-  }, [displayUsers, mapReady]);
+  }, [users, mapReady]);
 
-  // Auto fit map bounds on initial load when displayUsers has items
+  // Auto fit map bounds on initial load when users has items
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || !mapReady || hasAutoCenteredRef.current || displayUsers.size === 0) return;
+    if (!map || !mapReady || hasAutoCenteredRef.current || users.size === 0) return;
     hasAutoCenteredRef.current = true;
     setTimeout(() => {
       if (!mapInstanceRef.current) return;
       const bounds = L.latLngBounds(
-        Array.from(displayUsers.values()).map((u) => [Number(u.latitude), Number(u.longitude)])
+        Array.from(users.values()).map((u) => [Number(u.latitude), Number(u.longitude)])
       );
       mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
     }, 200);
-  }, [displayUsers, mapReady]);
+  }, [users, mapReady]);
 
   const handleSelectUser = (user) => {
     setSelectedUser(user);
@@ -419,9 +349,9 @@ export default function MasterTrackUser() {
   const handleRecenter = () => {
     const map = mapInstanceRef.current;
     if (!map) return;
-    if (displayUsers.size > 0) {
+    if (users.size > 0) {
       const bounds = L.latLngBounds(
-        Array.from(displayUsers.values()).map((u) => [Number(u.latitude), Number(u.longitude)])
+        Array.from(users.values()).map((u) => [Number(u.latitude), Number(u.longitude)])
       );
       map.fitBounds(bounds, { padding: [50, 50] });
     } else {
@@ -429,7 +359,7 @@ export default function MasterTrackUser() {
     }
   };
 
-  const filteredUsers = Array.from(displayUsers.values()).filter((u) => {
+  const filteredUsers = Array.from(users.values()).filter((u) => {
     const q = search.toLowerCase().trim();
     if (!q) return true;
     return (
@@ -453,32 +383,15 @@ export default function MasterTrackUser() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 rounded-xl bg-zinc-900 border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
             </span>
-            <span className="font-bold text-white">{displayUsers.size}</span>
-            <span>Live Dot{displayUsers.size === 1 ? '' : 's'}</span>
+            <span className="font-bold text-white">{users.size}</span>
+            <span>Live Dot{users.size === 1 ? '' : 's'}</span>
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setUseMockUsers((prev) => !prev);
-              hasAutoCenteredRef.current = false;
-            }}
-            className={`flex items-center gap-1.5 rounded-xl font-medium text-xs px-3 py-2 transition-all shadow-md cursor-pointer ${
-              useMockUsers
-                ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-amber-500/10'
-                : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/50'
-            }`}
-            title="Toggle 5 sample users to confirm design and responsive scrolling"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-            <span>{useMockUsers ? '5 Demo Users (Active)' : 'Load 5 Demo Users'}</span>
-          </button>
 
           <button
             type="button"
@@ -616,7 +529,7 @@ export default function MasterTrackUser() {
             </button>
           </div>
 
-          {displayUsers.size === 0 && (
+          {users.size === 0 && (
             <div className="absolute bottom-4 left-4 z-20 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 shadow-xl flex items-center gap-2">
               <Navigation className="h-4 w-4 text-orange-400 animate-pulse" />
               <span>Waiting for active user location streams...</span>
@@ -664,19 +577,6 @@ export default function MasterTrackUser() {
               <div className="text-center py-8 text-zinc-500 text-xs space-y-2">
                 <Smartphone className="h-8 w-8 mx-auto text-zinc-600 opacity-60" />
                 <p>No live tracked users right now.</p>
-                {!useMockUsers && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUseMockUsers(true);
-                      hasAutoCenteredRef.current = false;
-                    }}
-                    className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Load 5 Demo Users to Preview
-                  </button>
-                )}
               </div>
             ) : (
               filteredUsers.map((u) => {
