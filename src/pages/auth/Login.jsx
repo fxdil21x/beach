@@ -23,6 +23,7 @@ export default function Login() {
       const user = await login(form.username, form.password);
       if (user.role === 'ADMIN') navigate('/admin/search');
       else if (user.role === 'MASTER_ADMIN') navigate('/master/dashboard');
+      else if (user.role === 'RESTAURANT') navigate('/restaurant/dashboard');
       else navigate('/user/home');
     } catch (err) {
       setError(err.response?.data?.message || t('common.error'));
@@ -38,7 +39,8 @@ export default function Login() {
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-inner">
             <Shield className="h-6 w-6" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight"> Admin Login</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Portal Login</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Sign in with your Admin or Restaurant account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

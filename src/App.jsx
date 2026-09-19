@@ -47,6 +47,9 @@ const VisitorEntry = lazy(() => import('./pages/public/VisitorEntry.jsx'));
 const EntrySuccess = lazy(() => import('./pages/public/EntrySuccess.jsx'));
 const PublicIssueReport = lazy(() => import('./pages/public/PublicIssueReport.jsx'));
 
+// ── Restaurant Portal ──
+const RestaurantPortal = lazy(() => import('./pages/restaurant/RestaurantPortal.jsx'));
+
 import { EmergencyProvider } from './context/EmergencyContext.jsx';
 import { FeatureProvider } from './context/FeatureContext.jsx';
 import AdminEmergencyOverlay from './components/notifications/AdminEmergencyOverlay.jsx';
@@ -103,6 +106,12 @@ export default function App() {
                     <Route path="/admin" element={<Navigate to="/admin/search" replace />} />
                   </Route>
                 </Route>
+              </Route>
+
+              {/* Restaurant Portal */}
+              <Route element={<ProtectedRoute roles={['RESTAURANT', 'MASTER_ADMIN']} />}>
+                <Route path="/restaurant/dashboard" element={<RestaurantPortal />} />
+                <Route path="/restaurant" element={<Navigate to="/restaurant/dashboard" replace />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={['MASTER_ADMIN']} />}>

@@ -27,6 +27,8 @@ import {
   FolderPlus,
   Tag,
   Check,
+  Lock,
+  Key,
 } from 'lucide-react';
 import * as serviceApi from '../../api/serviceApi.js';
 
@@ -79,6 +81,9 @@ export default function ServicesManagement() {
     openingHours: '11:00 AM - 11:00 PM',
     isPureVeg: false,
     dietaryType: 'all',
+    username: '',
+    password: '',
+    googlePayNumber: '',
     driverName: '',
     vehicleNumber: '',
     vehicleType: 'auto',
@@ -100,6 +105,7 @@ export default function ServicesManagement() {
     image: '',
     isSpecial: false,
     isAvailable: true,
+    googlePayNumber: '',
   });
 
   const showToast = (message, type = 'success') => {
@@ -260,6 +266,9 @@ export default function ServicesManagement() {
       openingHours: '11:00 AM - 11:00 PM',
       isPureVeg: false,
       dietaryType: 'all',
+      username: '',
+      password: '',
+      googlePayNumber: '',
       driverName: '',
       vehicleNumber: '',
       vehicleType: 'auto',
@@ -291,6 +300,9 @@ export default function ServicesManagement() {
       openingHours: service.restaurantDetails?.openingHours || '11:00 AM - 11:00 PM',
       isPureVeg: service.restaurantDetails?.isPureVeg || false,
       dietaryType: service.restaurantDetails?.dietaryType || (service.restaurantDetails?.isPureVeg ? 'veg' : 'all'),
+      username: service.restaurantDetails?.username || '',
+      password: service.restaurantDetails?.password || '',
+      googlePayNumber: service.restaurantDetails?.googlePayNumber || '',
       driverName: service.transportDetails?.driverName || '',
       vehicleNumber: service.transportDetails?.vehicleNumber || '',
       vehicleType: service.transportDetails?.vehicleType || 'auto',
@@ -334,6 +346,9 @@ export default function ServicesManagement() {
           isPureVeg: serviceForm.dietaryType === 'veg' || Boolean(serviceForm.isPureVeg),
           dietaryType: serviceForm.dietaryType || 'all',
           categories: editingService?.restaurantDetails?.categories || [],
+          username: serviceForm.username?.trim() || '',
+          password: serviceForm.password?.trim() || '',
+          googlePayNumber: serviceForm.googlePayNumber?.trim() || '',
         };
       } else if (serviceForm.category === 'transport') {
         payload.transportDetails = {
@@ -525,6 +540,7 @@ export default function ServicesManagement() {
       image: '',
       isSpecial: false,
       isAvailable: true,
+      googlePayNumber: managingMenuRestaurant?.restaurantDetails?.googlePayNumber || '',
     });
     setIsFoodModalOpen(true);
   };
@@ -540,6 +556,7 @@ export default function ServicesManagement() {
       image: item.image || '',
       isSpecial: Boolean(item.isSpecial),
       isAvailable: item.isAvailable !== false,
+      googlePayNumber: item.googlePayNumber || '',
     });
     setIsFoodModalOpen(true);
   };
@@ -568,6 +585,7 @@ export default function ServicesManagement() {
           image: foodForm.image || '',
           isSpecial: Boolean(foodForm.isSpecial),
           isAvailable: Boolean(foodForm.isAvailable),
+          googlePayNumber: foodForm.googlePayNumber?.trim() || '',
         });
         showToast(`"${foodForm.name}" updated successfully!`);
       } else {
@@ -580,6 +598,7 @@ export default function ServicesManagement() {
           image: foodForm.image || '',
           isSpecial: Boolean(foodForm.isSpecial),
           isAvailable: true,
+          googlePayNumber: foodForm.googlePayNumber?.trim() || '',
         });
         showToast(`"${foodForm.name}" added to menu!`);
       }
@@ -1421,6 +1440,17 @@ export default function ServicesManagement() {
                               {service.restaurantDetails?.menuItems?.length || 0} Foods Added
                             </span>
                           </div>
+
+                          {service.restaurantDetails?.username && (
+                            <div className="flex items-center justify-between pt-1 border-t border-zinc-800/60 text-zinc-300">
+                              <span className="text-zinc-400 font-medium flex items-center gap-1">
+                                <Lock className="h-3 w-3 text-amber-400" /> Portal Login:
+                              </span>
+                              <span className="font-mono text-[11px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                                @{service.restaurantDetails.username}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -1740,6 +1770,23 @@ export default function ServicesManagement() {
                   value={foodForm.description}
                   onChange={(e) => setFoodForm({ ...foodForm, description: e.target.value })}
                   placeholder="e.g. Fragrant kaima rice cooked with Malabar spices, served with raita & pickle"
+                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-orange-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Google Pay Number / UPI ID */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-zinc-300">
+                    Google Pay Number / UPI ID (Optional)
+                  </label>
+                  <span className="text-[10px] text-zinc-400 font-medium">Opens GPay on Mobile</span>
+                </div>
+                <input
+                  type="text"
+                  value={foodForm.googlePayNumber}
+                  onChange={(e) => setFoodForm({ ...foodForm, googlePayNumber: e.target.value })}
+                  placeholder="e.g. 9876543210 or restaurant@okhdfcbank"
                   className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-orange-500 focus:outline-none"
                 />
               </div>
@@ -2108,6 +2155,54 @@ export default function ServicesManagement() {
                             <p className="text-[10px] text-zinc-400 mt-0.5">Fish Fry, Fries & Bites</p>
                           </div>
                         </button>
+                      </div>
+                    </div>
+
+                    {/* Restaurant Login Credentials */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                          <Lock className="h-3.5 w-3.5" /> Restaurant Portal Login
+                        </div>
+                        <span className="text-[10px] text-zinc-400">Used for restaurant login at /login</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-zinc-300 mb-1">
+                            Username / ID
+                          </label>
+                          <input
+                            type="text"
+                            value={serviceForm.username}
+                            onChange={(e) => setServiceForm({ ...serviceForm, username: e.target.value })}
+                            placeholder="e.g. thalassery_beach"
+                            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:border-amber-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-zinc-300 mb-1">
+                            Password
+                          </label>
+                          <input
+                            type="text"
+                            value={serviceForm.password}
+                            onChange={(e) => setServiceForm({ ...serviceForm, password: e.target.value })}
+                            placeholder="e.g. rest@1234"
+                            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:border-amber-500 focus:outline-none font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-zinc-300 mb-1">
+                          Default Google Pay Number / UPI ID (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={serviceForm.googlePayNumber}
+                          onChange={(e) => setServiceForm({ ...serviceForm, googlePayNumber: e.target.value })}
+                          placeholder="e.g. 9876543210 or restaurant@okhdfcbank"
+                          className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:border-amber-500 focus:outline-none"
+                        />
                       </div>
                     </div>
                   </div>

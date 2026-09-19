@@ -6,12 +6,14 @@ import { AppShellSkeleton } from '../ui/Skeleton.jsx';
 export function ProtectedRoute({ roles, redirectTo }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const adminSide = roles?.includes('ADMIN') || roles?.includes('MASTER_ADMIN');
+  const adminSide = roles?.includes('ADMIN') || roles?.includes('MASTER_ADMIN') || roles?.includes('RESTAURANT');
   const targetRedirect = redirectTo || (
     user?.role === 'ADMIN'
       ? '/admin/search'
       : user?.role === 'MASTER_ADMIN'
       ? '/master/dashboard'
+      : user?.role === 'RESTAURANT'
+      ? '/restaurant/dashboard'
       : adminSide
       ? '/login'
       : '/user/home'
@@ -44,6 +46,7 @@ export function GuestRoute() {
   if (user) {
     if (user.role === 'ADMIN') return <Navigate to="/admin/search" replace />;
     if (user.role === 'MASTER_ADMIN') return <Navigate to="/master/dashboard" replace />;
+    if (user.role === 'RESTAURANT') return <Navigate to="/restaurant/dashboard" replace />;
   }
 
   return <Outlet />;
@@ -68,5 +71,6 @@ export function RoleRedirect() {
   if (!user) return <Navigate to="/user/home" replace />;
   if (user.role === 'ADMIN') return <Navigate to="/admin/search" replace />;
   if (user.role === 'MASTER_ADMIN') return <Navigate to="/master/dashboard" replace />;
+  if (user.role === 'RESTAURANT') return <Navigate to="/restaurant/dashboard" replace />;
   return <Navigate to="/user/home" replace />;
 }
