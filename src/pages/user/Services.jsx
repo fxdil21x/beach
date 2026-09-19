@@ -201,7 +201,7 @@ export default function Services() {
   }, []);
 
   const categories = [
-    { id: 'all', label: 'All Services' },
+    // { id: 'all', label: 'All Services' },
     { id: 'transport', label: 'Auto & Taxi' },
     { id: 'restaurant', label: 'Restaurants & Food' },
     { id: 'stay', label: 'Resorts & Stays' },

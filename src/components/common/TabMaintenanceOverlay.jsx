@@ -16,6 +16,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { useFeatureSettings } from '../../context/FeatureContext.jsx';
+import { useModalScrollLock } from '../../utils/scrollLock.js';
 
 export const ICON_MAP = {
   Wrench,
@@ -36,14 +37,23 @@ export const ICON_MAP = {
 export default function TabMaintenanceOverlay({ tabId, fallbackTitle = 'Feature Under Maintenance' }) {
   const { getTabMaintenance } = useFeatureSettings();
   const info = getTabMaintenance(tabId);
+  const isBlocked = Boolean(info && info.isBlocked);
 
-  if (!info || !info.isBlocked) return null;
+  useModalScrollLock(isBlocked);
+
+  if (!isBlocked) return null;
 
   const IconComponent = ICON_MAP[info.icon] || Wrench;
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center p-4 pb-20 backdrop-blur-xl bg-slate-950/80 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-amber-500/30 bg-slate-900/95 p-6 text-center text-white shadow-2xl shadow-amber-950/50">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/85 animate-in fade-in duration-200"
+      style={{ touchAction: 'none' }}
+    >
+      <div 
+        className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-amber-500/30 bg-slate-900/95 p-6 text-center text-white shadow-2xl shadow-amber-950/50 my-auto"
+        style={{ touchAction: 'auto' }}
+      >
         {/* Glowing Background Ring */}
         <div className="absolute -top-16 -left-16 h-36 w-36 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
         <div className="absolute -bottom-16 -right-16 h-36 w-36 rounded-full bg-orange-500/15 blur-2xl pointer-events-none" />
