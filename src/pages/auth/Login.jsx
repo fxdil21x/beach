@@ -38,13 +38,7 @@ export default function Login() {
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-inner">
             <Shield className="h-6 w-6" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Staff & Admin Login</h1>
-          <p className="mt-2 text-xs sm:text-sm text-slate-500">
-            Muzhappilangad Beach Gate Officers & Admins{' '}
-            <Link to="/user/home" className="font-semibold text-blue-600 hover:underline">
-              {t('nav.home', 'Home')}
-            </Link>
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight"> Admin Login</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,14 +76,7 @@ export default function Login() {
           </Button>
         </form>
 
-        <div className="pt-2 text-center border-t border-slate-100">
-          <p className="text-xs text-slate-500">
-            Are you a beach resident?{' '}
-            <Link to="/user/home" className="font-semibold text-blue-600 hover:underline">
-              Go to Resident Pass Page
-            </Link>
-          </p>
-        </div>
+       
       </div>
     </div>
   );

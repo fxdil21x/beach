@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock, Layers, Globe, Moon, Map as MapIcon, Eye, Compass, ExternalLink, X, Maximize2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { MapPin, Navigation, UserCheck, ShieldAlert, Search, RefreshCw, Smartphone, Clock, Layers, Globe, Moon, Map as MapIcon, Eye, Compass, ExternalLink, X, Maximize2, Sparkles } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEmergency } from '../../context/EmergencyContext.jsx';
@@ -8,6 +8,65 @@ import axios from '../../api/axios.js';
 
 // Default Muzhappilangad Beach Coordinates
 const DEFAULT_CENTER = [11.7915, 75.4524];
+
+// 5 Demo User Data Items for confirming responsive design, scrolling, and map interaction
+const MOCK_5_USERS = [
+  {
+    userId: 'demo-user-1',
+    userName: 'Rahul Sharma',
+    username: 'rahul_s',
+    userPhone: '+91 98451 22341',
+    latitude: 11.7942,
+    longitude: 75.4510,
+    accuracy: 12,
+    speed: 1.5,
+    timestamp: new Date().toISOString(),
+  },
+  {
+    userId: 'demo-user-2',
+    userName: 'Ananya Verma',
+    username: 'ananya_v',
+    userPhone: '+91 94470 56789',
+    latitude: 11.7915,
+    longitude: 75.4524,
+    accuracy: 8,
+    speed: 0.8,
+    timestamp: new Date(Date.now() - 45000).toISOString(),
+  },
+  {
+    userId: 'demo-user-3',
+    userName: 'Muhammed Nihal',
+    username: 'nihal_k',
+    userPhone: '+91 97451 98765',
+    latitude: 11.7880,
+    longitude: 75.4542,
+    accuracy: 15,
+    speed: 2.1,
+    timestamp: new Date(Date.now() - 90000).toISOString(),
+  },
+  {
+    userId: 'demo-user-4',
+    userName: 'Sneha Patel',
+    username: 'sneha_p',
+    userPhone: '+91 98230 45671',
+    latitude: 11.7960,
+    longitude: 75.4495,
+    accuracy: 9,
+    speed: 0.0,
+    timestamp: new Date(Date.now() - 150000).toISOString(),
+  },
+  {
+    userId: 'demo-user-5',
+    userName: 'Arjun Das',
+    username: 'arjun_d',
+    userPhone: '+91 99612 34512',
+    latitude: 11.7855,
+    longitude: 75.4560,
+    accuracy: 14,
+    speed: 3.4,
+    timestamp: new Date(Date.now() - 210000).toISOString(),
+  },
+];
 
 const TILE_LAYERS = {
   satellite: {
@@ -40,17 +99,42 @@ export default function MasterTrackUser() {
   const { socket } = useEmergency();
   const { featureSettings } = useFeatureSettings();
   const [users, setUsers] = useState(new Map());
+  const [useMockUsers, setUseMockUsers] = useState(true); // Demo state to confirm design with 5 items
+  const [mapReady, setMapReady] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [mapStyle, setMapStyle] = useState('satellite'); // Default to Realistic Satellite View
   const [streetViewTarget, setStreetViewTarget] = useState(null); // 3D Street View Modal Target
+  const [mobileView, setMobileView] = useState('split'); // 'split' | 'map' | 'users'
 
   const mapRef = useRef(null);
+  const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const tileLayerRef = useRef(null);
   const markersRef = useRef(new Map());
+  const hasAutoCenteredRef = useRef(false);
 
   const isEnabled = Boolean(featureSettings.trackUserEnabled);
+
+  // Combine live users with 5 demo users when useMockUsers is enabled
+  const displayUsers = useMemo(() => {
+    if (!useMockUsers) return users;
+    const merged = new Map(users);
+    if (merged.size === 0) {
+      MOCK_5_USERS.forEach((u) => merged.set(u.userId, u));
+    }
+    return merged;
+  }, [users, useMockUsers]);
+
+  // Invalidate map size on mobile view switcher tab change
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      const timer = setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [mobileView]);
 
   // Bind global window handler for marker popup 3D Street View button click
   useEffect(() => {
@@ -77,6 +161,7 @@ export default function MasterTrackUser() {
     });
 
     mapInstanceRef.current = map;
+    setMapReady(true);
 
     const resizeObserver = new ResizeObserver(() => {
       if (mapInstanceRef.current) {
@@ -90,9 +175,11 @@ export default function MasterTrackUser() {
 
     return () => {
       resizeObserver.disconnect();
+      markersRef.current.clear();
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        setMapReady(false);
       }
     };
   }, []);
@@ -100,7 +187,7 @@ export default function MasterTrackUser() {
   // Handle Tile Layer switching (Satellite, Esri, Dark, Street)
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!map || !mapReady) return;
 
     if (tileLayerRef.current) {
       map.removeLayer(tileLayerRef.current);
@@ -113,7 +200,7 @@ export default function MasterTrackUser() {
     }).addTo(map);
 
     tileLayerRef.current = newTileLayer;
-  }, [mapStyle]);
+  }, [mapStyle, mapReady]);
 
   const isFetchingActiveRef = useRef(false);
 
@@ -197,13 +284,13 @@ export default function MasterTrackUser() {
     };
   }, [socket, isEnabled]);
 
-  // Update map markers whenever users state changes
+  // Update map markers whenever displayUsers or mapReady changes
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!map || !mapReady) return;
 
     const currentMarkers = markersRef.current;
-    const activeUserIds = new Set(users.keys());
+    const activeUserIds = new Set(displayUsers.keys());
 
     // Remove obsolete markers & circles
     currentMarkers.forEach((item, userId) => {
@@ -215,7 +302,7 @@ export default function MasterTrackUser() {
     });
 
     // Create / Update markers for active users
-    users.forEach((user, userId) => {
+    displayUsers.forEach((user, userId) => {
       const lat = Number(user.latitude);
       const lng = Number(user.longitude);
       if (isNaN(lat) || isNaN(lng)) return;
@@ -259,6 +346,12 @@ export default function MasterTrackUser() {
 
       if (currentMarkers.has(userId)) {
         const item = currentMarkers.get(userId);
+        if (!map.hasLayer(item.marker)) {
+          item.marker.addTo(map);
+        }
+        if (item.circle && !map.hasLayer(item.circle)) {
+          item.circle.addTo(map);
+        }
         item.marker.setLatLng([lat, lng]);
         item.marker.setPopupContent(popupContent);
         if (item.circle) {
@@ -286,26 +379,49 @@ export default function MasterTrackUser() {
         currentMarkers.set(userId, { marker, circle });
       }
     });
-  }, [users]);
+  }, [displayUsers, mapReady]);
+
+  // Auto fit map bounds on initial load when displayUsers has items
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapReady || hasAutoCenteredRef.current || displayUsers.size === 0) return;
+    hasAutoCenteredRef.current = true;
+    setTimeout(() => {
+      if (!mapInstanceRef.current) return;
+      const bounds = L.latLngBounds(
+        Array.from(displayUsers.values()).map((u) => [Number(u.latitude), Number(u.longitude)])
+      );
+      mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+    }, 200);
+  }, [displayUsers, mapReady]);
 
   const handleSelectUser = (user) => {
     setSelectedUser(user);
+    if (mobileView === 'users') {
+      setMobileView('map');
+    }
     const map = mapInstanceRef.current;
     if (map && user.latitude && user.longitude) {
-      map.flyTo([Number(user.latitude), Number(user.longitude)], 16, {
-        duration: 1.2,
-      });
-      const item = markersRef.current.get(user.userId);
-      if (item && item.marker) item.marker.openPopup();
+      setTimeout(() => {
+        map.invalidateSize();
+        map.flyTo([Number(user.latitude), Number(user.longitude)], 16, {
+          duration: 1.2,
+        });
+        const item = markersRef.current.get(user.userId);
+        if (item && item.marker) item.marker.openPopup();
+      }, 100);
+    }
+    if (mobileView === 'split' && window.innerWidth < 1024) {
+      mapContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   };
 
   const handleRecenter = () => {
     const map = mapInstanceRef.current;
     if (!map) return;
-    if (users.size > 0) {
+    if (displayUsers.size > 0) {
       const bounds = L.latLngBounds(
-        Array.from(users.values()).map((u) => [Number(u.latitude), Number(u.longitude)])
+        Array.from(displayUsers.values()).map((u) => [Number(u.latitude), Number(u.longitude)])
       );
       map.fitBounds(bounds, { padding: [50, 50] });
     } else {
@@ -313,7 +429,7 @@ export default function MasterTrackUser() {
     }
   };
 
-  const filteredUsers = Array.from(users.values()).filter((u) => {
+  const filteredUsers = Array.from(displayUsers.values()).filter((u) => {
     const q = search.toLowerCase().trim();
     if (!q) return true;
     return (
@@ -324,28 +440,45 @@ export default function MasterTrackUser() {
   });
 
   return (
-    <div className="space-y-4 min-h-full flex flex-col pb-8 lg:pb-0 lg:h-[calc(100vh-120px)] lg:overflow-hidden">
+    <div className="space-y-3 sm:space-y-4 min-h-full flex flex-col pb-6 lg:pb-0 lg:h-[calc(100vh-120px)] lg:overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-emerald-400" />
-            Track User — Live Location Sharing Map
+            <MapPin className="h-5 w-5 text-emerald-400 shrink-0" />
+            <span>Track User — Live Location Sharing Map</span>
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
             Real-time GPS tracking of registered users currently sharing their location.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2 rounded-xl bg-zinc-900 border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
             </span>
-            <span className="font-bold text-white">{users.size}</span>
-            <span>Live Dot{users.size === 1 ? '' : 's'}</span>
+            <span className="font-bold text-white">{displayUsers.size}</span>
+            <span>Live Dot{displayUsers.size === 1 ? '' : 's'}</span>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setUseMockUsers((prev) => !prev);
+              hasAutoCenteredRef.current = false;
+            }}
+            className={`flex items-center gap-1.5 rounded-xl font-medium text-xs px-3 py-2 transition-all shadow-md cursor-pointer ${
+              useMockUsers
+                ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-amber-500/10'
+                : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/50'
+            }`}
+            title="Toggle 5 sample users to confirm design and responsive scrolling"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+            <span>{useMockUsers ? '5 Demo Users (Active)' : 'Load 5 Demo Users'}</span>
+          </button>
 
           <button
             type="button"
@@ -356,6 +489,48 @@ export default function MasterTrackUser() {
             Recenter Map
           </button>
         </div>
+      </div>
+
+      {/* Mobile View Mode Switcher (Visible on screens < lg) */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-zinc-900/90 border border-zinc-800 backdrop-blur-md lg:hidden shrink-0 shadow-lg">
+        <button
+          type="button"
+          onClick={() => setMobileView('split')}
+          className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            mobileView === 'split'
+              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <Compass className="h-3.5 w-3.5" />
+          <span>Split</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileView('map')}
+          className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            mobileView === 'map'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <MapPin className="h-3.5 w-3.5" />
+          <span>Map Only</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileView('users')}
+          className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            mobileView === 'users'
+              ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/25'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <UserCheck className="h-3.5 w-3.5" />
+          <span>Users ({filteredUsers.length})</span>
+        </button>
       </div>
 
       {!isEnabled && (
@@ -370,69 +545,78 @@ export default function MasterTrackUser() {
       {/* Main Content Layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
         {/* Map Container */}
-        <div className="lg:col-span-3 rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden shadow-2xl relative h-[380px] sm:h-[450px] lg:h-full min-h-[300px]">
+        <div
+          ref={mapContainerRef}
+          className={`lg:col-span-3 rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden shadow-2xl relative transition-all ${
+            mobileView === 'users' ? 'hidden lg:block' : 'block'
+          } ${
+            mobileView === 'map'
+              ? 'h-[calc(100vh-230px)] min-h-[420px] lg:h-full'
+              : 'h-[300px] sm:h-[380px] lg:h-full min-h-[250px]'
+          }`}
+        >
           <div ref={mapRef} className="w-full h-full z-0" />
 
           {/* Map Layer Switcher Control */}
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-1 rounded-xl bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-1 shadow-2xl">
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-1 rounded-xl bg-zinc-950/90 backdrop-blur-md border border-zinc-800 p-1 shadow-2xl max-w-[calc(100%-70px)] overflow-x-auto">
             <button
               type="button"
               onClick={() => setMapStyle('satellite')}
-              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
                 mapStyle === 'satellite'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
               title="Realistic Google Satellite & Hybrid View"
             >
-              <Globe className="h-3.5 w-3.5 text-emerald-300" />
+              <Globe className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-300" />
               <span>Satellite</span>
             </button>
 
             <button
               type="button"
               onClick={() => setMapStyle('esri')}
-              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
                 mapStyle === 'esri'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
               title="Esri World Aerial Imagery"
             >
-              <Layers className="h-3.5 w-3.5 text-cyan-300" />
+              <Layers className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-cyan-300" />
               <span>Aerial</span>
             </button>
 
             <button
               type="button"
               onClick={() => setMapStyle('dark')}
-              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
                 mapStyle === 'dark'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
               title="Dark Tactical Mode"
             >
-              <Moon className="h-3.5 w-3.5 text-purple-300" />
+              <Moon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-300" />
               <span>Dark</span>
             </button>
 
             <button
               type="button"
               onClick={() => setMapStyle('street')}
-              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
                 mapStyle === 'street'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
               title="Standard OpenStreetMap Vector"
             >
-              <MapIcon className="h-3.5 w-3.5 text-amber-300" />
+              <MapIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-300" />
               <span>Street</span>
             </button>
           </div>
 
-          {users.size === 0 && (
+          {displayUsers.size === 0 && (
             <div className="absolute bottom-4 left-4 z-20 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 shadow-xl flex items-center gap-2">
               <Navigation className="h-4 w-4 text-orange-400 animate-pulse" />
               <span>Waiting for active user location streams...</span>
@@ -441,12 +625,25 @@ export default function MasterTrackUser() {
         </div>
 
         {/* Live Users Sidebar */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 flex flex-col min-h-0 space-y-3 lg:col-span-1 shadow-xl">
+        <div
+          className={`rounded-2xl border border-zinc-800 bg-zinc-950 p-3.5 sm:p-4 flex flex-col min-h-0 space-y-3 lg:col-span-1 shadow-xl transition-all ${
+            mobileView === 'map' ? 'hidden lg:flex' : 'flex'
+          } ${
+            mobileView === 'users'
+              ? 'h-[calc(100vh-230px)] min-h-[420px] lg:h-full'
+              : 'h-[360px] sm:h-[420px] lg:h-full'
+          }`}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
               <UserCheck className="h-4 w-4 text-emerald-400" />
-              Tracked Users ({filteredUsers.length})
+              <span>Tracked Users ({filteredUsers.length})</span>
             </h2>
+            {mobileView === 'split' && (
+              <span className="text-[10px] text-zinc-500 lg:hidden font-medium">
+                Tap card to locate
+              </span>
+            )}
           </div>
 
           {/* Search Box */}
@@ -461,12 +658,25 @@ export default function MasterTrackUser() {
             />
           </div>
 
-          {/* User List Scrollable */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[380px] sm:max-h-[440px] lg:max-h-none overscroll-contain touch-pan-y">
+          {/* User List Scrollable with min-h-0 and smooth scrolling */}
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
             {filteredUsers.length === 0 ? (
               <div className="text-center py-8 text-zinc-500 text-xs space-y-2">
                 <Smartphone className="h-8 w-8 mx-auto text-zinc-600 opacity-60" />
                 <p>No live tracked users right now.</p>
+                {!useMockUsers && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseMockUsers(true);
+                      hasAutoCenteredRef.current = false;
+                    }}
+                    className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Load 5 Demo Users to Preview
+                  </button>
+                )}
               </div>
             ) : (
               filteredUsers.map((u) => {
