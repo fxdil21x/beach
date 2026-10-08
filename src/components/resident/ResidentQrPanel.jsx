@@ -37,8 +37,8 @@ export default function ResidentQrPanel({
       <div className="text-center pt-1">
         <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 mb-2">{t('pass.showQr')}</p>
         {qrToken && (
-          <div className="flex justify-center">
-            <div className="p-3 bg-white rounded-2xl">
+          <div className="">
+            <div className=" bg-white rounded-2xl">
               <ResidentQR token={qrToken} size={260} />
             </div>
           </div>

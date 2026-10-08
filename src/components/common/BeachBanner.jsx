@@ -44,12 +44,12 @@ export default function BeachBanner({
           </div>
         )}
         {title && (
-          <h2 className="text-xl font-extrabold leading-snug sm:text-2xl text-white drop-shadow-md">
+          <h2 className="text-xl font-[500] leading-snug sm:text-2xl text-white drop-shadow-md">
             {title}
           </h2>
         )}
         {subtitle && (
-          <p className="text-xs sm:text-sm font-medium text-slate-200 drop-shadow-xs leading-relaxed max-w-xl">
+          <p className="text-xs sm:text-sm font-[400] text-slate-200 drop-shadow-xs leading-relaxed max-w-xl">
             {subtitle}
           </p>
         )}

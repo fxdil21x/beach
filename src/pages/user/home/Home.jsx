@@ -243,7 +243,7 @@ export default function UserHome() {
             {showReportButton && (
               <Link
                 to="/user/report"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 border border-white/30 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 border border-white/30 px-3.5 py-2 text-xs font-[400] text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-xs"
               >
                 <TriangleAlert className="h-3.5 w-3.5 text-amber-300" />
                 <span>{t('report.reportButton', 'Report Issue')}</span>
@@ -252,7 +252,7 @@ export default function UserHome() {
 
             <Link
               to="/user/beach-rules"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/25 border border-amber-400/40 px-3.5 py-2 text-xs font-bold text-amber-200 backdrop-blur-md hover:bg-amber-500/35 transition-all shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/25 border border-amber-400/40 px-3.5 py-2 text-xs font-[400] text-amber-200 backdrop-blur-md hover:bg-amber-500/35 transition-all shadow-xs"
             >
               <ShieldCheck className="h-3.5 w-3.5 text-amber-300" />
               <span>{t('nav.beachRules', 'Beach Safety Rules')}</span>
