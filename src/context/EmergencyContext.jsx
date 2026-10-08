@@ -53,6 +53,18 @@ export async function getSafeUserMediaStream() {
   }
 }
 
+export async function primeMicrophonePermission() {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) return false;
+  try {
+    const stream = await getSafeUserMediaStream();
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
 function createPeerConnection(onIceCandidate, onRemoteStream) {
   const pc = new RTCPeerConnection({
     iceServers: ICE_SERVERS,
@@ -157,7 +169,7 @@ export function EmergencyProvider({ children }) {
     }
   }, [socket, user, isAdmin, userEmergencyState?.emergencyId]);
 
-  // Prime microphone permission after user logs in so browser is pre-authorized
+  // Prime microphone permission dialog after user logs in, then immediately release hardware so it is NOT listening
   useEffect(() => {
     if (!user) return;
     const primeMic = async () => {
@@ -167,19 +179,15 @@ export function EmergencyProvider({ children }) {
             try {
               const status = await navigator.permissions.query({ name: 'microphone' });
               if (status.state === 'granted') {
-                const stream = await getSafeUserMediaStream();
-                if (stream) {
-                  localStreamRef.current = stream;
-                }
-                return;
+                return; // Already granted, no need to touch hardware
               }
             } catch {}
           }
-          // Attempt silent or standard acquire
+          // Request permission once, then IMMEDIATELY stop tracks so mic is completely OFF
           const stream = await getSafeUserMediaStream();
           if (stream) {
-            localStreamRef.current = stream;
-            console.log('[EmergencyContext] Microphone permission primed post-login');
+            stream.getTracks().forEach((t) => t.stop());
+            console.log('[EmergencyContext] Microphone permission authorized & hardware released (not listening)');
           }
         }
       } catch (e) {

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { MapPin, ShieldCheck, AlertCircle, Navigation } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext.jsx';
-import { useEmergency } from '../../../../context/EmergencyContext.jsx';
+import { useEmergency, primeMicrophonePermission } from '../../../../context/EmergencyContext.jsx';
 import axios from '../../../../api/axios.js';
 import CommonModal from '../../../../components/common/CommonModal/index.js';
 
@@ -10,7 +10,7 @@ const LOCATION_PERMISSION_WINDOW = 30 * 60 * 1000; // 30 minutes in ms
 
 export default function UserLocationTracker() {
   const { user } = useAuth();
-  const { socket, acquireLocalMicrophone } = useEmergency();
+  const { socket } = useEmergency();
   const location = useLocation();
 
   const [showPrompt, setShowPrompt] = useState(false);
@@ -208,11 +208,9 @@ export default function UserLocationTracker() {
     }
     fetchAndSendCurrentLocation();
 
-    // Prime microphone permission during this direct user click gesture
+    // Prime microphone permission during this direct user click gesture, then immediately release
     try {
-      if (acquireLocalMicrophone) {
-        await acquireLocalMicrophone();
-      }
+      await primeMicrophonePermission();
     } catch {}
   };
 
