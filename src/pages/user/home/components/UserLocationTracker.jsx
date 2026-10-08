@@ -230,15 +230,15 @@ export default function UserLocationTracker() {
 
   return (
     <>
-      {/* Location Consent Modal using CommonModal */}
+      {/* Location & Safety Consent Modal using CommonModal */}
       <CommonModal
         isOpen={showPrompt}
         onClose={handleDecline}
         icon={MapPin}
         iconBg="bg-emerald-50 text-emerald-600 border border-emerald-100"
-        title="Enable Live Location Sharing"
-        subtitle="Beach Safety System has enabled live safety monitoring for registered visitors and residents at Muzhappilangad Beach."
-        actionLabel={locationError ? '📍 Retry Location Access' : '📍 Allow Location'}
+        title="Enable Safety, Location & Voice Intercom"
+        subtitle="Beach Safety System requires live location monitoring and emergency 2-way voice intercom for visitors and residents at Muzhappilangad Beach."
+        actionLabel={locationError ? '📍 Retry Safety Access' : '📍 Allow Safety & Location'}
         onAction={handleAllow}
         actionBtnClass="bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
         actions={
@@ -256,7 +256,7 @@ export default function UserLocationTracker() {
               className="flex-1 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
-              {locationError ? 'Retry Location Access' : 'Allow Location'}
+              {locationError ? 'Retry Safety Access' : 'Allow Safety & Location'}
             </button>
           </div>
         }
@@ -264,10 +264,10 @@ export default function UserLocationTracker() {
         <div className="rounded-2xl bg-emerald-50/70 border border-emerald-100 p-4 text-xs text-emerald-900 space-y-2">
           <div className="flex items-center gap-2 font-bold text-emerald-800">
             <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span>Why share your location?</span>
+            <span>Why enable safety services?</span>
           </div>
           <p className="text-emerald-700 leading-normal">
-            Your live location helps safety officers locate you instantly on the Master Admin map during emergency SOS alerts or high-tide warnings.
+            Enables instant GPS tracking for safety officers and primes the emergency 2-way voice intercom during SOS alerts or beach warnings.
           </p>
         </div>
 

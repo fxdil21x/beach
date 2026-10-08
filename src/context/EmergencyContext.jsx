@@ -169,36 +169,6 @@ export function EmergencyProvider({ children }) {
     }
   }, [socket, user, isAdmin, userEmergencyState?.emergencyId]);
 
-  // Prime microphone permission dialog after user logs in, then immediately release hardware so it is NOT listening
-  useEffect(() => {
-    if (!user) return;
-    const primeMic = async () => {
-      try {
-        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-          if (typeof navigator.permissions?.query === 'function') {
-            try {
-              const status = await navigator.permissions.query({ name: 'microphone' });
-              if (status.state === 'granted') {
-                return; // Already granted, no need to touch hardware
-              }
-            } catch {}
-          }
-          // Request permission once, then IMMEDIATELY stop tracks so mic is completely OFF
-          const stream = await getSafeUserMediaStream();
-          if (stream) {
-            stream.getTracks().forEach((t) => t.stop());
-            console.log('[EmergencyContext] Microphone permission authorized & hardware released (not listening)');
-          }
-        }
-      } catch (e) {
-        console.warn('[EmergencyContext] Post-login mic priming deferred:', e);
-      }
-    };
-
-    const timer = setTimeout(primeMic, 800);
-    return () => clearTimeout(timer);
-  }, [user?.id || user?._id]);
-
   // Handle emergency audio for a specific emergencyId
   const startAlarmSound = useCallback((emergencyId) => {
     let alarmAudio = audioMapRef.current.get(emergencyId);
@@ -363,10 +333,22 @@ export function EmergencyProvider({ children }) {
     // Receive emergency:cancelled
     const handleEmergencyCancelled = ({ emergencyId }) => {
       console.log('[EmergencyContext] emergency:cancelled:', emergencyId);
-      setUserEmergencyState((prev) => {
-        if (prev?.emergencyId === emergencyId) return null;
-        return prev;
-      });
+      setUserEmergencyState((prev) => (prev?.emergencyId === emergencyId ? null : prev));
+      if (emergencyId) {
+        stopAlarmSound(emergencyId);
+        setActiveEmergencies((prev) => {
+          const next = { ...prev };
+          delete next[emergencyId];
+          if (Object.keys(next).length === 0) {
+            stopEmergencyVibration();
+          }
+          return next;
+        });
+      }
+      if (callState?.emergencyId === emergencyId) {
+        closePeer();
+        setCallState(null);
+      }
     };
 
     socket.on('emergency:active-list', handleActiveList);
@@ -586,15 +568,30 @@ export function EmergencyProvider({ children }) {
 
   /** End call from either side */
   const endCall = useCallback((emergencyId) => {
-    if (socket?.connected) {
+    const targetId = emergencyId || callState?.emergencyId || userEmergencyState?.emergencyId;
+    if (socket?.connected && targetId) {
       socket.emit('call:end', {
         targetSocketId: remoteSocketIdRef.current,
-        emergencyId,
+        emergencyId: targetId,
       });
+      socket.emit('emergency:cancel', { emergencyId: targetId });
     }
     closePeer();
     setCallState(null);
-  }, [socket, closePeer]);
+    setUserEmergencyState(null);
+    if (targetId) {
+      axios.post(`/emergency/cancel/${targetId}`).catch(() => {});
+      stopAlarmSound(targetId);
+      setActiveEmergencies((prev) => {
+        const next = { ...prev };
+        delete next[targetId];
+        if (Object.keys(next).length === 0) {
+          stopEmergencyVibration();
+        }
+        return next;
+      });
+    }
+  }, [socket, closePeer, callState?.emergencyId, userEmergencyState?.emergencyId, stopAlarmSound]);
 
   /** Toggle local microphone mute */
   const toggleMute = useCallback(() => {
@@ -766,6 +763,18 @@ export function EmergencyProvider({ children }) {
       console.log('[Voice] call:ended received for', emergencyId);
       closePeer();
       setCallState(null);
+      setUserEmergencyState((prev) => (prev?.emergencyId === emergencyId ? null : prev));
+      if (emergencyId) {
+        stopAlarmSound(emergencyId);
+        setActiveEmergencies((prev) => {
+          const next = { ...prev };
+          delete next[emergencyId];
+          if (Object.keys(next).length === 0) {
+            stopEmergencyVibration();
+          }
+          return next;
+        });
+      }
     };
 
     socket.on('call:answered', handleCallAnswered);
@@ -880,13 +889,31 @@ export function EmergencyProvider({ children }) {
 
   // User Action: Cancel / Clear Emergency
   const cancelUserEmergency = async (emergencyId) => {
-    const targetId = emergencyId || userEmergencyState?.emergencyId;
+    const targetId = emergencyId || userEmergencyState?.emergencyId || callState?.emergencyId;
     setUserEmergencyState(null);
+    closePeer();
+    setCallState(null);
 
     if (!targetId) return;
 
     if (socket && socket.connected) {
+      socket.emit('call:end', {
+        targetSocketId: remoteSocketIdRef.current,
+        emergencyId: targetId,
+      });
       socket.emit('emergency:cancel', { emergencyId: targetId });
+    }
+
+    if (targetId) {
+      stopAlarmSound(targetId);
+      setActiveEmergencies((prev) => {
+        const next = { ...prev };
+        delete next[targetId];
+        if (Object.keys(next).length === 0) {
+          stopEmergencyVibration();
+        }
+        return next;
+      });
     }
 
     try {
