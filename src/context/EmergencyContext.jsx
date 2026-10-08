@@ -27,21 +27,37 @@ const AUDIO_CONSTRAINTS = {
     echoCancellation: true,
     noiseSuppression: true,
     autoGainControl: true,
-    sampleRate: 48000,
   },
   video: false,
 };
+
+const FALLBACK_AUDIO_CONSTRAINTS = {
+  audio: true,
+  video: false,
+};
+
+export async function getSafeUserMediaStream() {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    return null;
+  }
+  try {
+    return await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
+  } catch (err1) {
+    console.warn('[Voice] Standard audio constraints failed, trying fallback:', err1);
+    try {
+      return await navigator.mediaDevices.getUserMedia(FALLBACK_AUDIO_CONSTRAINTS);
+    } catch (err2) {
+      console.warn('[Voice] Fallback audio constraints failed:', err2);
+      return null;
+    }
+  }
+}
 
 function createPeerConnection(onIceCandidate, onRemoteStream) {
   const pc = new RTCPeerConnection({
     iceServers: ICE_SERVERS,
     iceCandidatePoolSize: 4,
   });
-
-  // Explicitly ensure bidirectional audio transceiver
-  try {
-    pc.addTransceiver('audio', { direction: 'sendrecv' });
-  } catch {}
 
   pc.onicecandidate = (e) => {
     if (e.candidate) {
@@ -140,6 +156,40 @@ export function EmergencyProvider({ children }) {
       socket.emit('join:emergency', userEmergencyState.emergencyId);
     }
   }, [socket, user, isAdmin, userEmergencyState?.emergencyId]);
+
+  // Prime microphone permission after user logs in so browser is pre-authorized
+  useEffect(() => {
+    if (!user) return;
+    const primeMic = async () => {
+      try {
+        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+          if (typeof navigator.permissions?.query === 'function') {
+            try {
+              const status = await navigator.permissions.query({ name: 'microphone' });
+              if (status.state === 'granted') {
+                const stream = await getSafeUserMediaStream();
+                if (stream) {
+                  localStreamRef.current = stream;
+                }
+                return;
+              }
+            } catch {}
+          }
+          // Attempt silent or standard acquire
+          const stream = await getSafeUserMediaStream();
+          if (stream) {
+            localStreamRef.current = stream;
+            console.log('[EmergencyContext] Microphone permission primed post-login');
+          }
+        }
+      } catch (e) {
+        console.warn('[EmergencyContext] Post-login mic priming deferred:', e);
+      }
+    };
+
+    const timer = setTimeout(primeMic, 800);
+    return () => clearTimeout(timer);
+  }, [user?.id || user?._id]);
 
   // Handle emergency audio for a specific emergencyId
   const startAlarmSound = useCallback((emergencyId) => {
@@ -403,17 +453,24 @@ export function EmergencyProvider({ children }) {
   const acquireLocalMicrophone = useCallback(async () => {
     resumeAudioContext();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
-      localStreamRef.current = stream;
+      let stream = localStreamRef.current;
+      const hasLiveTracks = stream && stream.active && stream.getAudioTracks().some((t) => t.readyState === 'live');
+      if (!hasLiveTracks) {
+        stream = await getSafeUserMediaStream();
+        if (!stream) throw new Error('Could not access microphone');
+        localStreamRef.current = stream;
+      }
 
       const pc = peerRef.current;
       if (pc) {
         const audioTrack = stream.getAudioTracks()[0];
         if (audioTrack) {
+          audioTrack.enabled = true;
           const senders = pc.getSenders();
           const audioSender = senders.find((s) => s.track && s.track.kind === 'audio') || senders.find((s) => !s.track);
           if (audioSender) {
             await audioSender.replaceTrack(audioTrack);
+            console.log('[WebRTC] Replaced audio track successfully on existing sender!');
           } else {
             pc.addTrack(audioTrack, stream);
           }
@@ -452,12 +509,17 @@ export function EmergencyProvider({ children }) {
         socket.emit('join:emergency', emergencyId);
       }
 
-      let stream = null;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
-        localStreamRef.current = stream;
-      } catch (e) {
-        console.warn('[Voice] Admin mic acquisition pending:', e);
+      let stream = localStreamRef.current;
+      const hasLiveTracks = stream && stream.active && stream.getAudioTracks().some((t) => t.readyState === 'live');
+      if (!hasLiveTracks) {
+        try {
+          stream = await getSafeUserMediaStream();
+          if (stream) {
+            localStreamRef.current = stream;
+          }
+        } catch (e) {
+          console.warn('[Voice] Admin mic acquisition pending:', e);
+        }
       }
 
       const pc = createPeerConnection(
@@ -475,8 +537,15 @@ export function EmergencyProvider({ children }) {
       );
       peerRef.current = pc;
 
-      if (stream) {
-        stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+      if (stream && stream.getAudioTracks().length > 0) {
+        stream.getAudioTracks().forEach((t) => {
+          t.enabled = true;
+          pc.addTrack(t, stream);
+        });
+      } else {
+        try {
+          pc.addTransceiver('audio', { direction: 'sendrecv' });
+        } catch {}
       }
 
       const offer = await pc.createOffer({
@@ -485,7 +554,13 @@ export function EmergencyProvider({ children }) {
       });
       await pc.setLocalDescription(offer);
 
-      setCallState({ status: 'calling', emergencyId, peerName, remoteSocketId: null, micReady: Boolean(stream) });
+      setCallState({
+        status: 'calling',
+        emergencyId,
+        peerName,
+        remoteSocketId: null,
+        micReady: Boolean(stream && stream.getAudioTracks().some((t) => t.readyState === 'live')),
+      });
 
       socket.emit('call:offer', {
         emergencyId,
@@ -578,12 +653,18 @@ export function EmergencyProvider({ children }) {
       });
 
       try {
-        let stream = null;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
-          localStreamRef.current = stream;
-        } catch (mediaErr) {
-          console.warn('[Voice] User mic auto-access pending user click:', mediaErr);
+        let stream = localStreamRef.current;
+        const hasLiveTracks = stream && stream.active && stream.getAudioTracks().some((t) => t.readyState === 'live');
+
+        if (!hasLiveTracks) {
+          try {
+            stream = await getSafeUserMediaStream();
+            if (stream) {
+              localStreamRef.current = stream;
+            }
+          } catch (mediaErr) {
+            console.warn('[Voice] User mic auto-access pending user click:', mediaErr);
+          }
         }
 
         const pc = createPeerConnection(
@@ -600,8 +681,15 @@ export function EmergencyProvider({ children }) {
         );
         peerRef.current = pc;
 
-        if (stream) {
-          stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+        if (stream && stream.getAudioTracks().length > 0) {
+          stream.getAudioTracks().forEach((t) => {
+            t.enabled = true;
+            pc.addTrack(t, stream);
+          });
+        } else {
+          try {
+            pc.addTransceiver('audio', { direction: 'sendrecv' });
+          } catch {}
         }
 
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
@@ -631,12 +719,13 @@ export function EmergencyProvider({ children }) {
           adminSocketId,
         });
 
+        const micReady = Boolean(stream && stream.getAudioTracks().some((t) => t.readyState === 'live'));
         setCallState({
           status: 'connected',
           emergencyId,
           peerName: adminName || 'Gate Officer',
           remoteSocketId: adminSocketId,
-          micReady: Boolean(stream),
+          micReady,
         });
       } catch (err) {
         console.error('[Voice] auto-answer error:', err);
@@ -701,6 +790,19 @@ export function EmergencyProvider({ children }) {
       } catch {}
     }
 
+    // 3. Prime user microphone stream immediately while user click gesture is active!
+    try {
+      if (!localStreamRef.current || !localStreamRef.current.active || !localStreamRef.current.getAudioTracks().some((t) => t.readyState === 'live')) {
+        const stream = await getSafeUserMediaStream();
+        if (stream) {
+          localStreamRef.current = stream;
+          console.log('[Emergency] User microphone primed successfully on SOS click!');
+        }
+      }
+    } catch (e) {
+      console.warn('[Emergency] Error priming mic on SOS click:', e);
+    }
+
     const emergencyId = `emg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const payload = {
       emergencyId,
@@ -711,7 +813,7 @@ export function EmergencyProvider({ children }) {
       timestamp: new Date().toISOString(),
     };
 
-    // 3. Set local feedback state
+    // 4. Set local feedback state
     setUserEmergencyState({
       status: 'PENDING',
       message: 'Emergency alert sent. Waiting for an admin.',

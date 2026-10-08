@@ -101,8 +101,15 @@ export default function VoiceCallOverlay() {
   const formatTime = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-  const handleMute = (e) => {
+  const handleMute = async (e) => {
     e.stopPropagation();
+    if (callState && callState.micReady === false && acquireLocalMicrophone) {
+      const stream = await acquireLocalMicrophone();
+      if (stream) {
+        setMuted(false);
+        return;
+      }
+    }
     toggleMute();
     setMuted((m) => !m);
   };

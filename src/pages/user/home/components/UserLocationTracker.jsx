@@ -10,7 +10,7 @@ const LOCATION_PERMISSION_WINDOW = 30 * 60 * 1000; // 30 minutes in ms
 
 export default function UserLocationTracker() {
   const { user } = useAuth();
-  const { socket } = useEmergency();
+  const { socket, acquireLocalMicrophone } = useEmergency();
   const location = useLocation();
 
   const [showPrompt, setShowPrompt] = useState(false);
@@ -198,7 +198,7 @@ export default function UserLocationTracker() {
     setIsTracking(false);
   };
 
-  const handleAllow = () => {
+  const handleAllow = async () => {
     hasInteractedRef.current = true;
     setShowPrompt(false);
     setLocationError('');
@@ -207,6 +207,13 @@ export default function UserLocationTracker() {
       localStorage.setItem(`location_allowed_time_${userKey}`, Date.now().toString());
     }
     fetchAndSendCurrentLocation();
+
+    // Prime microphone permission during this direct user click gesture
+    try {
+      if (acquireLocalMicrophone) {
+        await acquireLocalMicrophone();
+      }
+    } catch {}
   };
 
   const handleDecline = () => {

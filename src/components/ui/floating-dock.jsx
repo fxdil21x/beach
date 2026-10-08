@@ -44,10 +44,10 @@ function FloatingDockCore({ items, className, isFlush }) {
       onMouseMove={(e) => mouseX.set(e.pageX)}
       onMouseLeave={() => mouseX.set(Infinity)}
       className={cn(
-        'pointer-events-auto w-full flex items-center justify-around backdrop-blur-2xl transition-all duration-300',
+        'pointer-events-auto w-full flex items-center justify-around backdrop-blur-2xl',
         isFlush
-          ? 'rounded-none border-x-0 border-b-0 border-t border-neutral-800/90 bg-neutral-900/95 dark:bg-neutral-900/95 px-2 pt-1.5 pb-[calc(max(0.6rem,env(safe-area-inset-bottom))+2px)] shadow-none'
-          : 'rounded-full bg-neutral-900/95 dark:bg-neutral-900/95 border border-neutral-800/90 px-2 sm:px-4 py-2 sm:py-2.5 shadow-[0_14px_40px_rgba(0,0,0,0.32)]',
+          ? 'h-[60px] sm:h-[64px] rounded-none border-x-0 border-b-0 border-t border-neutral-800/90 bg-neutral-900/95 dark:bg-neutral-900/95 px-2 pt-1 pb-[calc(max(0.5rem,env(safe-area-inset-bottom)))] shadow-none'
+          : 'h-[54px] sm:h-[58px] rounded-full bg-neutral-900/95 dark:bg-neutral-900/95 border border-neutral-800/90 px-2 sm:px-4 shadow-[0_14px_40px_rgba(0,0,0,0.32)]',
         className
       )}
     >
@@ -88,17 +88,8 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
     return val - bounds.x - bounds.width / 2;
   });
 
-  const widthTransform = useTransform(distance, [-120, 0, 120], [38, 52, 38]);
-  const heightTransform = useTransform(distance, [-120, 0, 120], [38, 52, 38]);
-
-  const widthTransformIcon = useTransform(distance, [-120, 0, 120], [18, 26, 18]);
-  const heightTransformIcon = useTransform(distance, [-120, 0, 120], [18, 26, 18]);
-
-  const width = useSpring(widthTransform, { mass: 0.1, stiffness: 160, damping: 12 });
-  const height = useSpring(heightTransform, { mass: 0.1, stiffness: 160, damping: 12 });
-
-  const widthIcon = useSpring(widthTransformIcon, { mass: 0.1, stiffness: 160, damping: 12 });
-  const heightIcon = useSpring(heightTransformIcon, { mass: 0.1, stiffness: 160, damping: 12 });
+  const scaleTransform = useTransform(distance, [-100, 0, 100], [1, 1.18, 1]);
+  const scale = useSpring(scaleTransform, { mass: 0.1, stiffness: 200, damping: 15 });
 
   const Icon = item.icon;
 
@@ -118,7 +109,7 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
       {({ isActive }) => (
         <motion.div
           ref={ref}
-          style={{ width, height }}
+          style={{ scale }}
           onMouseEnter={() => {
             if (typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches) {
               setHovered(true);
@@ -128,7 +119,7 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
           onTouchStart={() => setHovered(false)}
           onTouchEnd={() => setHovered(false)}
           onClick={() => setHovered(false)}
-          className="relative flex aspect-square items-center justify-center rounded-full select-none"
+          className="relative flex h-10 w-10 sm:h-11 sm:w-11 aspect-square items-center justify-center rounded-full select-none"
         >
           {/* Smooth Gliding Active Pill Background */}
           {isActive && (
@@ -162,13 +153,13 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
           {/* Icon with 2-time lively bounce + shake animation on active tab / tab change / actions */}
           <motion.div
             key={`${item.to}-${location.pathname}-${actionPulse}`}
-            style={{ width: widthIcon, height: heightIcon }}
+            className="relative z-10 flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center"
             animate={
               isActive
                 ? {
-                    y: [0, -8, 0, -4, 0],
-                    rotate: [0, -12, 12, -8, 8, 0],
-                    scale: [1, 1.25, 1.06, 1.16, 1],
+                    y: [0, -6, 0, -3, 0],
+                    rotate: [0, -10, 10, -6, 6, 0],
+                    scale: [1, 1.2, 1.05, 1.12, 1],
                   }
                 : { y: 0, rotate: 0, scale: 1 }
             }
@@ -176,7 +167,6 @@ function DockIcon({ mouseX, item, accentColor = '#0284C7', glowColor = 'rgba(2, 
               duration: 0.55,
               ease: 'easeInOut',
             }}
-            className="relative z-10 flex items-center justify-center"
           >
             {Icon ? (
               <Icon
