@@ -15,7 +15,7 @@ export default function SearchInput({ value, onChange, onSearch, placeholder }) 
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSearch?.()}
           placeholder={placeholder || t('common.search')}
-          className="flex h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2 text-sm text-slate-900 ring-offset-white placeholder:text-slate-400 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 shadow-sm"
+          className="flex h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2 text-sm text-slate-900 ring-offset-white placeholder:text-slate-400 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/20 focus-visible:border-sky-500 shadow-sm"
         />
       </div>
       <Button type="button" onClick={onSearch} className="w-full shrink-0 px-5 sm:w-auto">

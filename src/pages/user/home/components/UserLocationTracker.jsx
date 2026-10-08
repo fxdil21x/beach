@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MapPin, ShieldCheck, AlertCircle, Navigation } from 'lucide-react';
+import { MapPin, ShieldCheck, AlertCircle, Navigation, PhoneCall, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext.jsx';
 import { useEmergency, primeMicrophonePermission } from '../../../../context/EmergencyContext.jsx';
 import axios from '../../../../api/axios.js';
@@ -236,11 +236,11 @@ export default function UserLocationTracker() {
       <CommonModal
         isOpen={showPrompt}
         onClose={handleDecline}
-        icon={MapPin}
-        iconBg="bg-emerald-50 text-emerald-600 border border-emerald-100"
-        title="Enable Location & Voice Intercom"
-        subtitle="Beach Safety System requires live location monitoring and emergency 2-way voice intercom for visitors and residents at Muzhappilangad Beach."
-        actionLabel={locationError ? '📍 Retry Safety Access' : '📍 Allow Location & Voice Intercom'}
+        icon={ShieldAlert}
+        iconBg="bg-rose-50 text-rose-600 border border-rose-100"
+        title="Beach Emergency SOS & Safety Protection"
+        subtitle="If you face any danger or trouble on the beach, safety officers can trace your exact location and connect via instant emergency voice call."
+        actionLabel={locationError ? '📍 Retry Permission' : '📍 Permission'}
         onAction={handleAllow}
         actionBtnClass="bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
         actions={
@@ -258,29 +258,59 @@ export default function UserLocationTracker() {
               className="flex-1 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
-              {locationError ? 'Retry Safety Access' : 'Allow Location & Voice Intercom'}
+              <span>{locationError ? 'Retry Permission' : 'Permissions'}</span>
             </button>
           </div>
         }
       >
-        <div className="rounded-2xl bg-emerald-50/70 border border-emerald-100 p-4 text-xs text-emerald-900 space-y-2">
-          <div className="flex items-center gap-2 font-bold text-emerald-800">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span>Why enable safety services?</span>
+        <div className="space-y-3">
+          {/* Feature 1: Live Location Tracing */}
+          <div className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-100 p-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 font-bold">
+              <MapPin className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs font-bold text-slate-900">
+                Live Location Tracing
+              </h4>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+                When you click the <strong>SOS button</strong>, security officers instantly trace your exact beach coordinates on the map to dispatch rapid rescue teams to your location.
+              </p>
+            </div>
           </div>
-          <p className="text-emerald-700 leading-normal">
-            Enables instant GPS tracking for safety officers and primes the emergency 2-way voice intercom during SOS alerts or beach warnings.
-          </p>
+
+          {/* Feature 2: Instant Emergency Voice Intercom */}
+          <div className="flex items-start gap-3 rounded-2xl bg-slate-50 border border-slate-100 p-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700 font-bold">
+              <PhoneCall className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs font-bold text-slate-900">
+                Emergency 2-Way Voice Call
+              </h4>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+                Connects an instant emergency voice call directly with beach patrol & gate security so you can talk to officers even if cellular signals are weak.
+              </p>
+            </div>
+          </div>
+
+          {/* Privacy Guarantee */}
+          <div className="flex items-center gap-2 px-1 text-[11px] text-slate-500">
+            <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span>
+              Your location is protected and only shared with Muzhappilangad Beach Security during active emergencies.
+            </span>
+          </div>
         </div>
 
         {locationError && (
-          <div className="rounded-2xl bg-red-50/90 border border-red-200/80 p-4 text-xs text-red-700 space-y-2 animate-in fade-in">
+          <div className="rounded-2xl bg-red-50/90 border border-red-200/80 p-3.5 text-xs text-red-700 space-y-1.5 animate-in fade-in">
             <div className="flex items-center gap-2 font-bold text-red-800">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
-              <span>Browser Location Access Blocked</span>
+              <span>Location Access Blocked</span>
             </div>
-            <p className="text-red-600 leading-relaxed">
-              Your browser is blocking location requests. Click the lock/site icon 🔒 next to the address bar at the top, set <strong>Location</strong> to <strong>Allow</strong>, then click <strong>Retry</strong> below.
+            <p className="text-red-600 text-[11px] leading-relaxed">
+              Your browser blocked location access. Please click the permissions icon 🔒 next to the URL address bar, allow <strong>Location</strong>, and click <strong>Retry</strong>.
             </p>
           </div>
         )}

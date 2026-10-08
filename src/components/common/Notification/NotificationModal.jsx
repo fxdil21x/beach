@@ -150,28 +150,31 @@ export default function NotificationModal({ isOpen, onClose, announcements = [],
           key={currentItem._id || currentItem.id || currentItem.title}
           className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs transition-all animate-in fade-in zoom-in-95 duration-200"
         >
+          {/* Top Row: Icon + Title & Badge */}
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-sm shadow-orange-400/30">
               <IconComp className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                  {currentItem.title}
-                </h3>
-                <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+            <div className="min-w-0 flex-1 pt-0.5">
+              <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                {currentItem.title}
+              </h3>
+              <div className="mt-1">
+                <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
                   {currentItem.badge || 'Coming Soon'}
                 </span>
               </div>
-              <div className="mt-3 rounded-xl bg-slate-50 p-3 border border-slate-100">
-                <span className="block text-[10px] font-bold tracking-wider uppercase text-orange-500">
-                  {t('notifications.useOfFeature', "WHAT'S THE USE OF THIS FEATURE:")}
-                </span>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-700 font-medium">
-                  {currentItem.description}
-                </p>
-              </div>
             </div>
+          </div>
+
+          {/* Full-width Feature Box */}
+          <div className="mt-3.5 rounded-xl bg-slate-50 p-3.5 border border-slate-100">
+            <span className="block text-[10px] font-bold tracking-wider uppercase text-orange-500">
+              {t('notifications.useOfFeature', "WHAT'S THE USE OF THIS FEATURE:")}
+            </span>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-700 font-medium">
+              {currentItem.description}
+            </p>
           </div>
         </div>
       ) : null}
