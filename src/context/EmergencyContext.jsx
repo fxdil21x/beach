@@ -301,19 +301,31 @@ export function EmergencyProvider({ children }) {
     // Receive emergency:claimed
     const handleEmergencyClaimed = (claimedData) => {
       console.log('[EmergencyContext] emergency:claimed received:', claimedData);
-      const { emergencyId } = claimedData;
+      const { emergencyId, cancelled, resolved } = claimedData;
 
-      stopAlarmSound(emergencyId);
+      if (emergencyId) {
+        stopAlarmSound(emergencyId);
+        setActiveEmergencies((prev) => {
+          const next = { ...prev };
+          delete next[emergencyId];
+          if (Object.keys(next).length === 0) {
+            stopEmergencyVibration();
+          }
+          return next;
+        });
+      }
 
-      setActiveEmergencies((prev) => {
-        const next = { ...prev };
-        delete next[emergencyId];
-
-        if (Object.keys(next).length === 0) {
-          stopEmergencyVibration();
-        }
-        return next;
-      });
+      // If emergency was cancelled or resolved, also dismiss callState and userEmergencyState
+      if (cancelled || resolved) {
+        setUserEmergencyState((prev) => (!emergencyId || prev?.emergencyId === emergencyId ? null : prev));
+        setCallState((prev) => {
+          if (!emergencyId || prev?.emergencyId === emergencyId) {
+            closePeer();
+            return null;
+          }
+          return prev;
+        });
+      }
     };
 
     // Receive emergency:status-update
@@ -333,7 +345,7 @@ export function EmergencyProvider({ children }) {
     // Receive emergency:cancelled
     const handleEmergencyCancelled = ({ emergencyId }) => {
       console.log('[EmergencyContext] emergency:cancelled:', emergencyId);
-      setUserEmergencyState((prev) => (prev?.emergencyId === emergencyId ? null : prev));
+      setUserEmergencyState((prev) => (!emergencyId || prev?.emergencyId === emergencyId ? null : prev));
       if (emergencyId) {
         stopAlarmSound(emergencyId);
         setActiveEmergencies((prev) => {
@@ -345,10 +357,13 @@ export function EmergencyProvider({ children }) {
           return next;
         });
       }
-      if (callState?.emergencyId === emergencyId) {
-        closePeer();
-        setCallState(null);
-      }
+      setCallState((prev) => {
+        if (!emergencyId || prev?.emergencyId === emergencyId) {
+          closePeer();
+          return null;
+        }
+        return prev;
+      });
     };
 
     socket.on('emergency:active-list', handleActiveList);
@@ -569,12 +584,14 @@ export function EmergencyProvider({ children }) {
   /** End call from either side */
   const endCall = useCallback((emergencyId) => {
     const targetId = emergencyId || callState?.emergencyId || userEmergencyState?.emergencyId;
-    if (socket?.connected && targetId) {
+    if (socket?.connected) {
       socket.emit('call:end', {
         targetSocketId: remoteSocketIdRef.current,
         emergencyId: targetId,
       });
-      socket.emit('emergency:cancel', { emergencyId: targetId });
+      if (targetId) {
+        socket.emit('emergency:cancel', { emergencyId: targetId });
+      }
     }
     closePeer();
     setCallState(null);
@@ -590,8 +607,11 @@ export function EmergencyProvider({ children }) {
         }
         return next;
       });
+    } else {
+      stopAllAlarmSounds();
+      stopEmergencyVibration();
     }
-  }, [socket, closePeer, callState?.emergencyId, userEmergencyState?.emergencyId, stopAlarmSound]);
+  }, [socket, closePeer, callState?.emergencyId, userEmergencyState?.emergencyId, stopAlarmSound, stopAllAlarmSounds]);
 
   /** Toggle local microphone mute */
   const toggleMute = useCallback(() => {
@@ -763,7 +783,7 @@ export function EmergencyProvider({ children }) {
       console.log('[Voice] call:ended received for', emergencyId);
       closePeer();
       setCallState(null);
-      setUserEmergencyState((prev) => (prev?.emergencyId === emergencyId ? null : prev));
+      setUserEmergencyState((prev) => (!emergencyId || prev?.emergencyId === emergencyId ? null : prev));
       if (emergencyId) {
         stopAlarmSound(emergencyId);
         setActiveEmergencies((prev) => {
@@ -774,6 +794,9 @@ export function EmergencyProvider({ children }) {
           }
           return next;
         });
+      } else {
+        stopAllAlarmSounds();
+        stopEmergencyVibration();
       }
     };
 
@@ -894,14 +917,14 @@ export function EmergencyProvider({ children }) {
     closePeer();
     setCallState(null);
 
-    if (!targetId) return;
-
     if (socket && socket.connected) {
       socket.emit('call:end', {
         targetSocketId: remoteSocketIdRef.current,
         emergencyId: targetId,
       });
-      socket.emit('emergency:cancel', { emergencyId: targetId });
+      if (targetId) {
+        socket.emit('emergency:cancel', { emergencyId: targetId });
+      }
     }
 
     if (targetId) {
@@ -914,12 +937,14 @@ export function EmergencyProvider({ children }) {
         }
         return next;
       });
-    }
-
-    try {
-      await axios.post(`/emergency/cancel/${targetId}`);
-    } catch {
-      // socket handled it
+      try {
+        await axios.post(`/emergency/cancel/${targetId}`);
+      } catch {
+        // socket handled it
+      }
+    } else {
+      stopAllAlarmSounds();
+      stopEmergencyVibration();
     }
   };
 

@@ -206,12 +206,14 @@ export default function UserLocationTracker() {
       localStorage.setItem(`location_allowed_${userKey}`, 'true');
       localStorage.setItem(`location_allowed_time_${userKey}`, Date.now().toString());
     }
-    fetchAndSendCurrentLocation();
 
-    // Prime microphone permission during this direct user click gesture, then immediately release
+    // 1. Prime microphone permission during this user click gesture, then immediately release hardware
     try {
       await primeMicrophonePermission();
     } catch {}
+
+    // 2. Fetch and send GPS location
+    fetchAndSendCurrentLocation();
   };
 
   const handleDecline = () => {
@@ -236,9 +238,9 @@ export default function UserLocationTracker() {
         onClose={handleDecline}
         icon={MapPin}
         iconBg="bg-emerald-50 text-emerald-600 border border-emerald-100"
-        title="Enable Safety, Location & Voice Intercom"
+        title="Enable Location & Voice Intercom"
         subtitle="Beach Safety System requires live location monitoring and emergency 2-way voice intercom for visitors and residents at Muzhappilangad Beach."
-        actionLabel={locationError ? '📍 Retry Safety Access' : '📍 Allow Safety & Location'}
+        actionLabel={locationError ? '📍 Retry Safety Access' : '📍 Allow Location & Voice Intercom'}
         onAction={handleAllow}
         actionBtnClass="bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
         actions={
@@ -256,7 +258,7 @@ export default function UserLocationTracker() {
               className="flex-1 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Navigation className="h-3.5 w-3.5" />
-              {locationError ? 'Retry Safety Access' : 'Allow Safety & Location'}
+              {locationError ? 'Retry Safety Access' : 'Allow Location & Voice Intercom'}
             </button>
           </div>
         }

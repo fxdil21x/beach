@@ -18,7 +18,17 @@ export default function EmergencyButton({ variant = 'banner' }) {
   const handleEmergencyClick = async () => {
     setLoading(true);
     try {
-      await triggerEmergency('Muzhappilangad Drive-In Beach');
+      let locationText = 'Muzhappilangad Drive-In Beach';
+      try {
+        const cached = localStorage.getItem('user_last_location');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.latitude && parsed.longitude) {
+            locationText = `Muzhappilangad Beach (GPS: ${parsed.latitude.toFixed(5)}, ${parsed.longitude.toFixed(5)})`;
+          }
+        }
+      } catch {}
+      await triggerEmergency(locationText);
     } finally {
       setLoading(false);
     }

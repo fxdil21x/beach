@@ -162,26 +162,11 @@ export function AuthProvider({ children }) {
     };
   }, [user, recordActivity, checkInactivity]);
 
-  const primeMicrophoneAccess = () => {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-        navigator.mediaDevices
-          .getUserMedia({ audio: true, video: false })
-          .then((stream) => {
-            // Stop stream immediately once browser has recorded granted permission
-            stream.getTracks().forEach((t) => t.stop());
-          })
-          .catch(() => {});
-      }
-    } catch {}
-  };
-
   const login = async (username, password) => {
     const { data } = await authApi.login({ username, password });
     const { token, accessToken, refreshToken, user: userData } = data.data;
     saveToken(accessToken || token, refreshToken);
     setUser(userData);
-    primeMicrophoneAccess();
     return userData;
   };
 
@@ -190,14 +175,12 @@ export function AuthProvider({ children }) {
     const { token, accessToken, refreshToken, user: userData } = data.data;
     saveToken(accessToken || token, refreshToken);
     setUser(userData);
-    primeMicrophoneAccess();
     return userData;
   };
 
   const setSession = (token, userData, refreshToken) => {
     saveToken(token, refreshToken);
     setUser(userData);
-    primeMicrophoneAccess();
     return userData;
   };
 
