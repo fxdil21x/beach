@@ -96,6 +96,8 @@
 
     "thisIsMe": "यह मैं हूं",
     "selectRecord": "यह रिकॉर्ड चुनें",
+    "loginAction": "लॉगिन करें",
+    "registerAction": "पास रजिस्टर करें",
     "showQrPass": "QR पास देखें",
     "registerTab": "रजिस्टर",
     "loginTab": "लॉगिन",
@@ -108,7 +110,7 @@
     "verifyPhone": "फोन सत्यापित करें",
     "enterPassword": "पासवर्ड दर्ज करें",
     "passwordLabel": "पासवर्ड",
-    "passwordPlaceholder": "पंजीकृत फोन नंबर दर्ज करें",
+    "passwordPlaceholder": "पंजीकृत फोन नंबर",
     "phone": "फोन नंबर",
     "phoneRequired": "फोन नंबर आवश्यक है",
     "phoneAsPassword": "अगली बार लॉगिन के लिए आपका फोन नंबर पासवर्ड होगा।",

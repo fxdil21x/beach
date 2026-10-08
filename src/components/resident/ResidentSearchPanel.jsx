@@ -11,7 +11,7 @@ export default function ResidentSearchPanel({
   searching,
   searched,
   onSelect,
-  disableRegistered = false,
+  tab = 'register',
 }) {
   const { t } = useTranslation();
 
@@ -38,7 +38,7 @@ export default function ResidentSearchPanel({
               key={record.id}
               resident={record}
               onSelect={onSelect}
-              disabled={disableRegistered && record.isRegistered}
+              tab={tab}
             />
           ))}
         </div>

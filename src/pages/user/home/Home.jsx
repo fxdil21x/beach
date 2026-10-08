@@ -113,6 +113,11 @@ export default function UserHome() {
   };
 
   const handleSelect = (resident) => {
+    if (resident.isRegistered) {
+      setTab('login');
+    } else {
+      setTab('register');
+    }
     setSelected(resident);
     setError('');
   };
@@ -294,7 +299,7 @@ export default function UserHome() {
                 searching={searching}
                 searched={searched}
                 onSelect={handleSelect}
-                disableRegistered={tab === 'register'}
+                tab={tab}
               />
             )}
 
@@ -324,7 +329,7 @@ export default function UserHome() {
                   error={error}
                 />
                 {error === t('resident.notRegistered') && (
-                  <Button onClick={() => handleTabChange('register')} className="w-full">
+                  <Button onClick={() => { setTab('register'); setError(''); }} className="w-full">
                     {t('resident.goToRegister')}
                   </Button>
                 )}
